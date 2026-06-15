@@ -19,6 +19,7 @@
       <nav class="nav-links">
         <a href="#services">שירותים</a>
         <a href="#products">מוצרים ותשואות</a>
+        <a href="#calculator">חישובון</a>
         <a href="#about">אודות</a>
         <a href="portal.html" class="btn btn-outline-nav" style="background:rgba(201,168,76,.15);">פורטל לקוחות</a>
         <a href="#contact" class="btn btn-outline-nav">צרי קשר</a>
@@ -30,6 +31,7 @@
     <div class="mobile-menu" id="mobileMenu">
       <a href="#services" onclick="closeMobile()">שירותים</a>
       <a href="#products" onclick="closeMobile()">מוצרים ותשואות</a>
+      <a href="#calculator" onclick="closeMobile()">חישובון</a>
       <a href="#about" onclick="closeMobile()">אודות</a>
       <a href="portal.html" onclick="closeMobile()">פורטל לקוחות</a>
       <a href="#contact" onclick="closeMobile()">צרי קשר</a>
@@ -768,6 +770,159 @@
           </table>
         </div>
         <p class="table-note">* נתוני תשואה הם נומינליים לפני ניכוי דמי ניהול. מקור: רשות שוק ההון. עדכון אחרון: ינואר 2025</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- CALCULATOR -->
+  <section class="calculator-section" id="calculator">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">כלים שימושיים</span>
+        <h2>חישובון פיננסי</h2>
+        <p>גלי כמה כסף צפוי להצטבר לך לפנסיה או בחיסכון</p>
+      </div>
+      <div class="calc-tabs">
+        <button class="calc-tab active" data-calc="pension">חישובון פנסיה</button>
+        <button class="calc-tab" data-calc="savings">חישובון חיסכון</button>
+      </div>
+
+      <!-- PENSION CALCULATOR -->
+      <div class="calc-panel active" id="calc-pension">
+        <div class="calc-grid">
+          <div class="calc-inputs">
+            <div class="calc-field">
+              <label>גיל נוכחי</label>
+              <div class="calc-input-wrap">
+                <input type="range" id="pc-age" min="20" max="60" value="35" />
+                <output id="pc-age-out">35</output>
+              </div>
+            </div>
+            <div class="calc-field">
+              <label>גיל פרישה</label>
+              <div class="calc-input-wrap">
+                <input type="range" id="pc-retire" min="60" max="70" value="67" />
+                <output id="pc-retire-out">67</output>
+              </div>
+            </div>
+            <div class="calc-field">
+              <label>שכר חודשי ברוטו (₪)</label>
+              <div class="calc-input-wrap">
+                <input type="range" id="pc-salary" min="5000" max="50000" step="500" value="15000" />
+                <output id="pc-salary-out">15,000</output>
+              </div>
+            </div>
+            <div class="calc-field">
+              <label>סה"כ הפרשה לפנסיה (%)</label>
+              <div class="calc-input-wrap">
+                <input type="range" id="pc-contrib" min="10" max="25" value="18.5" step="0.5" />
+                <output id="pc-contrib-out">18.5%</output>
+              </div>
+            </div>
+            <div class="calc-field">
+              <label>תשואה שנתית צפויה (%)</label>
+              <div class="calc-input-wrap">
+                <input type="range" id="pc-yield" min="3" max="12" value="7" step="0.5" />
+                <output id="pc-yield-out">7%</output>
+              </div>
+            </div>
+            <div class="calc-field">
+              <label>צבירה קיימת (₪)</label>
+              <div class="calc-input-wrap">
+                <input type="range" id="pc-existing" min="0" max="500000" step="5000" value="0" />
+                <output id="pc-existing-out">0</output>
+              </div>
+            </div>
+          </div>
+          <div class="calc-result" id="pension-result">
+            <div class="result-main">
+              <span class="result-label">צבירה משוערת בגיל פרישה</span>
+              <span class="result-amount" id="pc-total">₪0</span>
+            </div>
+            <div class="result-details">
+              <div class="result-row">
+                <span>שנות חיסכון</span>
+                <strong id="pc-years">0</strong>
+              </div>
+              <div class="result-row">
+                <span>הפקדה חודשית</span>
+                <strong id="pc-monthly">₪0</strong>
+              </div>
+              <div class="result-row">
+                <span>סה"כ הפקדות</span>
+                <strong id="pc-deposits">₪0</strong>
+              </div>
+              <div class="result-row highlight">
+                <span>רווח מתשואות</span>
+                <strong id="pc-profit" style="color:var(--green)">₪0</strong>
+              </div>
+            </div>
+            <div class="result-monthly">
+              <span>קצבה חודשית משוערת</span>
+              <strong id="pc-pension">₪0</strong>
+              <small>(מחלוקת על 240 חודש)</small>
+            </div>
+            <a href="#contact" class="btn btn-primary" style="width:100%;margin-top:1rem;">רוצה לתכנן את הפנסיה שלי</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- SAVINGS CALCULATOR -->
+      <div class="calc-panel" id="calc-savings">
+        <div class="calc-grid">
+          <div class="calc-inputs">
+            <div class="calc-field">
+              <label>הפקדה חודשית (₪)</label>
+              <div class="calc-input-wrap">
+                <input type="range" id="sc-monthly" min="200" max="10000" step="100" value="1000" />
+                <output id="sc-monthly-out">1,000</output>
+              </div>
+            </div>
+            <div class="calc-field">
+              <label>תקופת חיסכון (שנים)</label>
+              <div class="calc-input-wrap">
+                <input type="range" id="sc-years" min="1" max="40" value="10" />
+                <output id="sc-years-out">10</output>
+              </div>
+            </div>
+            <div class="calc-field">
+              <label>תשואה שנתית (%)</label>
+              <div class="calc-input-wrap">
+                <input type="range" id="sc-yield" min="2" max="15" value="7" step="0.5" />
+                <output id="sc-yield-out">7%</output>
+              </div>
+            </div>
+            <div class="calc-field">
+              <label>הון התחלתי (₪)</label>
+              <div class="calc-input-wrap">
+                <input type="range" id="sc-init" min="0" max="200000" step="5000" value="0" />
+                <output id="sc-init-out">0</output>
+              </div>
+            </div>
+          </div>
+          <div class="calc-result" id="savings-result">
+            <div class="result-main">
+              <span class="result-label">סה"כ בסוף התקופה</span>
+              <span class="result-amount" id="sc-total">₪0</span>
+            </div>
+            <div class="result-details">
+              <div class="result-row">
+                <span>הפקדות בסך הכל</span>
+                <strong id="sc-deposits">₪0</strong>
+              </div>
+              <div class="result-row highlight">
+                <span>רווח מתשואות</span>
+                <strong id="sc-profit" style="color:var(--green)">₪0</strong>
+              </div>
+              <div class="result-row">
+                <span>כפל הכסף</span>
+                <strong id="sc-multi">×0</strong>
+              </div>
+            </div>
+            <a href="#contact" class="btn btn-primary" style="width:100%;margin-top:1rem;">רוצה להתחיל לחסוך</a>
+          </div>
+        </div>
       </div>
 
     </div>

@@ -27,17 +27,41 @@ const contactForm = document.getElementById('contactForm');
 const formSuccess = document.getElementById('formSuccess');
 
 if (contactForm) {
-  contactForm.addEventListener('submit', (e) => {
+  contactForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = contactForm.querySelector('button[type="submit"]');
     btn.disabled = true;
     btn.textContent = 'שולח...';
-    setTimeout(() => {
+
+    const data = {
+      name:    document.getElementById('name').value,
+      phone:   document.getElementById('phone').value,
+      email:   document.getElementById('email').value,
+      topic:   document.getElementById('topic').value,
+      message: document.getElementById('message').value,
+    };
+
+    try {
+      const res  = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+      if (json.ok) {
+        formSuccess.classList.add('show');
+        contactForm.reset();
+        // Open WhatsApp so Karin gets the lead instantly
+        setTimeout(() => window.open(json.waUrl, '_blank'), 600);
+      }
+    } catch {
+      // Fallback if server unreachable
       formSuccess.classList.add('show');
       contactForm.reset();
-      btn.disabled = false;
-      btn.textContent = 'שליחה ←';
-    }, 900);
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'שליחה ←';
   });
 }
 
@@ -119,6 +143,110 @@ document.querySelectorAll('.fin-table').forEach(table => {
     });
   });
 });
+
+/* ========================
+   CALCULATOR TABS
+   ======================== */
+const calcTabs   = document.querySelectorAll('.calc-tab');
+const calcPanels = document.querySelectorAll('.calc-panel');
+
+calcTabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    const target = tab.dataset.calc;
+    calcTabs.forEach(t => t.classList.remove('active'));
+    calcPanels.forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('calc-' + target).classList.add('active');
+  });
+});
+
+/* ========================
+   PENSION CALCULATOR
+   ======================== */
+function fmt(n) {
+  return '₪' + Math.round(n).toLocaleString('he-IL');
+}
+
+function calcPension() {
+  const age      = +document.getElementById('pc-age').value;
+  const retire   = +document.getElementById('pc-retire').value;
+  const salary   = +document.getElementById('pc-salary').value;
+  const contrib  = +document.getElementById('pc-contrib').value / 100;
+  const yieldPct = +document.getElementById('pc-yield').value / 100;
+  const existing = +document.getElementById('pc-existing').value;
+
+  const years    = Math.max(0, retire - age);
+  const monthly  = salary * contrib;
+  const r        = yieldPct / 12;
+  const n        = years * 12;
+
+  let total = existing * Math.pow(1 + yieldPct, years);
+  if (r > 0) total += monthly * ((Math.pow(1 + r, n) - 1) / r) * (1 + r);
+  else        total += monthly * n;
+
+  const deposits = monthly * n + existing;
+  const profit   = total - deposits;
+
+  document.getElementById('pc-years').textContent   = years + ' שנים';
+  document.getElementById('pc-monthly').textContent  = fmt(monthly);
+  document.getElementById('pc-deposits').textContent = fmt(deposits);
+  document.getElementById('pc-profit').textContent   = fmt(Math.max(0, profit));
+  document.getElementById('pc-total').textContent    = fmt(total);
+  document.getElementById('pc-pension').textContent  = fmt(total / 240);
+}
+
+['pc-age','pc-retire','pc-salary','pc-contrib','pc-yield','pc-existing'].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const out = document.getElementById(id + '-out');
+  el.addEventListener('input', () => {
+    const v = parseFloat(el.value);
+    if (id === 'pc-salary' || id === 'pc-existing') out.value = v.toLocaleString('he-IL');
+    else if (id === 'pc-contrib' || id === 'pc-yield') out.value = v + '%';
+    else out.value = v;
+    calcPension();
+  });
+});
+calcPension();
+
+/* ========================
+   SAVINGS CALCULATOR
+   ======================== */
+function calcSavings() {
+  const monthly  = +document.getElementById('sc-monthly').value;
+  const years    = +document.getElementById('sc-years').value;
+  const yieldPct = +document.getElementById('sc-yield').value / 100;
+  const init     = +document.getElementById('sc-init').value;
+
+  const r = yieldPct / 12;
+  const n = years * 12;
+
+  let total = init * Math.pow(1 + yieldPct, years);
+  if (r > 0) total += monthly * ((Math.pow(1 + r, n) - 1) / r) * (1 + r);
+  else        total += monthly * n;
+
+  const deposits = monthly * n + init;
+  const profit   = total - deposits;
+
+  document.getElementById('sc-deposits').textContent = fmt(deposits);
+  document.getElementById('sc-profit').textContent   = fmt(Math.max(0, profit));
+  document.getElementById('sc-total').textContent    = fmt(total);
+  document.getElementById('sc-multi').textContent    = deposits > 0 ? '×' + (total / deposits).toFixed(1) : '×1';
+}
+
+['sc-monthly','sc-years','sc-yield','sc-init'].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const out = document.getElementById(id + '-out');
+  el.addEventListener('input', () => {
+    const v = parseFloat(el.value);
+    if (id === 'sc-monthly' || id === 'sc-init') out.value = v.toLocaleString('he-IL');
+    else if (id === 'sc-yield') out.value = v + '%';
+    else out.value = v;
+    calcSavings();
+  });
+});
+calcSavings();
 
 /* ========================
    SCROLL ANIMATIONS
