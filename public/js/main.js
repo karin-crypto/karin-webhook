@@ -26,6 +26,16 @@ function closeMobile() {
 const contactForm = document.getElementById('contactForm');
 const formSuccess = document.getElementById('formSuccess');
 
+const WA_NUMBER = '972502423356';
+const TOPIC_LABELS = {
+  pension: 'קרן פנסיה', gemel: 'קופת גמל',
+  'bituach-menahalim': 'ביטוח מנהלים',
+  hishtalmut: 'קרן השתלמות',
+  'insurance-life': 'ביטוח חיים',
+  'insurance-health': 'ביטוח בריאות',
+  risk: 'ניהול סיכונים', other: 'אחר'
+};
+
 if (contactForm) {
   contactForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -33,35 +43,37 @@ if (contactForm) {
     btn.disabled = true;
     btn.textContent = 'שולח...';
 
-    const data = {
-      name:    document.getElementById('name').value,
-      phone:   document.getElementById('phone').value,
-      email:   document.getElementById('email').value,
-      topic:   document.getElementById('topic').value,
-      message: document.getElementById('message').value,
-    };
+    const name    = document.getElementById('name').value;
+    const phone   = document.getElementById('phone').value;
+    const email   = document.getElementById('email').value;
+    const topic   = document.getElementById('topic').value;
+    const message = document.getElementById('message').value;
 
+    const waText = encodeURIComponent(
+      `שלום קרן!\nפנייה חדשה מהאתר:\n` +
+      `שם: ${name}\nטלפון: ${phone}\n` +
+      (email   ? `אימייל: ${email}\n` : '') +
+      (topic   ? `נושא: ${TOPIC_LABELS[topic] || topic}\n` : '') +
+      (message ? `הודעה: ${message}` : '')
+    );
+
+    // Try server API first, fall back to direct WhatsApp
+    let waUrl = `https://wa.me/${WA_NUMBER}?text=${waText}`;
     try {
       const res  = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ name, phone, email, topic, message }),
       });
       const json = await res.json();
-      if (json.ok) {
-        formSuccess.classList.add('show');
-        contactForm.reset();
-        // Open WhatsApp so Karin gets the lead instantly
-        setTimeout(() => window.open(json.waUrl, '_blank'), 600);
-      }
-    } catch {
-      // Fallback if server unreachable
-      formSuccess.classList.add('show');
-      contactForm.reset();
-    }
+      if (json.ok) waUrl = json.waUrl;
+    } catch { /* static hosting – use direct WhatsApp link */ }
 
+    formSuccess.classList.add('show');
+    contactForm.reset();
     btn.disabled = false;
     btn.textContent = 'שליחה ←';
+    setTimeout(() => window.open(waUrl, '_blank'), 600);
   });
 }
 
