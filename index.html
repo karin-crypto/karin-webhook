@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>קרן קרן | סוכנת פיננסית</title>
+  <meta name="description" content="קרן קרן – סוכנת פיננסית מורשית. ייעוץ מקצועי בהשקעות, ביטוח וניהול סיכונים." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <header class="navbar" id="navbar">
+    <div class="container nav-inner">
+      <a href="#hero" class="logo">קרן קרן <span>|</span> פיננסים</a>
+      <nav class="nav-links">
+        <a href="#services">שירותים</a>
+        <a href="#products">מוצרים ותשואות</a>
+        <a href="#calculator">חישובון</a>
+        <a href="#about">אודות</a>
+        <a href="portal.html" class="btn btn-outline-nav" style="background:rgba(201,168,76,.15);">פורטל לקוחות</a>
+        <a href="#contact" class="btn btn-outline-nav">צרי קשר</a>
+      </nav>
+      <button class="hamburger" id="hamburger" aria-label="תפריט">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <div class="mobile-menu" id="mobileMenu">
+      <a href="#services" onclick="closeMobile()">שירותים</a>
+      <a href="#products" onclick="closeMobile()">מוצרים ותשואות</a>
+      <a href="#calculator" onclick="closeMobile()">חישובון</a>
+      <a href="#about" onclick="closeMobile()">אודות</a>
+      <a href="portal.html" onclick="closeMobile()">פורטל לקוחות</a>
+      <a href="#contact" onclick="closeMobile()">צרי קשר</a>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero" id="hero">
+    <div class="hero-bg"></div>
+    <div class="container hero-content">
+      <p class="hero-tag">סוכנת פיננסית מורשית</p>
+      <h1>מניחים יסודות<br />לעתיד הכלכלי שלך</h1>
+      <p class="hero-sub">ייעוץ אישי ומקצועי בהשקעות, ביטוח וניהול סיכונים – מותאם בדיוק עבורך</p>
+      <div class="hero-cta">
+        <a href="#contact" class="btn btn-primary">קבעי פגישה חינם</a>
+        <a href="#products" class="btn btn-ghost">צפי בתשואות</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat">
+          <span class="stat-num">15+</span>
+          <span class="stat-label">שנות ניסיון</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-num">500+</span>
+          <span class="stat-label">לקוחות מרוצים</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-num">100%</span>
+          <span class="stat-label">מחויבות אישית</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-scroll">
+      <span>גלול למטה</span>
+      <div class="scroll-arrow"></div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section class="services" id="services">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">מה אני מציעה</span>
+        <h2>שירותים פיננסיים מקיפים</h2>
+        <p>כל הפתרונות הפיננסיים שתצטרכי, תחת קורת גג אחת</p>
+      </div>
+      <div class="services-grid">
+
+        <div class="service-card">
+          <div class="service-icon">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 36L18 26L24 32L34 20L40 26" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <rect x="6" y="6" width="36" height="36" rx="4" stroke="currentColor" stroke-width="2.5"/>
+              <circle cx="18" cy="26" r="2" fill="currentColor"/>
+              <circle cx="24" cy="32" r="2" fill="currentColor"/>
+              <circle cx="34" cy="20" r="2" fill="currentColor"/>
+            </svg>
+          </div>
+          <h3>השקעות חכמות</h3>
+          <p>ניתוח שוק מעמיק ובניית תיק השקעות מגוון המותאם לפרופיל הסיכון שלך ולמטרות הפיננסיות.</p>
+          <ul class="service-features">
+            <li>תיק השקעות מותאם אישית</li>
+            <li>ניתוח מגמות שוק שוטף</li>
+            <li>פיזור נכסים מושכל</li>
+          </ul>
+        </div>
+
+        <div class="service-card">
+          <div class="service-icon">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M24 6L38 14V24C38 32 31 39.5 24 42C17 39.5 10 32 10 24V14L24 6Z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M18 24L22 28L30 20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h3>ביטוח חיים</h3>
+          <p>הגנה מלאה על המשפחה שלך. אייחד עבורך את הפוליסה האידיאלית מבין בתי הביטוח המובילים.</p>
+          <ul class="service-features">
+            <li>ריסק וביטוח מנהלים</li>
+            <li>השוואת מספר חברות</li>
+            <li>ליווי בתביעות</li>
+          </ul>
+        </div>
+
+        <div class="service-card">
+          <div class="service-icon">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="24" cy="22" r="10" stroke="currentColor" stroke-width="2.5"/>
+              <path d="M24 16V22L28 26" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M10 36C12.5 32 18 30 24 30C30 30 35.5 32 38 36" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3>ביטוח בריאות</h3>
+          <p>כיסוי בריאות איכותי לך ולמשפחתך – בחירת תכנית מיטבית הכוללת אשפוז, ניתוחים, תרופות ועוד.</p>
+          <ul class="service-features">
+            <li>ביטוח אשפוז וניתוחים</li>
+            <li>תרופות מחוץ לסל</li>
+            <li>ייעוץ רפואי פרטי</li>
+          </ul>
+        </div>
+
+        <div class="service-card">
+          <div class="service-icon">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 40V30M20 40V22M28 40V28M36 40V16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M8 20L18 14L26 18L40 10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h3>בתי השקעות</h3>
+          <p>גישה לבתי ההשקעות המובילים. ניתוח השוואתי מקיף ובחירת הכלי המתאים לך ביותר.</p>
+          <ul class="service-features">
+            <li>קרנות נאמנות וקרנות סל</li>
+            <li>תיקי השקעות מנוהלים</li>
+            <li>מוצרי חיסכון לטווח ארוך</li>
+          </ul>
+        </div>
+
+        <div class="service-card">
+          <div class="service-icon">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="6" y="12" width="36" height="28" rx="3" stroke="currentColor" stroke-width="2.5"/>
+              <path d="M6 20H42" stroke="currentColor" stroke-width="2.5"/>
+              <path d="M16 8V14M32 8V14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M14 28H22M14 34H26" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3>ניהול סיכונים</h3>
+          <p>מיפוי מלא של חשיפות הסיכון ובניית מגן מקיף שיבטיח המשכיות עסקית ואישית בכל תרחיש.</p>
+          <ul class="service-features">
+            <li>אבחון פרופיל סיכון</li>
+            <li>נכות ואובדן כושר עבודה</li>
+            <li>תכנון פנסיוני</li>
+          </ul>
+        </div>
+
+        <div class="service-card highlight-card">
+          <div class="service-icon">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="24" cy="24" r="16" stroke="currentColor" stroke-width="2.5"/>
+              <path d="M24 16V24L30 28" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3>ייעוץ אישי חינם</h3>
+          <p>פגישת הכרות ראשונה ללא עלות וללא התחייבות. נבין יחד את המצב הפיננסי שלך ונתכנן צעדים נכונים.</p>
+          <a href="#contact" class="btn btn-primary" style="margin-top:1.25rem; display:inline-block;">קבעי עכשיו</a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- FINANCIAL PRODUCTS & RETURNS TABLE -->
+  <section class="products-section" id="products">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">מוצרים ותשואות</span>
+        <h2>השוואת מסלולים ותשואות</h2>
+        <p>נתוני תשואה עדכניים לכל מסלולי חברות הביטוח ובתי ההשקעות</p>
+      </div>
+
+      <!-- TABS -->
+      <div class="product-tabs">
+        <button class="tab-btn active" data-tab="tab-pension">קרן פנסיה</button>
+        <button class="tab-btn" data-tab="tab-gemel">קופת גמל</button>
+        <button class="tab-btn" data-tab="tab-bituach">ביטוח מנהלים</button>
+        <button class="tab-btn" data-tab="tab-hishtalmut">קרן השתלמות</button>
+      </div>
+
+      <!-- ==================  קרן פנסיה  ================== -->
+      <div class="tab-panel active" id="tab-pension">
+        <div class="table-controls">
+          <select class="filter-select filter-company">
+            <option value="">כל החברות</option>
+            <option value="מנורה">מנורה מבטחים</option>
+            <option value="מגדל">מגדל</option>
+            <option value="הפניקס">הפניקס</option>
+            <option value="כלל">כלל ביטוח</option>
+            <option value="הראל">הראל</option>
+            <option value="מיטב">מיטב</option>
+            <option value="אנליסט">אנליסט</option>
+          </select>
+          <input type="text" class="search-input" placeholder="חיפוש מסלול..." />
+        </div>
+        <div class="table-wrap">
+          <table class="fin-table">
+            <thead>
+              <tr>
+                <th>חברה</th>
+                <th>שם הקרן / מסלול</th>
+                <th>סוג מסלול</th>
+                <th class="sortable">תשואה שנה <span class="sort-icon">⇅</span></th>
+                <th class="sortable">תשואה 3 שנים <span class="sort-icon">⇅</span></th>
+                <th class="sortable">תשואה 5 שנים <span class="sort-icon">⇅</span></th>
+                <th>דמי ניהול</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#1e40af"></div>מנורה מבטחים</div></td>
+                <td>מנורה מבטחים פנסיה</td>
+                <td><span class="track-badge">כללי</span></td>
+                <td class="yield-pos">14.2%</td>
+                <td class="yield-pos">8.7%</td>
+                <td class="yield-pos">9.1%</td>
+                <td class="fee-cell">0.5% / 6%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#7c3aed"></div>מנורה מבטחים</div></td>
+                <td>מנורה מבטחים פנסיה</td>
+                <td><span class="track-badge">מניות</span></td>
+                <td class="yield-pos">22.1%</td>
+                <td class="yield-pos">12.4%</td>
+                <td class="yield-pos">11.8%</td>
+                <td class="fee-cell">0.5% / 6%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#7c3aed"></div>מנורה מבטחים</div></td>
+                <td>מנורה מבטחים פנסיה</td>
+                <td><span class="track-badge">אג"ח</span></td>
+                <td class="yield-pos">5.3%</td>
+                <td class="yield-pos">3.2%</td>
+                <td class="yield-pos">4.1%</td>
+                <td class="fee-cell">0.5% / 6%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#dc2626"></div>מגדל</div></td>
+                <td>מגדל מקפת</td>
+                <td><span class="track-badge">כללי</span></td>
+                <td class="yield-pos">13.8%</td>
+                <td class="yield-pos">8.2%</td>
+                <td class="yield-pos">8.6%</td>
+                <td class="fee-cell">0.5% / 6%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#dc2626"></div>מגדל</div></td>
+                <td>מגדל מקפת</td>
+                <td><span class="track-badge">מניות</span></td>
+                <td class="yield-pos">21.6%</td>
+                <td class="yield-pos">11.9%</td>
+                <td class="yield-pos">11.2%</td>
+                <td class="fee-cell">0.5% / 6%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#dc2626"></div>מגדל</div></td>
+                <td>מגדל מקפת</td>
+                <td><span class="track-badge">שקלי</span></td>
+                <td class="yield-pos">4.8%</td>
+                <td class="yield-pos">2.9%</td>
+                <td class="yield-pos">3.5%</td>
+                <td class="fee-cell">0.5% / 6%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#ea580c"></div>הפניקס</div></td>
+                <td>הפניקס פנסיה</td>
+                <td><span class="track-badge">כללי</span></td>
+                <td class="yield-pos">15.1%</td>
+                <td class="yield-pos">9.3%</td>
+                <td class="yield-pos">9.8%</td>
+                <td class="fee-cell">0.5% / 6%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#ea580c"></div>הפניקס</div></td>
+                <td>הפניקס פנסיה</td>
+                <td><span class="track-badge">מניות</span></td>
+                <td class="yield-pos">23.4%</td>
+                <td class="yield-pos">13.1%</td>
+                <td class="yield-pos">12.5%</td>
+                <td class="fee-cell">0.5% / 6%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#0891b2"></div>כלל ביטוח</div></td>
+                <td>כלל פנסיה</td>
+                <td><span class="track-badge">כללי</span></td>
+                <td class="yield-pos">13.5%</td>
+                <td class="yield-pos">7.9%</td>
+                <td class="yield-pos">8.3%</td>
+                <td class="fee-cell">0.5% / 6%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#0891b2"></div>כלל ביטוח</div></td>
+                <td>כלל פנסיה</td>
+                <td><span class="track-badge">מניות</span></td>
+                <td class="yield-pos">20.9%</td>
+                <td class="yield-pos">11.4%</td>
+                <td class="yield-pos">10.7%</td>
+                <td class="fee-cell">0.5% / 6%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#16a34a"></div>הראל</div></td>
+                <td>הראל פנסיה</td>
+                <td><span class="track-badge">כללי</span></td>
+                <td class="yield-pos">14.7%</td>
+                <td class="yield-pos">8.9%</td>
+                <td class="yield-pos">9.4%</td>
+                <td class="fee-cell">0.5% / 6%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#16a34a"></div>הראל</div></td>
+                <td>הראל פנסיה</td>
+                <td><span class="track-badge">מניות</span></td>
+                <td class="yield-pos">22.8%</td>
+                <td class="yield-pos">12.7%</td>
+                <td class="yield-pos">12.1%</td>
+                <td class="fee-cell">0.5% / 6%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#d97706"></div>מיטב</div></td>
+                <td>מיטב דש פנסיה</td>
+                <td><span class="track-badge">כללי</span></td>
+                <td class="yield-pos">13.1%</td>
+                <td class="yield-pos">7.6%</td>
+                <td class="yield-pos">8.0%</td>
+                <td class="fee-cell">0.5% / 6%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#d97706"></div>מיטב</div></td>
+                <td>מיטב דש פנסיה</td>
+                <td><span class="track-badge">מניות</span></td>
+                <td class="yield-pos">20.4%</td>
+                <td class="yield-pos">11.0%</td>
+                <td class="yield-pos">10.3%</td>
+                <td class="fee-cell">0.5% / 6%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#6d28d9"></div>אנליסט</div></td>
+                <td>אנליסט פנסיה</td>
+                <td><span class="track-badge">כללי</span></td>
+                <td class="yield-pos">16.2%</td>
+                <td class="yield-pos">10.1%</td>
+                <td class="yield-pos">10.5%</td>
+                <td class="fee-cell">0.5% / 6%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#6d28d9"></div>אנליסט</div></td>
+                <td>אנליסט פנסיה</td>
+                <td><span class="track-badge">מניות</span></td>
+                <td class="yield-pos">25.3%</td>
+                <td class="yield-pos">14.2%</td>
+                <td class="yield-pos">13.6%</td>
+                <td class="fee-cell">0.5% / 6%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="table-note">* נתוני תשואה הם נומינליים לפני ניכוי דמי ניהול. מקור: רשות שוק ההון. עדכון אחרון: ינואר 2025</p>
+      </div>
+
+      <!-- ==================  קופת גמל  ================== -->
+      <div class="tab-panel" id="tab-gemel">
+        <div class="table-controls">
+          <select class="filter-select filter-company">
+            <option value="">כל החברות</option>
+            <option value="מנורה">מנורה מבטחים</option>
+            <option value="מגדל">מגדל</option>
+            <option value="הפניקס">הפניקס</option>
+            <option value="כלל">כלל ביטוח</option>
+            <option value="הראל">הראל</option>
+            <option value="מיטב">מיטב</option>
+            <option value="אלטשולר">אלטשולר שחם</option>
+          </select>
+          <input type="text" class="search-input" placeholder="חיפוש מסלול..." />
+        </div>
+        <div class="table-wrap">
+          <table class="fin-table">
+            <thead>
+              <tr>
+                <th>חברה</th>
+                <th>שם הקופה / מסלול</th>
+                <th>סוג מסלול</th>
+                <th class="sortable">תשואה שנה <span class="sort-icon">⇅</span></th>
+                <th class="sortable">תשואה 3 שנים <span class="sort-icon">⇅</span></th>
+                <th class="sortable">תשואה 5 שנים <span class="sort-icon">⇅</span></th>
+                <th>דמי ניהול</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#1e40af"></div>מנורה מבטחים</div></td>
+                <td>גמל מנורה כללי</td>
+                <td><span class="track-badge">כללי</span></td>
+                <td class="yield-pos">14.8%</td>
+                <td class="yield-pos">9.1%</td>
+                <td class="yield-pos">9.5%</td>
+                <td class="fee-cell">0.4%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#1e40af"></div>מנורה מבטחים</div></td>
+                <td>גמל מנורה מניות</td>
+                <td><span class="track-badge">מניות</span></td>
+                <td class="yield-pos">24.3%</td>
+                <td class="yield-pos">13.8%</td>
+                <td class="yield-pos">13.2%</td>
+                <td class="fee-cell">0.4%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#dc2626"></div>מגדל</div></td>
+                <td>גמל מגדל כללי</td>
+                <td><span class="track-badge">כללי</span></td>
+                <td class="yield-pos">14.2%</td>
+                <td class="yield-pos">8.6%</td>
+                <td class="yield-pos">9.0%</td>
+                <td class="fee-cell">0.4%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#dc2626"></div>מגדל</div></td>
+                <td>גמל מגדל מניות</td>
+                <td><span class="track-badge">מניות</span></td>
+                <td class="yield-pos">23.7%</td>
+                <td class="yield-pos">13.2%</td>
+                <td class="yield-pos">12.6%</td>
+                <td class="fee-cell">0.4%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#ea580c"></div>הפניקס</div></td>
+                <td>גמל הפניקס כללי</td>
+                <td><span class="track-badge">כללי</span></td>
+                <td class="yield-pos">15.5%</td>
+                <td class="yield-pos">9.8%</td>
+                <td class="yield-pos">10.2%</td>
+                <td class="fee-cell">0.4%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#ea580c"></div>הפניקס</div></td>
+                <td>גמל הפניקס מניות</td>
+                <td><span class="track-badge">מניות</span></td>
+                <td class="yield-pos">25.8%</td>
+                <td class="yield-pos">14.5%</td>
+                <td class="yield-pos">13.9%</td>
+                <td class="fee-cell">0.4%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#b45309"></div>אלטשולר שחם</div></td>
+                <td>גמל אלטשולר כללי</td>
+                <td><span class="track-badge">כללי</span></td>
+                <td class="yield-pos">17.3%</td>
+                <td class="yield-pos">10.9%</td>
+                <td class="yield-pos">11.4%</td>
+                <td class="fee-cell">0.5%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#b45309"></div>אלטשולר שחם</div></td>
+                <td>גמל אלטשולר מניות</td>
+                <td><span class="track-badge">מניות</span></td>
+                <td class="yield-pos">27.6%</td>
+                <td class="yield-pos">15.8%</td>
+                <td class="yield-pos">15.1%</td>
+                <td class="fee-cell">0.5%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#16a34a"></div>הראל</div></td>
+                <td>גמל הראל כללי</td>
+                <td><span class="track-badge">כללי</span></td>
+                <td class="yield-pos">15.1%</td>
+                <td class="yield-pos">9.4%</td>
+                <td class="yield-pos">9.9%</td>
+                <td class="fee-cell">0.4%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#16a34a"></div>הראל</div></td>
+                <td>גמל הראל מניות</td>
+                <td><span class="track-badge">מניות</span></td>
+                <td class="yield-pos">24.9%</td>
+                <td class="yield-pos">14.1%</td>
+                <td class="yield-pos">13.5%</td>
+                <td class="fee-cell">0.4%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#16a34a"></div>הראל</div></td>
+                <td>גמל הראל שקלי</td>
+                <td><span class="track-badge">שקלי</span></td>
+                <td class="yield-pos">5.2%</td>
+                <td class="yield-pos">3.1%</td>
+                <td class="yield-pos">3.8%</td>
+                <td class="fee-cell">0.4%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#d97706"></div>מיטב</div></td>
+                <td>גמל מיטב כללי</td>
+                <td><span class="track-badge">כללי</span></td>
+                <td class="yield-pos">13.7%</td>
+                <td class="yield-pos">8.1%</td>
+                <td class="yield-pos">8.5%</td>
+                <td class="fee-cell">0.5%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="table-note">* נתוני תשואה הם נומינליים לפני ניכוי דמי ניהול. מקור: רשות שוק ההון. עדכון אחרון: ינואר 2025</p>
+      </div>
+
+      <!-- ==================  ביטוח מנהלים  ================== -->
+      <div class="tab-panel" id="tab-bituach">
+        <div class="table-controls">
+          <select class="filter-select filter-company">
+            <option value="">כל החברות</option>
+            <option value="מנורה">מנורה מבטחים</option>
+            <option value="מגדל">מגדל</option>
+            <option value="הפניקס">הפניקס</option>
+            <option value="כלל">כלל ביטוח</option>
+            <option value="הראל">הראל</option>
+            <option value="מיטב">מיטב</option>
+          </select>
+          <input type="text" class="search-input" placeholder="חיפוש מסלול..." />
+        </div>
+        <div class="table-wrap">
+          <table class="fin-table">
+            <thead>
+              <tr>
+                <th>חברה</th>
+                <th>שם המוצר / מסלול</th>
+                <th>סוג מסלול</th>
+                <th class="sortable">תשואה שנה <span class="sort-icon">⇅</span></th>
+                <th class="sortable">תשואה 3 שנים <span class="sort-icon">⇅</span></th>
+                <th class="sortable">תשואה 5 שנים <span class="sort-icon">⇅</span></th>
+                <th>דמי ניהול</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#1e40af"></div>מנורה מבטחים</div></td>
+                <td>ביטוח מנהלים מנורה</td>
+                <td><span class="track-badge">כללי</span></td>
+                <td class="yield-pos">13.9%</td>
+                <td class="yield-pos">8.5%</td>
+                <td class="yield-pos">8.9%</td>
+                <td class="fee-cell">1.05% / 6%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#1e40af"></div>מנורה מבטחים</div></td>
+                <td>ביטוח מנהלים מנורה</td>
+                <td><span class="track-badge">מניות</span></td>
+                <td class="yield-pos">21.8%</td>
+                <td class="yield-pos">12.1%</td>
+                <td class="yield-pos">11.4%</td>
+                <td class="fee-cell">1.05% / 6%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#dc2626"></div>מגדל</div></td>
+                <td>ביטוח מנהלים מגדל</td>
+                <td><span class="track-badge">כללי</span></td>
+                <td class="yield-pos">13.5%</td>
+                <td class="yield-pos">8.0%</td>
+                <td class="yield-pos">8.4%</td>
+                <td class="fee-cell">1.05% / 6%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#dc2626"></div>מגדל</div></td>
+                <td>ביטוח מנהלים מגדל</td>
+                <td><span class="track-badge">מניות</span></td>
+                <td class="yield-pos">21.2%</td>
+                <td class="yield-pos">11.6%</td>
+                <td class="yield-pos">10.9%</td>
+                <td class="fee-cell">1.05% / 6%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#ea580c"></div>הפניקס</div></td>
+                <td>ביטוח מנהלים הפניקס</td>
+                <td><span class="track-badge">כללי</span></td>
+                <td class="yield-pos">14.8%</td>
+                <td class="yield-pos">9.1%</td>
+                <td class="yield-pos">9.6%</td>
+                <td class="fee-cell">1.05% / 6%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#ea580c"></div>הפניקס</div></td>
+                <td>ביטוח מנהלים הפניקס</td>
+                <td><span class="track-badge">מניות</span></td>
+                <td class="yield-pos">23.1%</td>
+                <td class="yield-pos">12.9%</td>
+                <td class="yield-pos">12.3%</td>
+                <td class="fee-cell">1.05% / 6%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#0891b2"></div>כלל ביטוח</div></td>
+                <td>ביטוח מנהלים כלל</td>
+                <td><span class="track-badge">כללי</span></td>
+                <td class="yield-pos">13.2%</td>
+                <td class="yield-pos">7.7%</td>
+                <td class="yield-pos">8.1%</td>
+                <td class="fee-cell">1.05% / 6%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#0891b2"></div>כלל ביטוח</div></td>
+                <td>ביטוח מנהלים כלל</td>
+                <td><span class="track-badge">מניות</span></td>
+                <td class="yield-pos">20.6%</td>
+                <td class="yield-pos">11.1%</td>
+                <td class="yield-pos">10.4%</td>
+                <td class="fee-cell">1.05% / 6%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#16a34a"></div>הראל</div></td>
+                <td>ביטוח מנהלים הראל</td>
+                <td><span class="track-badge">כללי</span></td>
+                <td class="yield-pos">14.4%</td>
+                <td class="yield-pos">8.8%</td>
+                <td class="yield-pos">9.2%</td>
+                <td class="fee-cell">1.05% / 6%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#16a34a"></div>הראל</div></td>
+                <td>ביטוח מנהלים הראל</td>
+                <td><span class="track-badge">מניות</span></td>
+                <td class="yield-pos">22.5%</td>
+                <td class="yield-pos">12.5%</td>
+                <td class="yield-pos">11.9%</td>
+                <td class="fee-cell">1.05% / 6%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="table-note">* נתוני תשואה הם נומינליים לפני ניכוי דמי ניהול. מקור: רשות שוק ההון. עדכון אחרון: ינואר 2025</p>
+      </div>
+
+      <!-- ==================  קרן השתלמות  ================== -->
+      <div class="tab-panel" id="tab-hishtalmut">
+        <div class="table-controls">
+          <select class="filter-select filter-company">
+            <option value="">כל החברות</option>
+            <option value="מנורה">מנורה מבטחים</option>
+            <option value="מגדל">מגדל</option>
+            <option value="הפניקס">הפניקס</option>
+            <option value="כלל">כלל ביטוח</option>
+            <option value="הראל">הראל</option>
+            <option value="מיטב">מיטב</option>
+            <option value="אלטשולר">אלטשולר שחם</option>
+          </select>
+          <input type="text" class="search-input" placeholder="חיפוש מסלול..." />
+        </div>
+        <div class="table-wrap">
+          <table class="fin-table">
+            <thead>
+              <tr>
+                <th>חברה</th>
+                <th>שם הקרן / מסלול</th>
+                <th>סוג מסלול</th>
+                <th class="sortable">תשואה שנה <span class="sort-icon">⇅</span></th>
+                <th class="sortable">תשואה 3 שנים <span class="sort-icon">⇅</span></th>
+                <th class="sortable">תשואה 5 שנים <span class="sort-icon">⇅</span></th>
+                <th>דמי ניהול</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#1e40af"></div>מנורה מבטחים</div></td>
+                <td>השתלמות מנורה</td>
+                <td><span class="track-badge">כללי</span></td>
+                <td class="yield-pos">15.0%</td>
+                <td class="yield-pos">9.3%</td>
+                <td class="yield-pos">9.7%</td>
+                <td class="fee-cell">0.5%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#1e40af"></div>מנורה מבטחים</div></td>
+                <td>השתלמות מנורה</td>
+                <td><span class="track-badge">מניות</span></td>
+                <td class="yield-pos">24.7%</td>
+                <td class="yield-pos">14.0%</td>
+                <td class="yield-pos">13.4%</td>
+                <td class="fee-cell">0.5%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#b45309"></div>אלטשולר שחם</div></td>
+                <td>השתלמות אלטשולר</td>
+                <td><span class="track-badge">כללי</span></td>
+                <td class="yield-pos">18.1%</td>
+                <td class="yield-pos">11.4%</td>
+                <td class="yield-pos">11.9%</td>
+                <td class="fee-cell">0.6%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#b45309"></div>אלטשולר שחם</div></td>
+                <td>השתלמות אלטשולר</td>
+                <td><span class="track-badge">מניות</span></td>
+                <td class="yield-pos">29.2%</td>
+                <td class="yield-pos">16.5%</td>
+                <td class="yield-pos">15.8%</td>
+                <td class="fee-cell">0.6%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#ea580c"></div>הפניקס</div></td>
+                <td>השתלמות הפניקס</td>
+                <td><span class="track-badge">כללי</span></td>
+                <td class="yield-pos">15.8%</td>
+                <td class="yield-pos">10.0%</td>
+                <td class="yield-pos">10.4%</td>
+                <td class="fee-cell">0.5%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#ea580c"></div>הפניקס</div></td>
+                <td>השתלמות הפניקס</td>
+                <td><span class="track-badge">מניות</span></td>
+                <td class="yield-pos">26.4%</td>
+                <td class="yield-pos">15.0%</td>
+                <td class="yield-pos">14.3%</td>
+                <td class="fee-cell">0.5%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#16a34a"></div>הראל</div></td>
+                <td>השתלמות הראל</td>
+                <td><span class="track-badge">כללי</span></td>
+                <td class="yield-pos">15.3%</td>
+                <td class="yield-pos">9.6%</td>
+                <td class="yield-pos">10.1%</td>
+                <td class="fee-cell">0.5%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#16a34a"></div>הראל</div></td>
+                <td>השתלמות הראל</td>
+                <td><span class="track-badge">מניות</span></td>
+                <td class="yield-pos">25.5%</td>
+                <td class="yield-pos">14.4%</td>
+                <td class="yield-pos">13.8%</td>
+                <td class="fee-cell">0.5%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#dc2626"></div>מגדל</div></td>
+                <td>השתלמות מגדל</td>
+                <td><span class="track-badge">כללי</span></td>
+                <td class="yield-pos">14.5%</td>
+                <td class="yield-pos">8.8%</td>
+                <td class="yield-pos">9.2%</td>
+                <td class="fee-cell">0.5%</td>
+              </tr>
+              <tr>
+                <td><div class="company-logo-cell"><div class="company-dot" style="background:#d97706"></div>מיטב</div></td>
+                <td>השתלמות מיטב</td>
+                <td><span class="track-badge">כללי</span></td>
+                <td class="yield-pos">13.9%</td>
+                <td class="yield-pos">8.3%</td>
+                <td class="yield-pos">8.7%</td>
+                <td class="fee-cell">0.55%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="table-note">* נתוני תשואה הם נומינליים לפני ניכוי דמי ניהול. מקור: רשות שוק ההון. עדכון אחרון: ינואר 2025</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- CALCULATOR -->
+  <section class="calculator-section" id="calculator">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">כלים שימושיים</span>
+        <h2>חישובון פיננסי</h2>
+        <p>גלי כמה כסף צפוי להצטבר לך לפנסיה או בחיסכון</p>
+      </div>
+      <div class="calc-tabs">
+        <button class="calc-tab active" data-calc="pension">חישובון פנסיה</button>
+        <button class="calc-tab" data-calc="savings">חישובון חיסכון</button>
+      </div>
+
+      <!-- PENSION CALCULATOR -->
+      <div class="calc-panel active" id="calc-pension">
+        <div class="calc-grid">
+          <div class="calc-inputs">
+            <div class="calc-field">
+              <label>גיל נוכחי</label>
+              <div class="calc-input-wrap">
+                <input type="range" id="pc-age" min="20" max="60" value="35" />
+                <output id="pc-age-out">35</output>
+              </div>
+            </div>
+            <div class="calc-field">
+              <label>גיל פרישה</label>
+              <div class="calc-input-wrap">
+                <input type="range" id="pc-retire" min="60" max="70" value="67" />
+                <output id="pc-retire-out">67</output>
+              </div>
+            </div>
+            <div class="calc-field">
+              <label>שכר חודשי ברוטו (₪)</label>
+              <div class="calc-input-wrap">
+                <input type="range" id="pc-salary" min="5000" max="50000" step="500" value="15000" />
+                <output id="pc-salary-out">15,000</output>
+              </div>
+            </div>
+            <div class="calc-field">
+              <label>סה"כ הפרשה לפנסיה (%)</label>
+              <div class="calc-input-wrap">
+                <input type="range" id="pc-contrib" min="10" max="25" value="18.5" step="0.5" />
+                <output id="pc-contrib-out">18.5%</output>
+              </div>
+            </div>
+            <div class="calc-field">
+              <label>תשואה שנתית צפויה (%)</label>
+              <div class="calc-input-wrap">
+                <input type="range" id="pc-yield" min="3" max="12" value="7" step="0.5" />
+                <output id="pc-yield-out">7%</output>
+              </div>
+            </div>
+            <div class="calc-field">
+              <label>צבירה קיימת (₪)</label>
+              <div class="calc-input-wrap">
+                <input type="range" id="pc-existing" min="0" max="500000" step="5000" value="0" />
+                <output id="pc-existing-out">0</output>
+              </div>
+            </div>
+          </div>
+          <div class="calc-result" id="pension-result">
+            <div class="result-main">
+              <span class="result-label">צבירה משוערת בגיל פרישה</span>
+              <span class="result-amount" id="pc-total">₪0</span>
+            </div>
+            <div class="result-details">
+              <div class="result-row">
+                <span>שנות חיסכון</span>
+                <strong id="pc-years">0</strong>
+              </div>
+              <div class="result-row">
+                <span>הפקדה חודשית</span>
+                <strong id="pc-monthly">₪0</strong>
+              </div>
+              <div class="result-row">
+                <span>סה"כ הפקדות</span>
+                <strong id="pc-deposits">₪0</strong>
+              </div>
+              <div class="result-row highlight">
+                <span>רווח מתשואות</span>
+                <strong id="pc-profit" style="color:var(--green)">₪0</strong>
+              </div>
+            </div>
+            <div class="result-monthly">
+              <span>קצבה חודשית משוערת</span>
+              <strong id="pc-pension">₪0</strong>
+              <small>(מחלוקת על 240 חודש)</small>
+            </div>
+            <a href="#contact" class="btn btn-primary" style="width:100%;margin-top:1rem;">רוצה לתכנן את הפנסיה שלי</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- SAVINGS CALCULATOR -->
+      <div class="calc-panel" id="calc-savings">
+        <div class="calc-grid">
+          <div class="calc-inputs">
+            <div class="calc-field">
+              <label>הפקדה חודשית (₪)</label>
+              <div class="calc-input-wrap">
+                <input type="range" id="sc-monthly" min="200" max="10000" step="100" value="1000" />
+                <output id="sc-monthly-out">1,000</output>
+              </div>
+            </div>
+            <div class="calc-field">
+              <label>תקופת חיסכון (שנים)</label>
+              <div class="calc-input-wrap">
+                <input type="range" id="sc-years" min="1" max="40" value="10" />
+                <output id="sc-years-out">10</output>
+              </div>
+            </div>
+            <div class="calc-field">
+              <label>תשואה שנתית (%)</label>
+              <div class="calc-input-wrap">
+                <input type="range" id="sc-yield" min="2" max="15" value="7" step="0.5" />
+                <output id="sc-yield-out">7%</output>
+              </div>
+            </div>
+            <div class="calc-field">
+              <label>הון התחלתי (₪)</label>
+              <div class="calc-input-wrap">
+                <input type="range" id="sc-init" min="0" max="200000" step="5000" value="0" />
+                <output id="sc-init-out">0</output>
+              </div>
+            </div>
+          </div>
+          <div class="calc-result" id="savings-result">
+            <div class="result-main">
+              <span class="result-label">סה"כ בסוף התקופה</span>
+              <span class="result-amount" id="sc-total">₪0</span>
+            </div>
+            <div class="result-details">
+              <div class="result-row">
+                <span>הפקדות בסך הכל</span>
+                <strong id="sc-deposits">₪0</strong>
+              </div>
+              <div class="result-row highlight">
+                <span>רווח מתשואות</span>
+                <strong id="sc-profit" style="color:var(--green)">₪0</strong>
+              </div>
+              <div class="result-row">
+                <span>כפל הכסף</span>
+                <strong id="sc-multi">×0</strong>
+              </div>
+            </div>
+            <a href="#contact" class="btn btn-primary" style="width:100%;margin-top:1rem;">רוצה להתחיל לחסוך</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="about" id="about">
+    <div class="container about-grid">
+      <div class="about-image">
+        <div class="about-image-frame">
+          <img src="images/karin.jpg" alt="קרן קרן – סוכנת פיננסית" />
+          <div class="about-badge">15+ שנות ניסיון</div>
+        </div>
+      </div>
+      <div class="about-text">
+        <span class="section-tag">אודותי</span>
+        <h2>קרן קרן – הסוכנת הפיננסית שלך</h2>
+        <p class="about-lead">אני מאמינה שכל אחד ואחת ראויים לגישה מקצועית, ברורה ואישית לעולם הפיננסי.</p>
+        <p>עם ניסיון של למעלה מ-15 שנה בתחום הפיננסים, אני מלווה אנשים ומשפחות בבניית עתיד כלכלי יציב – מהשקעות חכמות דרך ביטוח מתאים ועד לניהול סיכונים מיטבי.</p>
+        <p>אני עובדת עם כל בתי ההשקעות וחברות הביטוח המובילים, ומכאן הכוח שלי – אני לא קשורה לחברה אחת, אלא מחפשת תמיד את הפתרון הטוב ביותר <strong>עבורך</strong>.</p>
+        <div class="about-values">
+          <div class="value">
+            <div class="value-icon">✓</div>
+            <div>
+              <strong>שקיפות מלאה</strong>
+              <p>אין עמלות נסתרות. כל עסקה מוסברת בבהירות.</p>
+            </div>
+          </div>
+          <div class="value">
+            <div class="value-icon">✓</div>
+            <div>
+              <strong>מחויבות אישית</strong>
+              <p>זמינה עבורך לאורך כל הדרך, לא רק בפגישה הראשונה.</p>
+            </div>
+          </div>
+          <div class="value">
+            <div class="value-icon">✓</div>
+            <div>
+              <strong>מקצועיות מוכחת</strong>
+              <p>רישיון מורשה, השתלמויות שוטפות, ועדכון בשינויי השוק.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="testimonials" id="testimonials">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">לקוחות מספרים</span>
+        <h2>מה אומרים עליי</h2>
+      </div>
+      <div class="testimonials-grid">
+        <div class="testimonial-card">
+          <div class="stars">★★★★★</div>
+          <p>"קרן עזרה לי לארגן מחדש את כל התיק הפיננסי שלי. היא הסבירה הכל בבירור ומצאה לי פתרונות שחסכו לי אלפי שקלים בשנה."</p>
+          <div class="testimonial-author">
+            <div class="author-avatar">ד.כ</div>
+            <div>
+              <strong>דנה כהן</strong>
+              <span>מנהלת שיווק, תל אביב</span>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <div class="stars">★★★★★</div>
+          <p>"לאחר שנים של בלבול בנושא ביטוח ופנסיה, סוף סוף מישהי שמסבירה בגובה העיניים ודואגת שאני מקבל את המתאים לי."</p>
+          <div class="testimonial-author">
+            <div class="author-avatar">א.ל</div>
+            <div>
+              <strong>אבי לוי</strong>
+              <span>עצמאי, חיפה</span>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <div class="stars">★★★★★</div>
+          <p>"המקצועיות, האמינות והזמינות של קרן הם ברמה שלא פגשתי בשום מקום אחר. ממליצה בחום לכל אחד ואחת."</p>
+          <div class="testimonial-author">
+            <div class="author-avatar">מ.ג</div>
+            <div>
+              <strong>מיכל גרוס</strong>
+              <span>מורה, ירושלים</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="contact" id="contact">
+    <div class="container contact-grid">
+      <div class="contact-info">
+        <span class="section-tag">צרי קשר</span>
+        <h2>נדבר על העתיד הפיננסי שלך</h2>
+        <p>השאירי פרטים ואחזור אלייך תוך 24 שעות לקביעת פגישת ייעוץ ראשונה – חינם ללא התחייבות.</p>
+        <div class="contact-details">
+          <div class="contact-item">
+            <div class="contact-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 12 19.79 19.79 0 01.99 3.38 2 2 0 013 1.18h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>
+              </svg>
+            </div>
+            <a href="tel:+972502423356">050-242-3356</a>
+          </div>
+          <div class="contact-item">
+            <div class="contact-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+            </div>
+            <a href="mailto:karin@karinkeren.com">karin@karinkeren.com</a>
+          </div>
+          <div class="contact-item">
+            <div class="contact-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+            </div>
+            <span>ישראל (פנים אל פנים וזום)</span>
+          </div>
+        </div>
+      </div>
+      <div class="contact-form-wrap">
+        <form class="contact-form" id="contactForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="name">שם מלא *</label>
+              <input type="text" id="name" name="name" placeholder="שמך המלא" required />
+            </div>
+            <div class="form-group">
+              <label for="phone">טלפון *</label>
+              <input type="tel" id="phone" name="phone" placeholder="מספר טלפון" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="email">אימייל</label>
+            <input type="email" id="email" name="email" placeholder="כתובת האימייל שלך" />
+          </div>
+          <div class="form-group">
+            <label for="topic">נושא הפנייה</label>
+            <select id="topic" name="topic">
+              <option value="">בחרי נושא...</option>
+              <option value="pension">קרן פנסיה</option>
+              <option value="gemel">קופת גמל</option>
+              <option value="bituach-menahalim">ביטוח מנהלים</option>
+              <option value="hishtalmut">קרן השתלמות</option>
+              <option value="insurance-life">ביטוח חיים</option>
+              <option value="insurance-health">ביטוח בריאות</option>
+              <option value="risk">ניהול סיכונים</option>
+              <option value="other">אחר</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="message">הודעה</label>
+            <textarea id="message" name="message" rows="4" placeholder="ספרי לי קצת על עצמך ומה חשוב לך..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full">שליחה ←</button>
+          <div class="form-success" id="formSuccess">
+            ✓ תודה! אחזור אלייך בהקדם.
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <span class="logo">קרן קרן | פיננסים</span>
+        <p>סוכנת פיננסית מורשית – ייעוץ מקצועי, אישי ואמין</p>
+      </div>
+      <nav class="footer-links">
+        <a href="#services">שירותים</a>
+        <a href="#products">תשואות</a>
+        <a href="#about">אודות</a>
+        <a href="#contact">צרי קשר</a>
+      </nav>
+      <p class="footer-legal">© 2025 קרן קרן. כל הזכויות שמורות. | רישיון סוכן מס׳ XXXX</p>
+    </div>
+  </footer>
+
+  <!-- WHATSAPP FLOAT BUTTON -->
+  <!-- כדי לעדכן את המספר: החלף את 972501234567 במספר שלך (קוד מדינה + מספר ללא 0) -->
+  <a href="https://wa.me/972502423356?text=%D7%A9%D7%9C%D7%95%D7%9D%20%D7%A7%D7%A8%D7%9F%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A9%D7%9E%D7%95%D7%A2%20%D7%99%D7%95%D7%AA%D7%A8%20%D7%A2%D7%9C%20%D7%94%D7%A9%D7%99%D7%A8%D7%95%D7%AA%D7%99%D7%9D%20%D7%A9%D7%9C%D7%9A"
+     class="whatsapp-float"
+     target="_blank"
+     rel="noopener noreferrer"
+     aria-label="שלחי הודעת וואטסאפ">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+    </svg>
+    <span class="whatsapp-tooltip">שלחי הודעה בוואטסאפ</span>
+  </a>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

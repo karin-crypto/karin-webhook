@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>פורטל לקוחות | קרן קרן פיננסים</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/portal.css" />
+</head>
+<body class="portal-body">
+
+  <!-- LOGIN SCREEN -->
+  <div class="portal-login-screen" id="loginScreen">
+    <div class="portal-login-card">
+      <a href="index.html" class="portal-back-link">← חזרה לאתר</a>
+      <div class="portal-logo-wrap">
+        <div class="portal-logo-icon">
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M24 6L38 14V24C38 32 31 39.5 24 42C17 39.5 10 32 10 24V14L24 6Z"
+              stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M18 24L22 28L30 20" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h1>פורטל לקוחות</h1>
+        <p>קרן קרן | פיננסים</p>
+      </div>
+      <form class="portal-login-form" id="loginForm">
+        <div class="portal-form-group">
+          <label for="loginId">תעודת זהות</label>
+          <input type="text" id="loginId" placeholder="הזן מספר ת.ז." maxlength="9" required />
+        </div>
+        <div class="portal-form-group">
+          <label for="loginPhone">מספר טלפון (4 ספרות אחרונות)</label>
+          <input type="text" id="loginPhone" placeholder="לדוגמה: 3356" maxlength="4" required />
+        </div>
+        <button type="submit" class="btn btn-primary btn-full portal-login-btn">
+          כניסה לפורטל
+        </button>
+        <p class="portal-login-note">
+          אין לך גישה? <a href="https://wa.me/972502423356?text=שלום קרן, אשמח לקבל גישה לפורטל הלקוחות" target="_blank">צרי קשר בוואטסאפ</a>
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <!-- PORTAL DASHBOARD (shown after login) -->
+  <div class="portal-app" id="portalApp" style="display:none">
+
+    <!-- SIDEBAR -->
+    <aside class="portal-sidebar" id="portalSidebar">
+      <div class="sidebar-logo">
+        <span>קרן קרן | פיננסים</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="sidebar-link active" data-view="dashboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          סקירה כללית
+        </a>
+        <a href="#" class="sidebar-link" data-view="policies">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          הפוליסות שלי
+        </a>
+        <a href="#" class="sidebar-link" data-view="documents">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+          מסמכים
+        </a>
+        <a href="#" class="sidebar-link" data-view="yields">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          תשואות
+        </a>
+        <a href="#" class="sidebar-link" data-view="contact">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          פנייה לסוכנת
+        </a>
+      </nav>
+      <div class="sidebar-agent">
+        <img src="images/karin.jpg" alt="קרן קרן" />
+        <div>
+          <strong>קרן קרן</strong>
+          <span>הסוכנת שלך</span>
+          <a href="https://wa.me/972502423356" target="_blank" class="sidebar-wa">וואטסאפ ←</a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="portal-main">
+      <!-- TOPBAR -->
+      <div class="portal-topbar">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="תפריט">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="topbar-user">
+          <span id="topbarGreeting">שלום, לקוח/ה</span>
+          <button class="logout-btn" id="logoutBtn">יציאה</button>
+        </div>
+      </div>
+
+      <!-- VIEW: DASHBOARD -->
+      <div class="portal-view active" id="view-dashboard">
+        <div class="view-header">
+          <h2>סקירה כללית</h2>
+          <p class="view-date" id="todayDate"></p>
+        </div>
+        <div class="dashboard-cards">
+          <div class="dash-card dash-card--blue">
+            <div class="dash-card-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <div>
+              <span class="dash-num">4</span>
+              <span class="dash-label">פוליסות פעילות</span>
+            </div>
+          </div>
+          <div class="dash-card dash-card--green">
+            <div class="dash-card-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>
+            <div>
+              <span class="dash-num">+14.2%</span>
+              <span class="dash-label">תשואה השנה</span>
+            </div>
+          </div>
+          <div class="dash-card dash-card--gold">
+            <div class="dash-card-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+            </div>
+            <div>
+              <span class="dash-num">7</span>
+              <span class="dash-label">מסמכים</span>
+            </div>
+          </div>
+          <div class="dash-card dash-card--purple">
+            <div class="dash-card-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div>
+              <span class="dash-num">ינואר 26</span>
+              <span class="dash-label">פגישה הבאה</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="portal-card">
+            <h3>פוליסות פעילות</h3>
+            <div class="policy-mini-list">
+              <div class="policy-mini">
+                <div class="policy-mini-dot" style="background:#1e40af"></div>
+                <div class="policy-mini-info">
+                  <strong>קרן פנסיה – מנורה מבטחים</strong>
+                  <span>מסלול כללי | עודכן ינואר 2025</span>
+                </div>
+                <span class="policy-mini-status active">פעיל</span>
+              </div>
+              <div class="policy-mini">
+                <div class="policy-mini-dot" style="background:#16a34a"></div>
+                <div class="policy-mini-info">
+                  <strong>ביטוח מנהלים – הראל</strong>
+                  <span>מסלול מניות | עודכן ינואר 2025</span>
+                </div>
+                <span class="policy-mini-status active">פעיל</span>
+              </div>
+              <div class="policy-mini">
+                <div class="policy-mini-dot" style="background:#ea580c"></div>
+                <div class="policy-mini-info">
+                  <strong>ביטוח בריאות – הפניקס</strong>
+                  <span>תכנית כסף | עודכן ינואר 2025</span>
+                </div>
+                <span class="policy-mini-status active">פעיל</span>
+              </div>
+              <div class="policy-mini">
+                <div class="policy-mini-dot" style="background:#b45309"></div>
+                <div class="policy-mini-info">
+                  <strong>קרן השתלמות – אלטשולר שחם</strong>
+                  <span>מסלול כללי | עודכן ינואר 2025</span>
+                </div>
+                <span class="policy-mini-status active">פעיל</span>
+              </div>
+            </div>
+          </div>
+          <div class="portal-card">
+            <h3>מסמכים אחרונים</h3>
+            <div class="doc-mini-list">
+              <div class="doc-mini">
+                <div class="doc-icon">PDF</div>
+                <div class="doc-info">
+                  <strong>דו"ח שנתי 2024 – פנסיה</strong>
+                  <span>מנורה מבטחים | 15.01.2025</span>
+                </div>
+                <button class="doc-download" onclick="fakeDownload('דוח שנתי 2024 - פנסיה')">↓</button>
+              </div>
+              <div class="doc-mini">
+                <div class="doc-icon">PDF</div>
+                <div class="doc-info">
+                  <strong>אישור כיסוי – ביטוח בריאות</strong>
+                  <span>הפניקס | 03.01.2025</span>
+                </div>
+                <button class="doc-download" onclick="fakeDownload('אישור כיסוי - בריאות')">↓</button>
+              </div>
+              <div class="doc-mini">
+                <div class="doc-icon">PDF</div>
+                <div class="doc-info">
+                  <strong>פוליסת ביטוח מנהלים</strong>
+                  <span>הראל | 01.01.2025</span>
+                </div>
+                <button class="doc-download" onclick="fakeDownload('פוליסת ביטוח מנהלים')">↓</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW: POLICIES -->
+      <div class="portal-view" id="view-policies">
+        <div class="view-header">
+          <h2>הפוליסות שלי</h2>
+        </div>
+        <div class="policies-list">
+
+          <div class="policy-card">
+            <div class="policy-header">
+              <div class="policy-color" style="background:#1e40af"></div>
+              <div class="policy-title">
+                <h3>קרן פנסיה – מנורה מבטחים</h3>
+                <span class="policy-num">מספר פוליסה: 12345678</span>
+              </div>
+              <span class="policy-badge active">פעיל</span>
+            </div>
+            <div class="policy-details">
+              <div class="policy-detail"><span>חברה</span><strong>מנורה מבטחים</strong></div>
+              <div class="policy-detail"><span>מסלול</span><strong>כללי</strong></div>
+              <div class="policy-detail"><span>הפקדה חודשית</span><strong>₪2,400</strong></div>
+              <div class="policy-detail"><span>צבירה</span><strong>₪187,450</strong></div>
+              <div class="policy-detail"><span>תשואה שנתית</span><strong class="yield-pos">+14.2%</strong></div>
+              <div class="policy-detail"><span>דמי ניהול</span><strong>0.5% / 6%</strong></div>
+            </div>
+          </div>
+
+          <div class="policy-card">
+            <div class="policy-header">
+              <div class="policy-color" style="background:#16a34a"></div>
+              <div class="policy-title">
+                <h3>ביטוח מנהלים – הראל</h3>
+                <span class="policy-num">מספר פוליסה: 87654321</span>
+              </div>
+              <span class="policy-badge active">פעיל</span>
+            </div>
+            <div class="policy-details">
+              <div class="policy-detail"><span>חברה</span><strong>הראל</strong></div>
+              <div class="policy-detail"><span>מסלול</span><strong>מניות</strong></div>
+              <div class="policy-detail"><span>הפקדה חודשית</span><strong>₪1,800</strong></div>
+              <div class="policy-detail"><span>צבירה</span><strong>₪94,200</strong></div>
+              <div class="policy-detail"><span>תשואה שנתית</span><strong class="yield-pos">+22.5%</strong></div>
+              <div class="policy-detail"><span>דמי ניהול</span><strong>1.05% / 6%</strong></div>
+            </div>
+          </div>
+
+          <div class="policy-card">
+            <div class="policy-header">
+              <div class="policy-color" style="background:#ea580c"></div>
+              <div class="policy-title">
+                <h3>ביטוח בריאות – הפניקס</h3>
+                <span class="policy-num">מספר פוליסה: 11223344</span>
+              </div>
+              <span class="policy-badge active">פעיל</span>
+            </div>
+            <div class="policy-details">
+              <div class="policy-detail"><span>חברה</span><strong>הפניקס</strong></div>
+              <div class="policy-detail"><span>תכנית</span><strong>כסף פלוס</strong></div>
+              <div class="policy-detail"><span>פרמיה חודשית</span><strong>₪320</strong></div>
+              <div class="policy-detail"><span>כיסוי</span><strong>אשפוז, ניתוחים, תרופות</strong></div>
+              <div class="policy-detail"><span>תוקף</span><strong>עד 31.12.2025</strong></div>
+              <div class="policy-detail"><span>סוג</span><strong>ביטוח בריאות</strong></div>
+            </div>
+          </div>
+
+          <div class="policy-card">
+            <div class="policy-header">
+              <div class="policy-color" style="background:#b45309"></div>
+              <div class="policy-title">
+                <h3>קרן השתלמות – אלטשולר שחם</h3>
+                <span class="policy-num">מספר פוליסה: 55667788</span>
+              </div>
+              <span class="policy-badge active">פעיל</span>
+            </div>
+            <div class="policy-details">
+              <div class="policy-detail"><span>חברה</span><strong>אלטשולר שחם</strong></div>
+              <div class="policy-detail"><span>מסלול</span><strong>כללי</strong></div>
+              <div class="policy-detail"><span>הפקדה חודשית</span><strong>₪1,500</strong></div>
+              <div class="policy-detail"><span>צבירה</span><strong>₪63,800</strong></div>
+              <div class="policy-detail"><span>תשואה שנתית</span><strong class="yield-pos">+18.1%</strong></div>
+              <div class="policy-detail"><span>נזילות</span><strong>מאי 2027</strong></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- VIEW: DOCUMENTS -->
+      <div class="portal-view" id="view-documents">
+        <div class="view-header">
+          <h2>המסמכים שלי</h2>
+        </div>
+        <div class="docs-filters">
+          <select class="filter-select" id="docTypeFilter">
+            <option value="">כל המסמכים</option>
+            <option value="דוח שנתי">דו"חות שנתיים</option>
+            <option value="פוליסה">פוליסות</option>
+            <option value="אישור">אישורים</option>
+            <option value="הצעה">הצעות מחיר</option>
+          </select>
+        </div>
+        <div class="docs-grid" id="docsGrid">
+
+          <div class="doc-card" data-type="דוח שנתי">
+            <div class="doc-card-icon">PDF</div>
+            <div class="doc-card-info">
+              <h4>דו"ח שנתי 2024 – קרן פנסיה</h4>
+              <p>מנורה מבטחים</p>
+              <span class="doc-date">15 ינואר 2025</span>
+            </div>
+            <button class="btn btn-primary" style="font-size:.82rem; padding:.5rem 1rem;" onclick="fakeDownload('דוח שנתי 2024 - פנסיה')">הורדה</button>
+          </div>
+
+          <div class="doc-card" data-type="אישור">
+            <div class="doc-card-icon">PDF</div>
+            <div class="doc-card-info">
+              <h4>אישור כיסוי ביטוח בריאות</h4>
+              <p>הפניקס</p>
+              <span class="doc-date">3 ינואר 2025</span>
+            </div>
+            <button class="btn btn-primary" style="font-size:.82rem; padding:.5rem 1rem;" onclick="fakeDownload('אישור כיסוי - בריאות')">הורדה</button>
+          </div>
+
+          <div class="doc-card" data-type="פוליסה">
+            <div class="doc-card-icon">PDF</div>
+            <div class="doc-card-info">
+              <h4>פוליסת ביטוח מנהלים 2025</h4>
+              <p>הראל</p>
+              <span class="doc-date">1 ינואר 2025</span>
+            </div>
+            <button class="btn btn-primary" style="font-size:.82rem; padding:.5rem 1rem;" onclick="fakeDownload('פוליסת ביטוח מנהלים')">הורדה</button>
+          </div>
+
+          <div class="doc-card" data-type="דוח שנתי">
+            <div class="doc-card-icon">PDF</div>
+            <div class="doc-card-info">
+              <h4>דו"ח שנתי 2024 – השתלמות</h4>
+              <p>אלטשולר שחם</p>
+              <span class="doc-date">20 ינואר 2025</span>
+            </div>
+            <button class="btn btn-primary" style="font-size:.82rem; padding:.5rem 1rem;" onclick="fakeDownload('דוח שנתי 2024 - השתלמות')">הורדה</button>
+          </div>
+
+          <div class="doc-card" data-type="הצעה">
+            <div class="doc-card-icon">PDF</div>
+            <div class="doc-card-info">
+              <h4>הצעת מחיר – ביטוח ריסק</h4>
+              <p>כלל ביטוח</p>
+              <span class="doc-date">10 דצמבר 2024</span>
+            </div>
+            <button class="btn btn-primary" style="font-size:.82rem; padding:.5rem 1rem;" onclick="fakeDownload('הצעת מחיר ריסק')">הורדה</button>
+          </div>
+
+          <div class="doc-card" data-type="אישור">
+            <div class="doc-card-icon">PDF</div>
+            <div class="doc-card-info">
+              <h4>אישור הפרשות מעסיק</h4>
+              <p>מנורה מבטחים</p>
+              <span class="doc-date">5 דצמבר 2024</span>
+            </div>
+            <button class="btn btn-primary" style="font-size:.82rem; padding:.5rem 1rem;" onclick="fakeDownload('אישור הפרשות מעסיק')">הורדה</button>
+          </div>
+
+          <div class="doc-card" data-type="פוליסה">
+            <div class="doc-card-icon">PDF</div>
+            <div class="doc-card-info">
+              <h4>פוליסת קרן השתלמות</h4>
+              <p>אלטשולר שחם</p>
+              <span class="doc-date">1 ינואר 2024</span>
+            </div>
+            <button class="btn btn-primary" style="font-size:.82rem; padding:.5rem 1rem;" onclick="fakeDownload('פוליסת קרן השתלמות')">הורדה</button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- VIEW: YIELDS -->
+      <div class="portal-view" id="view-yields">
+        <div class="view-header">
+          <h2>תשואות הפוליסות שלי</h2>
+        </div>
+        <div class="yields-table-wrap">
+          <table class="fin-table">
+            <thead>
+              <tr>
+                <th>פוליסה</th>
+                <th>חברה</th>
+                <th>מסלול</th>
+                <th>תשואה שנה</th>
+                <th>תשואה 3 שנים</th>
+                <th>תשואה 5 שנים</th>
+                <th>צבירה</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>קרן פנסיה</td>
+                <td>מנורה מבטחים</td>
+                <td><span class="track-badge">כללי</span></td>
+                <td class="yield-pos">14.2%</td>
+                <td class="yield-pos">8.7%</td>
+                <td class="yield-pos">9.1%</td>
+                <td>₪187,450</td>
+              </tr>
+              <tr>
+                <td>ביטוח מנהלים</td>
+                <td>הראל</td>
+                <td><span class="track-badge">מניות</span></td>
+                <td class="yield-pos">22.5%</td>
+                <td class="yield-pos">12.5%</td>
+                <td class="yield-pos">11.9%</td>
+                <td>₪94,200</td>
+              </tr>
+              <tr>
+                <td>קרן השתלמות</td>
+                <td>אלטשולר שחם</td>
+                <td><span class="track-badge">כללי</span></td>
+                <td class="yield-pos">18.1%</td>
+                <td class="yield-pos">11.4%</td>
+                <td class="yield-pos">11.9%</td>
+                <td>₪63,800</td>
+              </tr>
+              <tr>
+                <td>ביטוח בריאות</td>
+                <td>הפניקס</td>
+                <td><span class="track-badge">כסף פלוס</span></td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="table-note">* הנתונים מתעדכנים אחת לחודש מול חברות הביטוח ובתי ההשקעות</p>
+      </div>
+
+      <!-- VIEW: CONTACT AGENT -->
+      <div class="portal-view" id="view-contact">
+        <div class="view-header">
+          <h2>פנייה לסוכנת</h2>
+        </div>
+        <div class="portal-contact-grid">
+          <div class="portal-card">
+            <h3>יצירת קשר מהירה</h3>
+            <div class="portal-contact-options">
+              <a href="https://wa.me/972502423356?text=שלום קרן, אני לקוח/ת שלך ואני רוצה לדבר איתך" target="_blank" class="portal-contact-btn wa">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                וואטסאפ – 050-242-3356
+              </a>
+              <a href="tel:+972502423356" class="portal-contact-btn phone">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 12 19.79 19.79 0 01.99 3.38 2 2 0 013 1.18h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+                שיחת טלפון
+              </a>
+              <a href="mailto:karin@karinkeren.com" class="portal-contact-btn email">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                karin@karinkeren.com
+              </a>
+            </div>
+          </div>
+          <div class="portal-card">
+            <h3>שלח/י הודעה</h3>
+            <form class="portal-msg-form" id="portalMsgForm">
+              <div class="portal-form-group">
+                <label>נושא</label>
+                <select class="filter-select" style="width:100%">
+                  <option>שאלה על פוליסה</option>
+                  <option>בקשת מסמך</option>
+                  <option>שינוי מסלול</option>
+                  <option>פגישת ייעוץ</option>
+                  <option>אחר</option>
+                </select>
+              </div>
+              <div class="portal-form-group">
+                <label>הודעה</label>
+                <textarea rows="4" placeholder="כתוב/י כאן את פנייתך..." style="width:100%; font-family:Heebo,sans-serif; padding:.75rem; border:1.5px solid #e2e8f0; border-radius:8px; resize:vertical; direction:rtl; font-size:.95rem;"></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary">שלח/י הודעה</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- DOWNLOAD TOAST -->
+  <div class="portal-toast" id="portalToast"></div>
+
+  <script src="js/portal.js"></script>
+</body>
+</html>
