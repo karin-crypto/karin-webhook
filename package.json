@@ -1,5 +1,5 @@
 {
-  "name": "karin-webhook",
+  "name": "karin-keren-financial",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -9,6 +9,6 @@
     "express": "^4.18.2"
   },
   "engines": {
-    "node": "18"
+    "node": ">=18"
   }
 }
