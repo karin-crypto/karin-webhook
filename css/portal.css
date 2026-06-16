@@ -85,6 +85,49 @@
 }
 .portal-login-note a { color: var(--gold); font-weight: 600; }
 
+/* OTP / 2-step login */
+.login-step-label {
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-bottom: .75rem;
+}
+
+.login-error {
+  display: none;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: .6rem .85rem;
+  font-size: .85rem;
+  font-weight: 500;
+}
+
+.otp-sent-msg {
+  font-size: .9rem;
+  color: var(--gray);
+  margin-bottom: .75rem;
+  line-height: 1.5;
+}
+.otp-sent-msg strong { color: var(--navy); }
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--gray);
+  font-family: 'Heebo', sans-serif;
+  font-size: .85rem;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: .25rem 0;
+  transition: color var(--trans);
+  align-self: center;
+}
+.link-btn:hover { color: var(--navy); }
+
 /* ========================
    PORTAL APP LAYOUT
    ======================== */

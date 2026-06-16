@@ -28,22 +28,43 @@
         <h1>פורטל לקוחות</h1>
         <p>קרן קרן | פיננסים</p>
       </div>
-      <form class="portal-login-form" id="loginForm">
+
+      <!-- STEP 1: ID entry -->
+      <div id="stepId">
+        <div class="login-step-label">שלב 1 מתוך 2 – הזדהות</div>
         <div class="portal-form-group">
           <label for="loginId">תעודת זהות</label>
-          <input type="text" id="loginId" placeholder="הזן מספר ת.ז." maxlength="9" required />
+          <input type="text" id="loginId" placeholder="9 ספרות" maxlength="9" inputmode="numeric" pattern="[0-9]*" autocomplete="off" />
         </div>
-        <div class="portal-form-group">
-          <label for="loginPhone">מספר טלפון (4 ספרות אחרונות)</label>
-          <input type="text" id="loginPhone" placeholder="לדוגמה: 3356" maxlength="4" required />
-        </div>
-        <button type="submit" class="btn btn-primary btn-full portal-login-btn">
-          כניסה לפורטל
+        <div class="login-error" id="stepIdError"></div>
+        <button class="btn btn-primary btn-full portal-login-btn" id="btnSendOtp" onclick="requestOTP()">
+          שלחי קוד לנייד ←
         </button>
         <p class="portal-login-note">
-          אין לך גישה? <a href="https://wa.me/972502423356?text=שלום קרן, אשמח לקבל גישה לפורטל הלקוחות" target="_blank">צרי קשר בוואטסאפ</a>
+          הקוד יישלח למספר הרשום אצל קרן קרן
         </p>
-      </form>
+      </div>
+
+      <!-- STEP 2: OTP entry (hidden initially) -->
+      <div id="stepOtp" style="display:none">
+        <div class="login-step-label">שלב 2 מתוך 2 – אימות</div>
+        <p class="otp-sent-msg">שלחנו קוד בן 6 ספרות ל-<strong id="otpPhoneDisplay"></strong></p>
+        <div class="portal-form-group">
+          <label for="otpInput">קוד אימות</label>
+          <input type="text" id="otpInput" placeholder="6 ספרות" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" />
+        </div>
+        <div class="login-error" id="stepOtpError"></div>
+        <button class="btn btn-primary btn-full portal-login-btn" id="btnVerifyOtp" onclick="verifyOTP()">
+          כניסה לפורטל ←
+        </button>
+        <div style="text-align:center; margin-top:.85rem;">
+          <button class="link-btn" onclick="resendOTP()">לא קיבלתי קוד – שלחי שוב</button>
+        </div>
+      </div>
+
+      <p class="portal-login-note" style="margin-top:1.5rem; border-top:1px solid #e2e8f0; padding-top:1rem;">
+        אין לך גישה? <a href="https://wa.me/972502423356?text=שלום קרן, אשמח לקבל גישה לפורטל הלקוחות" target="_blank">צרי קשר בוואטסאפ</a>
+      </p>
     </div>
   </div>
 
