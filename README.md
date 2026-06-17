@@ -58,26 +58,64 @@ Liveness probe — returns the active model and whether Claude is enabled.
 
 A minimal RTL Hebrew chat widget for testing Mia in the browser.
 
+## חיבור לווצאפ (WhatsApp Cloud API)
+
+Mia speaks WhatsApp via Meta's Cloud API.
+
+1. In the [Meta App dashboard](https://developers.facebook.com/) add the
+   **WhatsApp** product and grab your **Phone number ID** and an access token.
+2. Set these env vars (see `.env.example`):
+   - `WHATSAPP_VERIFY_TOKEN` — any string you choose
+   - `WHATSAPP_TOKEN` — Graph API access token
+   - `WHATSAPP_PHONE_NUMBER_ID` — the sending number's ID
+   - `WHATSAPP_APP_SECRET` *(optional)* — enables request signature verification
+3. Under **WhatsApp → Configuration**, set the webhook:
+   - **Callback URL:** `https://<your-host>/webhook/whatsapp`
+   - **Verify token:** same value as `WHATSAPP_VERIFY_TOKEN`
+   - Subscribe to the **`messages`** field.
+
+Meta calls `GET /webhook/whatsapp` once to verify, then POSTs incoming messages
+to the same path. Mia replies through the Graph API, keyed by the customer's
+phone number so each contact keeps its own conversation context.
+
+> During local development, expose your server with a tunnel (e.g. `ngrok http 3000`)
+> and use the HTTPS URL it gives you as the callback URL.
+
 ## הגדרות (Configuration)
 
-| Env var             | Default            | Description                                       |
-| ------------------- | ------------------ | ------------------------------------------------- |
-| `ANTHROPIC_API_KEY` | _(none)_           | Enables Claude-powered replies.                   |
-| `MIA_MODEL`         | `claude-opus-4-8`  | Model that powers Mia (`claude-haiku-4-5` is cheaper/faster). |
-| `MIA_BUSINESS`      | `החברה`            | Business name Mia represents (used in her prompt). |
-| `PORT`              | `3000`             | Port the server listens on.                       |
+| Env var                    | Default            | Description                                                    |
+| -------------------------- | ------------------ | -------------------------------------------------------------- |
+| `ANTHROPIC_API_KEY`        | _(none)_           | Enables Claude-powered replies.                                |
+| `MIA_MODEL`                | `claude-opus-4-8`  | Model that powers Mia (`claude-haiku-4-5` is cheaper/faster).  |
+| `MIA_BUSINESS`             | `החברה`            | Business name Mia represents (used in her prompt).             |
+| `PORT`                     | `3000`             | Port the server listens on.                                    |
+| `DATABASE_URL`             | _(none)_           | Postgres connection string. Set → persistent history; unset → in-memory. |
+| `PGSSL`                    | _(none)_           | `true` for managed Postgres that requires SSL.                 |
+| `WHATSAPP_VERIFY_TOKEN`    | _(none)_           | Matches the verify token in Meta's webhook config.             |
+| `WHATSAPP_TOKEN`           | _(none)_           | Graph API access token for sending messages.                   |
+| `WHATSAPP_PHONE_NUMBER_ID` | _(none)_           | The sending phone number's ID.                                 |
+| `WHATSAPP_APP_SECRET`      | _(none)_           | Optional — enables `X-Hub-Signature-256` verification.         |
+| `WHATSAPP_API_VERSION`     | `v21.0`            | Graph API version.                                             |
 
-## חיבור לערוצים (Connecting channels)
+## אחסון שיחות (Conversation storage)
 
-The `/webhook` endpoint is channel-agnostic — it accepts `{ message, sessionId }`
-and returns `{ reply }`. To wire it to WhatsApp, Telegram, or a website widget,
-have your channel adapter translate inbound messages into that shape and send
-Mia's `reply` back to the user.
+Conversation history (last 20 messages per session) is stored in:
+
+- **Postgres** when `DATABASE_URL` is set — survives restarts and scales across
+  instances. The `mia_messages` table is created automatically on startup.
+- **In-memory** otherwise — zero config, but lost on restart.
+
+For a hosted WhatsApp bot, set `DATABASE_URL` so context isn't lost when the
+process recycles.
+
+## חיבור לערוצים נוספים (Other channels)
+
+The `/webhook` endpoint is channel-agnostic — `{ message, sessionId }` in,
+`{ reply }` out. To add Telegram or another channel, translate inbound messages
+into that shape, call `generateReply(store, sessionId, message)` from `agent.js`,
+and send the reply back — exactly as `whatsapp.js` does.
 
 ## הערות (Notes)
 
-- Conversation history is kept **in memory** (last 20 messages per session).
-  For production, back it with Redis or a database so context survives restarts
-  and scales across instances.
 - Mia is instructed never to invent prices, policies, or order statuses. To give
-  her real account/order data, extend `/webhook` with tool use or a lookup step.
+  her real account/order data, extend `agent.js` with tool use or a lookup step.
