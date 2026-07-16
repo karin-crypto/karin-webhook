@@ -112,35 +112,73 @@ function getSession(req) {
 /* ========================
    ROETO (ראוטרו) API ADAPTER
    ========================
-   Set these environment variables:
-     ROETO_API_URL   – e.g. https://api.roeto.co.il  (or https://p.roeto.co.il)
-     ROETO_API_KEY   – your API key from Roeto
+   Supports two auth modes:
+   Mode A – OAuth2 client credentials (Roeto default):
+     ROETO_API_URL        – e.g. https://api.roeto.co.il
+     ROETO_CLIENT_ID      – Client ID from Roeto API settings
+     ROETO_CLIENT_SECRET  – Client Secret from Roeto API settings
+     ROETO_TOKEN_PATH     – token endpoint path (default: /oauth/token)
+   Mode B – Simple API key:
+     ROETO_API_URL   – base URL
+     ROETO_API_KEY   – Bearer token
+   Optional:
      ROETO_CLIENT_PATH – path with {id} (default: /api/clients/{id})
      ROETO_PHONE_FIELD – JSON field for phone (default: phone)
      ROETO_NAME_FIELD  – JSON field for name  (default: name)
    ======================== */
+let _roetoToken = null; // { value, expiresAt }
+
+async function getRoetoAccessToken() {
+  if (_roetoToken && Date.now() < _roetoToken.expiresAt - 60000) {
+    return _roetoToken.value;
+  }
+  const base         = process.env.ROETO_API_URL;
+  const clientId     = process.env.ROETO_CLIENT_ID;
+  const clientSecret = process.env.ROETO_CLIENT_SECRET;
+  const tokenPath    = process.env.ROETO_TOKEN_PATH || '/oauth/token';
+
+  const res = await fetch(base + tokenPath, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body:    new URLSearchParams({
+      grant_type:    'client_credentials',
+      client_id:     clientId,
+      client_secret: clientSecret,
+    }),
+  });
+  if (!res.ok) throw new Error(`Roeto token ${res.status}: ${await res.text()}`);
+  const json = await res.json();
+  _roetoToken = { value: json.access_token, expiresAt: Date.now() + (json.expires_in || 3600) * 1000 };
+  return _roetoToken.value;
+}
+
 async function fetchRoetoClient(idNumber) {
   const base = process.env.ROETO_API_URL;
-  const key  = process.env.ROETO_API_KEY;
-  if (!base || !key) return null; // not configured
+  if (!base) return null; // dev mode – not configured
+
+  let authHeader;
+  if (process.env.ROETO_CLIENT_ID && process.env.ROETO_CLIENT_SECRET) {
+    const token = await getRoetoAccessToken();
+    authHeader = `Bearer ${token}`;
+  } else if (process.env.ROETO_API_KEY) {
+    authHeader = `Bearer ${process.env.ROETO_API_KEY}`;
+  } else {
+    return null;
+  }
 
   const pathTpl = process.env.ROETO_CLIENT_PATH || '/api/clients/{id}';
   const url = base + pathTpl.replace('{id}', encodeURIComponent(idNumber));
 
   const res = await fetch(url, {
-    headers: {
-      'Authorization': `Bearer ${key}`,
-      'Accept': 'application/json',
-    }
+    headers: { 'Authorization': authHeader, 'Accept': 'application/json' }
   });
 
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`Roeto API ${res.status}: ${await res.text()}`);
 
   const raw = await res.json();
-
-  const pf = process.env.ROETO_PHONE_FIELD || 'phone';
-  const nf = process.env.ROETO_NAME_FIELD  || 'name';
+  const pf  = process.env.ROETO_PHONE_FIELD || 'phone';
+  const nf  = process.env.ROETO_NAME_FIELD  || 'name';
 
   return {
     _raw:      raw,
