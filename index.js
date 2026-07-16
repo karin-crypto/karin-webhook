@@ -110,83 +110,35 @@ function getSession(req) {
 }
 
 /* ========================
-   ROETO (ראוטרו) API ADAPTER
+   BASE44 CRM ADAPTER
    ========================
-   Supports two auth modes:
-   Mode A – OAuth2 client credentials (Roeto default):
-     ROETO_API_URL        – e.g. https://api.roeto.co.il
-     ROETO_CLIENT_ID      – Client ID from Roeto API settings
-     ROETO_CLIENT_SECRET  – Client Secret from Roeto API settings
-     ROETO_TOKEN_PATH     – token endpoint path (default: /oauth/token)
-   Mode B – Simple API key:
-     ROETO_API_URL   – base URL
-     ROETO_API_KEY   – Bearer token
-   Optional:
-     ROETO_CLIENT_PATH – path with {id} (default: /api/clients/{id})
-     ROETO_PHONE_FIELD – JSON field for phone (default: phone)
-     ROETO_NAME_FIELD  – JSON field for name  (default: name)
+   Environment variables:
+     BASE44_LOOKUP_URL   – Base44 clientLookup function URL
+                           e.g. https://69ed0157e2731f27bece9d50.base44.app/api/functions/clientLookup
+     BASE44_LOOKUP_TOKEN – Secret token matching CLIENT_LOOKUP_TOKEN in Base44 env
    ======================== */
-let _roetoToken = null; // { value, expiresAt }
 
-async function getRoetoAccessToken() {
-  if (_roetoToken && Date.now() < _roetoToken.expiresAt - 60000) {
-    return _roetoToken.value;
-  }
-  const base         = process.env.ROETO_API_URL;
-  const clientId     = process.env.ROETO_CLIENT_ID;
-  const clientSecret = process.env.ROETO_CLIENT_SECRET;
-  const tokenPath    = process.env.ROETO_TOKEN_PATH || '/oauth/token';
+async function fetchBase44Client(idNumber) {
+  const baseUrl = process.env.BASE44_LOOKUP_URL;
+  const token   = process.env.BASE44_LOOKUP_TOKEN;
+  if (!baseUrl || !token) return null; // dev mode – not configured
 
-  const res = await fetch(base + tokenPath, {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body:    new URLSearchParams({
-      grant_type:    'client_credentials',
-      client_id:     clientId,
-      client_secret: clientSecret,
-    }),
-  });
-  if (!res.ok) throw new Error(`Roeto token ${res.status}: ${await res.text()}`);
+  const url = `${baseUrl}?idNumber=${encodeURIComponent(idNumber)}&token=${encodeURIComponent(token)}`;
+  const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+
+  if (!res.ok) throw new Error(`Base44 lookup ${res.status}: ${await res.text()}`);
+
   const json = await res.json();
-  _roetoToken = { value: json.access_token, expiresAt: Date.now() + (json.expires_in || 3600) * 1000 };
-  return _roetoToken.value;
-}
+  if (!json.ok || !json.client) return null;
 
-async function fetchRoetoClient(idNumber) {
-  const base = process.env.ROETO_API_URL;
-  if (!base) return null; // dev mode – not configured
-
-  let authHeader;
-  if (process.env.ROETO_CLIENT_ID && process.env.ROETO_CLIENT_SECRET) {
-    const token = await getRoetoAccessToken();
-    authHeader = `Bearer ${token}`;
-  } else if (process.env.ROETO_API_KEY) {
-    authHeader = `Bearer ${process.env.ROETO_API_KEY}`;
-  } else {
-    return null;
-  }
-
-  const pathTpl = process.env.ROETO_CLIENT_PATH || '/api/clients/{id}';
-  const url = base + pathTpl.replace('{id}', encodeURIComponent(idNumber));
-
-  const res = await fetch(url, {
-    headers: { 'Authorization': authHeader, 'Accept': 'application/json' }
-  });
-
-  if (res.status === 404) return null;
-  if (!res.ok) throw new Error(`Roeto API ${res.status}: ${await res.text()}`);
-
-  const raw = await res.json();
-  const pf  = process.env.ROETO_PHONE_FIELD || 'phone';
-  const nf  = process.env.ROETO_NAME_FIELD  || 'name';
-
+  const c = json.client;
   return {
-    _raw:      raw,
-    phone:     raw[pf]  || raw.mobile || raw.cellPhone || raw.phone,
-    name:      raw[nf]  || raw.fullName || raw.clientName || raw.name || 'לקוח/ה',
-    policies:  raw.policies  || raw.insurances || raw.policyList || [],
-    documents: raw.documents || raw.files      || raw.docList    || [],
-    summary:   raw.summary   || raw.dashboard  || null,
+    phone:     c.phone,
+    name:      c.fullName || 'לקוח/ה',
+    idNumber:  c.idNumber,
+    policies:  c.policies  || [],
+    documents: c.documents || [],
+    summary:   null,
   };
 }
 
@@ -208,9 +160,9 @@ app.post('/api/auth/request-otp', async (req, res) => {
   try {
     let phone, clientName, clientData;
 
-    const client = await fetchRoetoClient(raw);
+    const client = await fetchBase44Client(raw);
 
-    if (client === null && (process.env.ROETO_API_URL && process.env.ROETO_API_KEY)) {
+    if (client === null && process.env.BASE44_LOOKUP_URL) {
       return res.status(404).json({ ok: false, error: 'לא נמצא לקוח עם תעודת זהות זו במערכת.' });
     }
 
@@ -219,7 +171,7 @@ app.post('/api/auth/request-otp', async (req, res) => {
       clientName = client.name;
       clientData = client;
     } else {
-      // Roeto not configured → dev/demo mode
+      // Base44 not configured → dev/demo mode
       phone      = process.env.DEV_TEST_PHONE || '0501234567';
       clientName = 'לקוח/ה יקר/ה';
       clientData = null;
@@ -285,7 +237,7 @@ app.get('/api/client/data', async (req, res) => {
   if (!session) return res.status(401).json({ ok: false, error: 'לא מחובר. התחברי מחדש.' });
 
   try {
-    const fresh = await fetchRoetoClient(session.idNumber);
+    const fresh = await fetchBase44Client(session.idNumber);
     const data  = fresh || session.clientData;
     res.json({ ok: true, data, name: session.clientName });
   } catch (err) {
@@ -337,6 +289,6 @@ setInterval(() => {
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
-  if (!process.env.ROETO_API_URL) console.warn('⚠  ROETO_API_URL not set – Roeto integration disabled (dev/demo mode)');
+  if (!process.env.BASE44_LOOKUP_URL) console.warn('⚠  BASE44_LOOKUP_URL not set – Base44 CRM integration disabled (dev/demo mode)');
   if (!twilioClient)              console.warn('⚠  Twilio not configured – OTP codes printed to console');
 });
