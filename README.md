@@ -1,11 +1,11 @@
-# מיה – סוכנת שירות לקוחות 🤖
+# קרין קרן – אתר, פורטל לקוחות ומיה 🤖
 
-Mia is a ready-to-use **Hebrew customer-service agent**, served over a small
-Express webhook and powered by Claude. She answers customers in Hebrew, keeps
-per-session conversation context, and ships with a minimal embeddable web chat
-page so you can talk to her immediately.
+This app serves the **Karin Keren financial agency** website and client portal
+(Roeto + Twilio OTP), plus **Mia (מיה)** — a Hebrew AI customer-service agent
+powered by Claude. Mia answers customers in Hebrew, keeps per-session
+conversation context, and speaks both a generic JSON webhook and WhatsApp.
 
-When no `ANTHROPIC_API_KEY` is configured she falls back to a built-in
+When no `ANTHROPIC_API_KEY` is configured Mia falls back to a built-in
 rule-based Hebrew responder, so the service still runs out of the box.
 
 ## הרצה מהירה (Quick start)
@@ -13,14 +13,15 @@ rule-based Hebrew responder, so the service still runs out of the box.
 ```bash
 npm install
 
-# Optional: enable Claude
+# Optional: enable Claude / WhatsApp / Postgres
 cp .env.example .env
-# then edit .env and set ANTHROPIC_API_KEY
+# then edit .env (ANTHROPIC_API_KEY etc.)
 
 npm start
 ```
 
-Open <http://localhost:3000> to chat with Mia, or call the webhook directly.
+- <http://localhost:3000> — the business website (client portal at `/portal.html`)
+- <http://localhost:3000/mia.html> — Mia's chat page
 
 ## ה־API
 
@@ -52,11 +53,13 @@ curl -X POST http://localhost:3000/webhook \
 
 ### `GET /health`
 
-Liveness probe — returns the active model and whether Claude is enabled.
+Liveness probe (used by Railway) — includes Mia's status: active model,
+whether Claude is enabled, the conversation store, and WhatsApp configuration.
 
-### `GET /`
+### `GET /mia.html`
 
-A minimal RTL Hebrew chat widget for testing Mia in the browser.
+A minimal RTL Hebrew chat widget for testing Mia in the browser. The website
+itself is served at `GET /` and the client portal at `/portal.html`.
 
 ## חיבור לווצאפ (WhatsApp Cloud API)
 

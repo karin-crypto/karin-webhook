@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>מיה – שירות לקוחות</title>
+    <style>
+      :root {
+        --bg: #f4f6fb;
+        --card: #ffffff;
+        --accent: #2f6fed;
+        --accent-dark: #1f4fc0;
+        --bot: #eef2fb;
+        --text: #1c2533;
+        --muted: #7b8499;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
+      .chat {
+        width: 100%;
+        max-width: 440px;
+        height: 90vh;
+        max-height: 720px;
+        background: var(--card);
+        border-radius: 18px;
+        box-shadow: 0 12px 40px rgba(20, 40, 90, 0.12);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .header {
+        background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+        color: #fff;
+        padding: 18px 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.22);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        font-weight: 700;
+      }
+      .header h1 { font-size: 17px; margin: 0; }
+      .header p { font-size: 12.5px; margin: 2px 0 0; opacity: 0.85; }
+      .messages {
+        flex: 1;
+        padding: 18px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .msg {
+        max-width: 80%;
+        padding: 10px 14px;
+        border-radius: 16px;
+        line-height: 1.45;
+        font-size: 14.5px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+      .msg.user {
+        align-self: flex-start;
+        background: var(--accent);
+        color: #fff;
+        border-bottom-right-radius: 4px;
+      }
+      .msg.bot {
+        align-self: flex-end;
+        background: var(--bot);
+        color: var(--text);
+        border-bottom-left-radius: 4px;
+      }
+      .typing { color: var(--muted); font-style: italic; }
+      .composer {
+        display: flex;
+        gap: 8px;
+        padding: 12px;
+        border-top: 1px solid #e7ebf3;
+      }
+      .composer input {
+        flex: 1;
+        border: 1px solid #d6dce8;
+        border-radius: 12px;
+        padding: 11px 14px;
+        font-size: 14.5px;
+        font-family: inherit;
+        outline: none;
+      }
+      .composer input:focus { border-color: var(--accent); }
+      .composer button {
+        border: none;
+        background: var(--accent);
+        color: #fff;
+        border-radius: 12px;
+        padding: 0 18px;
+        font-size: 14.5px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .composer button:disabled { opacity: 0.5; cursor: default; }
+    </style>
+  </head>
+  <body>
+    <div class="chat">
+      <div class="header">
+        <div class="avatar">מ</div>
+        <div>
+          <h1>מיה</h1>
+          <p>נציגת שירות לקוחות · כאן לעזור</p>
+        </div>
+      </div>
+      <div class="messages" id="messages"></div>
+      <form class="composer" id="composer">
+        <input
+          id="input"
+          type="text"
+          placeholder="כתוב הודעה למיה..."
+          autocomplete="off"
+        />
+        <button type="submit" id="send">שלח</button>
+      </form>
+    </div>
+
+    <script>
+      const messagesEl = document.getElementById("messages");
+      const form = document.getElementById("composer");
+      const input = document.getElementById("input");
+      const sendBtn = document.getElementById("send");
+
+      let sessionId = localStorage.getItem("miaSession") || null;
+
+      function addMessage(text, who) {
+        const el = document.createElement("div");
+        el.className = "msg " + who;
+        el.textContent = text;
+        messagesEl.appendChild(el);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+        return el;
+      }
+
+      addMessage("שלום! אני מיה, נציגת השירות. איך אפשר לעזור לך היום?", "bot");
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const text = input.value.trim();
+        if (!text) return;
+
+        addMessage(text, "user");
+        input.value = "";
+        sendBtn.disabled = true;
+
+        const typing = addMessage("מיה מקלידה...", "bot");
+        typing.classList.add("typing");
+
+        try {
+          const res = await fetch("/webhook", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: text, sessionId }),
+          });
+          const data = await res.json();
+          typing.remove();
+
+          if (data.sessionId) {
+            sessionId = data.sessionId;
+            localStorage.setItem("miaSession", sessionId);
+          }
+          addMessage(data.reply || "מצטערת, משהו השתבש. אפשר לנסות שוב?", "bot");
+        } catch (err) {
+          typing.remove();
+          addMessage("אופס, יש בעיה בחיבור. נסה שוב בעוד רגע.", "bot");
+        } finally {
+          sendBtn.disabled = false;
+          input.focus();
+        }
+      });
+    </script>
+  </body>
+</html>
