@@ -3,11 +3,18 @@ const path    = require('path');
 const fs      = require('fs');
 const crypto  = require('crypto');
 
+const { createStore }   = require('./store');
+const { generateReply, MIA_MODEL, claudeEnabled } = require('./agent');
+const { registerWhatsApp, whatsappConfigured }    = require('./whatsapp');
+
 const app  = express();
 const PORT = process.env.PORT || 3000;
 const WA_NUMBER = '972502423356';
 
-app.use(express.json());
+const miaStore = createStore();
+
+// rawBody is needed by the WhatsApp channel to verify X-Hub-Signature-256.
+app.use(express.json({ verify: (req, _res, buf) => { req.rawBody = buf; } }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -323,7 +330,34 @@ app.get('/api/inquiries', (req, res) => {
   res.json(JSON.parse(fs.readFileSync(INQUIRIES_FILE, 'utf8')));
 });
 
-app.get('/health', (req, res) => res.json({ status: 'ok' }));
+/* ========================
+   MIA – AI CUSTOMER SERVICE AGENT
+   Chat page: /mia.html | Generic webhook + WhatsApp channel
+   ======================== */
+app.post('/webhook', async (req, res) => {
+  try {
+    const message = req.body && req.body.message;
+    if (!message || typeof message !== 'string') {
+      return res.status(400).json({ error: "Missing 'message' (string) in request body." });
+    }
+    const sessionId =
+      (req.body && req.body.sessionId) ||
+      `sess_${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
+
+    const reply = await generateReply(miaStore, sessionId, message);
+    res.json({ reply, sessionId });
+  } catch (err) {
+    console.error('Unexpected error in /webhook:', err);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+registerWhatsApp(app, miaStore);
+
+app.get('/health', (req, res) => res.json({
+  status: 'ok',
+  mia: { claudeEnabled, model: MIA_MODEL, store: miaStore.kind, whatsapp: whatsappConfigured },
+}));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
 /* ========================
@@ -335,8 +369,23 @@ setInterval(() => {
   for (const [k, v] of sessionStore) if (now > v.expires) sessionStore.delete(k);
 }, 5 * 60 * 1000);
 
-app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
   if (!process.env.ROETO_API_URL) console.warn('⚠  ROETO_API_URL not set – Roeto integration disabled (dev/demo mode)');
   if (!twilioClient)              console.warn('⚠  Twilio not configured – OTP codes printed to console');
+  console.log(
+    `Mia: Claude ${claudeEnabled ? 'enabled' : 'disabled (rule-based fallback)'} | ` +
+    `model: ${MIA_MODEL} | store: ${miaStore.kind} | ` +
+    `whatsapp: ${whatsappConfigured ? 'configured' : 'not configured'}`
+  );
 });
+
+// Graceful shutdown so Mia's DB connections close cleanly.
+for (const signal of ['SIGINT', 'SIGTERM']) {
+  process.on(signal, () => {
+    server.close(async () => {
+      await miaStore.close();
+      process.exit(0);
+    });
+  });
+}
