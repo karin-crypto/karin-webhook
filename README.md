@@ -111,6 +111,34 @@ Conversation history (last 20 messages per session) is stored in:
 For a hosted WhatsApp bot, set `DATABASE_URL` so context isn't lost when the
 process recycles.
 
+## הכלים של מיה (Mia's tools)
+
+When Claude is enabled, Mia runs as an **agent** — she can call tools mid-reply
+instead of only generating text. Tools live in `tools.js` (schema + executor)
+and Mia loops through them automatically via `agent.js`:
+
+| Tool                | What it does                                                                                  |
+| ------------------- | --------------------------------------------------------------------------------------------- |
+| `get_business_info` | Returns grounded facts (services, contact, portal) so Mia answers factually instead of guessing. |
+| `save_inquiry`      | Captures a lead (name + phone + topic) into the shared inquiries store — the same one the website contact form writes to. Karin sees it at `GET /api/inquiries`. |
+
+So a WhatsApp customer who says *"רוצה לפתוח קרן השתלמות, תחזרו אליי 052…"* gets
+her details saved as a real inquiry, not just a polite reply. Inquiries carry a
+`source` field (`"website"` or `"mia"`).
+
+The tool loop is capped at `MAX_TOOL_STEPS` (in `agent.js`) so it can't spin
+against the API. Intermediate `tool_use`/`tool_result` blocks live only within a
+single turn — the persisted conversation history stays plain text.
+
+**Adding a tool:** add a `{ name, description, input_schema }` entry to `TOOLS`
+and an executor in `EXECUTORS` in `tools.js`. Executors must never throw (return
+an error payload instead) so Mia can recover in-conversation.
+
+> **Security:** client lookup by ID (Roeto) is intentionally *not* a Mia tool.
+> That data is PII gated behind the portal's OTP flow; exposing it to an
+> unauthenticated chat would be a disclosure risk. Gate any such tool on a
+> verified session before adding it.
+
 ## חיבור לערוצים נוספים (Other channels)
 
 The `/webhook` endpoint is channel-agnostic — `{ message, sessionId }` in,
@@ -120,5 +148,7 @@ and send the reply back — exactly as `whatsapp.js` does.
 
 ## הערות (Notes)
 
-- Mia is instructed never to invent prices, policies, or order statuses. To give
-  her real account/order data, extend `agent.js` with tool use or a lookup step.
+- Mia is instructed never to invent prices, policies, or order statuses — and
+  now backs that up with tools (see *Mia's tools* above): she grounds factual
+  answers in `get_business_info` and turns real intent into leads via
+  `save_inquiry`.

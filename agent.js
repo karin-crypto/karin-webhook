@@ -9,6 +9,7 @@
  */
 
 const Anthropic = require("@anthropic-ai/sdk");
+const { TOOLS, runTool } = require("./tools");
 
 const {
   ANTHROPIC_API_KEY,
@@ -18,6 +19,10 @@ const {
   // Business name Mia represents. Customize for your own deployment.
   MIA_BUSINESS = "החברה",
 } = process.env;
+
+// Safety cap on tool round-trips within a single reply, so a tool loop can
+// never spin forever against the API.
+const MAX_TOOL_STEPS = 5;
 
 const SYSTEM_PROMPT = `את מיה, נציגת שירות לקוחות וירטואלית של ${MIA_BUSINESS}.
 
@@ -34,23 +39,68 @@ const SYSTEM_PROMPT = `את מיה, נציגת שירות לקוחות וירט�
 - אם לקוח כועס או מתוסכל, הגיבי באמפתיה לפני שאת ניגשת לפתרון.
 - אם הנושא רגיש או חורג מהיכולת שלך, הציעי בנימוס להעביר לנציג אנושי.
 
+שימוש בכלים:
+- יש לך גישה לכלים. השתמשי בהם במקום לנחש.
+- לפני מענה על שאלה עובדתית לגבי השירותים של הסוכנות או דרכי יצירת קשר — קראי ל-get_business_info והשעני את תשובתך על המידע שחוזר.
+- כשלקוח מבקש שיחזרו אליו, רוצה להתקדם עם מוצר, או כשהנושא דורש נציג אנושי — אספי שם וטלפון (ואם אפשר גם נושא) ואז קראי ל-save_inquiry. אם חסר שם או טלפון, שאלי אותם קודם. אחרי שמירה מוצלחת, אשרי ללקוח בחום שהפנייה התקבלה ושיחזרו אליו.
+- לעולם אל תמציאי שנשמרה פנייה מבלי שקראת לכלי בפועל.
+
 עני תמיד עם התשובה הסופית בלבד, ללא חשיבה גלויה או הסברים על תהליך החשיבה שלך.`;
 
 const client = ANTHROPIC_API_KEY ? new Anthropic({ apiKey: ANTHROPIC_API_KEY }) : null;
 
-async function claudeReply(history) {
-  const response = await client.messages.create({
-    model: MIA_MODEL,
-    max_tokens: 1024,
-    system: SYSTEM_PROMPT,
-    messages: history,
-  });
-  const text = response.content
+function extractText(response) {
+  return response.content
     .filter((block) => block.type === "text")
     .map((block) => block.text)
     .join("")
     .trim();
-  return text || "מצטערת, לא הצלחתי לנסח תשובה כרגע. אפשר לנסות שוב?";
+}
+
+/**
+ * Runs the agentic loop: call Claude with tools; whenever it asks to use a
+ * tool, execute it, feed the result back, and continue until Claude produces
+ * its final text answer. The persisted conversation history (plain user/
+ * assistant turns) is used as the starting point; the intermediate tool_use
+ * and tool_result blocks live only within this turn, so store.js stays simple.
+ */
+async function claudeReply(history) {
+  const messages = history.map((m) => ({ role: m.role, content: m.content }));
+
+  for (let step = 0; step < MAX_TOOL_STEPS; step++) {
+    const response = await client.messages.create({
+      model: MIA_MODEL,
+      max_tokens: 1024,
+      system: SYSTEM_PROMPT,
+      tools: TOOLS,
+      messages,
+    });
+
+    if (response.stop_reason === "tool_use") {
+      // Record Claude's turn (which includes the tool_use blocks)...
+      messages.push({ role: "assistant", content: response.content });
+      // ...run each requested tool and send the results back as one user turn.
+      const toolResults = [];
+      for (const block of response.content) {
+        if (block.type === "tool_use") {
+          const result = await runTool(block.name, block.input);
+          toolResults.push({
+            type: "tool_result",
+            tool_use_id: block.id,
+            content: result,
+          });
+        }
+      }
+      messages.push({ role: "user", content: toolResults });
+      continue; // loop again so Claude can use the tool output
+    }
+
+    const text = extractText(response);
+    if (text) return text;
+    break; // no text and not a tool call — fall through to the safe default
+  }
+
+  return "מצטערת, לא הצלחתי לנסח תשובה כרגע. אפשר לנסות שוב?";
 }
 
 function fallbackReply(message) {
