@@ -6,6 +6,7 @@ const { createStore }   = require('./store');
 const { generateReply, MIA_MODEL, claudeEnabled } = require('./agent');
 const { registerWhatsApp, whatsappConfigured }    = require('./whatsapp');
 const { saveInquiry, listInquiries }              = require('./inquiries');
+const { calendarConfigured }                      = require('./calendar');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -345,7 +346,7 @@ registerWhatsApp(app, miaStore);
 
 app.get('/health', (req, res) => res.json({
   status: 'ok',
-  mia: { claudeEnabled, model: MIA_MODEL, store: miaStore.kind, whatsapp: whatsappConfigured },
+  mia: { claudeEnabled, model: MIA_MODEL, store: miaStore.kind, whatsapp: whatsappConfigured, calendar: calendarConfigured },
 }));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 

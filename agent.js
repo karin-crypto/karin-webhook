@@ -43,9 +43,24 @@ const SYSTEM_PROMPT = `את מיה, נציגת שירות לקוחות וירט�
 - יש לך גישה לכלים. השתמשי בהם במקום לנחש.
 - לפני מענה על שאלה עובדתית לגבי השירותים של הסוכנות או דרכי יצירת קשר — קראי ל-get_business_info והשעני את תשובתך על המידע שחוזר.
 - כשלקוח מבקש שיחזרו אליו, רוצה להתקדם עם מוצר, או כשהנושא דורש נציג אנושי — אספי שם וטלפון (ואם אפשר גם נושא) ואז קראי ל-save_inquiry. אם חסר שם או טלפון, שאלי אותם קודם. אחרי שמירה מוצלחת, אשרי ללקוח בחום שהפנייה התקבלה ושיחזרו אליו.
-- לעולם אל תמציאי שנשמרה פנייה מבלי שקראת לכלי בפועל.
+- כשלקוח רוצה לקבוע פגישת ייעוץ — אספי שם, טלפון ומועד מבוקש. המירי את המועד לתאריך ושעה קונקרטיים בשעון ישראל (בפורמט YYYY-MM-DDTHH:MM) על סמך התאריך הנוכחי למטה. אם המועד מעורפל, הציעי מועד ספציფי ואשרי אותו מול הלקוח לפני הקריאה. ואז קראי ל-book_meeting. דווחי ללקוח את סטטוס התוצאה בכנות — אם התקבל "booked" הפגישה ביומן; אם "pending" הבקשה נשמרה ותאושר, אל תאמרי שהיא כבר מאושרת.
+- לעולם אל תמציאי שנשמרה פנייה או נקבעה פגישה מבלי שקראת לכלי בפועל.
 
 עני תמיד עם התשובה הסופית בלבד, ללא חשיבה גלויה או הסברים על תהליך החשיבה שלך.`;
+
+// Current date/time in Israel, refreshed per reply so Mia can resolve
+// relative times ("next Sunday morning") into a concrete booking slot.
+function nowInIsrael() {
+  try {
+    return new Intl.DateTimeFormat("he-IL", {
+      timeZone: "Asia/Jerusalem",
+      dateStyle: "full",
+      timeStyle: "short",
+    }).format(new Date());
+  } catch {
+    return new Date().toISOString();
+  }
+}
 
 const client = ANTHROPIC_API_KEY ? new Anthropic({ apiKey: ANTHROPIC_API_KEY }) : null;
 
@@ -66,12 +81,13 @@ function extractText(response) {
  */
 async function claudeReply(history) {
   const messages = history.map((m) => ({ role: m.role, content: m.content }));
+  const system = `${SYSTEM_PROMPT}\n\nהתאריך והשעה כעת (שעון ישראל): ${nowInIsrael()}.`;
 
   for (let step = 0; step < MAX_TOOL_STEPS; step++) {
     const response = await client.messages.create({
       model: MIA_MODEL,
       max_tokens: 1024,
-      system: SYSTEM_PROMPT,
+      system,
       tools: TOOLS,
       messages,
     });

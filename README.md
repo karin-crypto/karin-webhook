@@ -121,6 +121,7 @@ and Mia loops through them automatically via `agent.js`:
 | ------------------- | --------------------------------------------------------------------------------------------- |
 | `get_business_info` | Returns grounded facts (services, contact, portal) so Mia answers factually instead of guessing. |
 | `save_inquiry`      | Captures a lead (name + phone + topic) into the shared inquiries store — the same one the website contact form writes to. Karin sees it at `GET /api/inquiries`. |
+| `book_meeting`      | Books a consultation. When Google Calendar is configured it creates a real event and returns the link (`status: "booked"`); otherwise it saves a pending meeting request (`status: "pending"`) so nothing is lost. |
 
 So a WhatsApp customer who says *"רוצה לפתוח קרן השתלמות, תחזרו אליי 052…"* gets
 her details saved as a real inquiry, not just a polite reply. Inquiries carry a
@@ -128,7 +129,15 @@ her details saved as a real inquiry, not just a polite reply. Inquiries carry a
 
 The tool loop is capped at `MAX_TOOL_STEPS` (in `agent.js`) so it can't spin
 against the API. Intermediate `tool_use`/`tool_result` blocks live only within a
-single turn — the persisted conversation history stays plain text.
+single turn — the persisted conversation history stays plain text. Mia's system
+prompt is stamped with the current Israel date/time each turn, so she can resolve
+relative requests ("next Sunday morning") into a concrete booking slot.
+
+**Google Calendar** (`calendar.js`) is optional and dependency-free — it signs a
+service-account JWT with `crypto` and calls the Calendar REST API with `fetch`.
+Set `GOOGLE_SA_EMAIL`, `GOOGLE_SA_PRIVATE_KEY` and `GOOGLE_CALENDAR_ID` (see
+`.env.example`) and share the calendar with the service account. `GET /health`
+reports whether it's configured.
 
 **Adding a tool:** add a `{ name, description, input_schema }` entry to `TOOLS`
 and an executor in `EXECUTORS` in `tools.js`. Executors must never throw (return

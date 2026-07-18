@@ -21,6 +21,7 @@
  */
 
 const { saveInquiry } = require("./inquiries");
+const { calendarConfigured, createCalendarEvent } = require("./calendar");
 
 // Business name Mia represents (kept in sync with agent.js via env).
 const MIA_BUSINESS = process.env.MIA_BUSINESS || "החברה";
@@ -86,6 +87,29 @@ const TOOLS = [
       required: ["name", "phone"],
     },
   },
+  {
+    name: "book_meeting",
+    description:
+      "קובע פגישת ייעוץ עם הלקוח. יש להשתמש כשהלקוח רוצה לקבוע פגישה/שיחת ייעוץ במועד מסוים. לפני הקריאה: ודאי מול הלקוח את השם, הטלפון והמועד המבוקש (תאריך ושעה), והמירי אותם למועד קונקרטי בשעון ישראל. אם הלקוח נותן מועד מעורפל ('בבוקר', 'בשבוע הבא') — הציעי מועד ספציפי ואשרי איתו לפני הקריאה. אל תמציאי שהפגישה נקבעה מבלי לקרוא לכלי בפועל.",
+    input_schema: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "שם הלקוח" },
+        phone: { type: "string", description: "מספר טלפון ליצירת קשר" },
+        start: {
+          type: "string",
+          description:
+            "מועד ההתחלה בשעון ישראל בפורמט YYYY-MM-DDTHH:MM (למשל 2026-07-20T09:00). ללא אזור זמן — המערכת מפרשת בשעון ישראל.",
+        },
+        duration_minutes: {
+          type: "integer",
+          description: "משך הפגישה בדקות (ברירת מחדל 30).",
+        },
+        topic: { type: "string", description: "נושא הפגישה" },
+      },
+      required: ["name", "phone", "start"],
+    },
+  },
 ];
 
 // --- Executors ---------------------------------------------------------------
@@ -119,9 +143,87 @@ function saveInquiryTool(input = {}) {
   };
 }
 
+const START_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/;
+
+async function bookMeetingTool(input = {}) {
+  const name = String(input.name || "").trim();
+  const phone = String(input.phone || "").trim();
+  const start = String(input.start || "").trim();
+  const durationMinutes = Number(input.duration_minutes) > 0
+    ? Number(input.duration_minutes)
+    : 30;
+  const topic = input.topic ? String(input.topic).trim() : undefined;
+
+  if (!name || !phone) {
+    return { ok: false, error: "חסרים שם או טלפון. יש לאסוף את שניהם מהלקוח." };
+  }
+  if (!START_RE.test(start)) {
+    return {
+      ok: false,
+      error:
+        "מועד לא תקין. יש להעביר start בפורמט YYYY-MM-DDTHH:MM בשעון ישראל (למשל 2026-07-20T09:00).",
+    };
+  }
+
+  const summary = `פגישת ייעוץ – ${name}`;
+  const description =
+    `נקבע דרך מיה (סוכנת שירות).\nלקוח: ${name}\nטלפון: ${phone}` +
+    (topic ? `\nנושא: ${topic}` : "");
+
+  // If the calendar is configured, create a real event; always keep a record.
+  if (calendarConfigured) {
+    try {
+      const ev = await createCalendarEvent({ summary, description, start, durationMinutes });
+      saveInquiry({
+        type: "meeting",
+        status: "booked",
+        name,
+        phone,
+        topic,
+        start: ev.start,
+        durationMinutes,
+        calendarEventId: ev.id,
+        calendarLink: ev.htmlLink,
+        source: "mia",
+      });
+      return {
+        ok: true,
+        status: "booked",
+        start: ev.start,
+        link: ev.htmlLink,
+        message:
+          "הפגישה נקבעה ונוספה ליומן. אפשר לאשר ללקוח את המועד ולומר שנשלח תזכורת.",
+      };
+    } catch (err) {
+      console.error("book_meeting calendar error:", err.message);
+      // Fall through to saving a pending request so nothing is lost.
+    }
+  }
+
+  const record = saveInquiry({
+    type: "meeting",
+    status: "pending",
+    name,
+    phone,
+    topic,
+    start,
+    durationMinutes,
+    source: "mia",
+  });
+  return {
+    ok: true,
+    status: "pending",
+    id: record.id,
+    start,
+    message:
+      "בקשת הפגישה נשמרה ותאושר ידנית. אפשר לומר ללקוח שנחזור אליו לאישור המועד — אך לא לומר שהפגישה כבר מאושרת ביומן.",
+  };
+}
+
 const EXECUTORS = {
   get_business_info: getBusinessInfo,
   save_inquiry: saveInquiryTool,
+  book_meeting: bookMeetingTool,
 };
 
 /**
