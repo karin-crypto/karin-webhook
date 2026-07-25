@@ -1,0 +1,51 @@
+asset_id,category,usage,type,source,target_filename,format,orientation_size,maps_to_spec,rights_credit,status,location_or_notes
+KRN-HERO-001,Hero,Home hero background film (MOB drill),video,TBD,karina_hero_mob-drill_master_16x9.mp4,MP4/WebM,16:9 1920x1080,V1,TBD,NEEDED,Cinematic loopable muted; needs poster + 9x16 crop
+KRN-HERO-002,Hero,Home hero vertical crop (mobile),video,TBD,karina_hero_mob-drill_9x16.mp4,MP4/WebM,9:16 1080x1920,V1,TBD,NEEDED,Derived from HERO-001
+KRN-HERO-003,Hero,Home hero poster still,image,TBD,karina_hero_poster_16x9.jpg,JPG/WebP,16:9,V1/I3,TBD,NEEDED,First-frame poster / reduced-motion fallback
+KRN-HERO-004,Hero,Product page hero still (per model),image,TBD,karina_hero_product_pro.jpg,JPG/WebP,16:9,I3,TBD,NEEDED,Repeat for lite/cadet/sar
+KRN-HERO-005,Hero,Night hi-vis hero,image,FLOW,karina_hero_night-hivis_flow.jpg,JPG/WebP,16:9,I3,FLOW-generated,TO-CONFIRM,Confirm if a FLOW render exists
+KRN-GAL-001,Gallery,KARINA Pro studio 360 frames,image,TBD,karina_gallery_pro_360_###.jpg,JPG/WebP,1:1 or 4:5,I1,TBD,NEEDED,Multiple angles / 360 sequence
+KRN-GAL-002,Gallery,KARINA Lite studio shots,image,TBD,karina_gallery_lite_###.jpg,JPG/WebP,1:1,I1,TBD,NEEDED,
+KRN-GAL-003,Gallery,KARINA Cadet studio shots,image,TBD,karina_gallery_cadet_###.jpg,JPG/WebP,1:1,I1,TBD,NEEDED,
+KRN-GAL-004,Gallery,KARINA SAR studio shots,image,TBD,karina_gallery_sar_###.jpg,JPG/WebP,1:1,I1,TBD,NEEDED,
+KRN-GAL-005,Gallery,In-context action stills (deck/water),image,TBD,karina_gallery_incontext_###.jpg,JPG/WebP,3:2,I3,TBD,NEEDED,
+KRN-GAL-006,Gallery,Accessories product shots,image,TBD,karina_gallery_accessories_###.jpg,JPG/WebP,1:1,I6,TBD,NEEDED,Harness/lines/bags/kits
+KRN-TECH-001,Technology,Anatomy cutaway illustration (annotated),image,TBD,karina_tech_anatomy-cutaway.png,PNG/SVG,transparent,I7,TBD,NEEDED,Drives interactive hotspots
+KRN-TECH-002,Technology,Materials & durability macro,image,TBD,karina_tech_materials_macro_###.jpg,JPG/WebP,3:2,I2,TBD,NEEDED,
+KRN-TECH-003,Technology,Recovery / lift sequence loop,video,TBD,karina_tech_recovery-lift.mp4,MP4/WebM,16:9,V3,TBD,NEEDED,Crane/heli/manual variants
+KRN-TECH-004,Technology,Tech / anatomy explainer (animated),video,TBD,karina_tech_explainer.mp4,MP4/WebM,16:9,V4,TBD,NEEDED,
+KRN-TECH-005,Technology,Visibility & reflective detail,image,TBD,karina_tech_hivis-reflective_###.jpg,JPG/WebP,3:2,I2,TBD,NEEDED,
+KRN-TRN-001,Training,Drill protocol video(s),video,TBD,karina_training_protocol_###.mp4,MP4/WebM,16:9,V7,TBD,NEEDED,Step-by-step 2-4 min
+KRN-TRN-002,Training,Crew running drills (stills),image,TBD,karina_training_crew_###.jpg,JPG/WebP,3:2,I5,TBD,NEEDED,
+KRN-TRN-003,Training,Drill checklist / doc thumbnails,image,TBD,karina_training_checklist_thumb.png,PNG,1:1,I5,TBD,NEEDED,
+KRN-RES-001,Rescue,In-water demo film (per model),video,TBD,karina_rescue_demo_pro.mp4,MP4/WebM,16:9,V2,TBD,NEEDED,Buoyancy/recovery/visibility; repeat per model
+KRN-RES-002,Rescue,Rough-sea / recovery action stills,image,TBD,karina_rescue_roughsea_###.jpg,JPG/WebP,3:2,I3,TBD,NEEDED,
+KRN-RES-003,Rescue,SAR / helicopter recovery imagery,image,TBD,karina_rescue_sar-heli_###.jpg,JPG/WebP,3:2,I3/I4,TBD,NEEDED,
+KRN-RES-004,Rescue,Night rescue hi-vis footage,video,FLOW,karina_rescue_night_flow.mp4,MP4/WebM,16:9,V2,FLOW-generated,TO-CONFIRM,Confirm FLOW asset
+KRN-MON-001,Monaco,Monaco showcase / event photography,image,TBD,karina_monaco_event_###.jpg,JPG/WebP,3:2,I4,TBD,NEEDED,Yacht-show / launch event context
+KRN-MON-002,Monaco,Superyacht context imagery,image,TBD,karina_monaco_superyacht_###.jpg,JPG/WebP,3:2,I4,TBD,NEEDED,
+KRN-MON-003,Monaco,Monaco event highlight film,video,TBD,karina_monaco_highlights.mp4,MP4/WebM,16:9,V5,TBD,NEEDED,
+KRN-FND-001,Founder,Founder portrait,image,Existing-Site,karin.jpg,JPG,portrait,I10,Karin Keren,HAVE,public/images/karin.jpg (do not move/delete)
+KRN-FND-002,Founder,Founder with product / in action,image,TBD,karina_founder_action_###.jpg,JPG/WebP,3:2,I10,TBD,NEEDED,
+KRN-FND-003,Founder,Founder story / brand film,video,TBD,karina_founder_story.mp4,MP4/WebM,16:9,V8,TBD,NEEDED,Mission/vision
+KRN-CVN-001,Concept Vision,Concept render - product vision,image,FLOW,karina_concept_vision_flow_###.jpg,JPG/WebP,16:9,I3,FLOW-generated,TO-CONFIRM,FLOW future-vision renders
+KRN-CVN-002,Concept Vision,Concept render - design/ideation,image,ChatGPT,karina_concept_ideation_gpt_###.png,PNG,various,I7,ChatGPT-generated,TO-CONFIRM,ChatGPT-generated concepts
+KRN-CVN-003,Concept Vision,Concept vision film,video,TBD,karina_concept_vision.mp4,MP4/WebM,16:9,V4,TBD,NEEDED,
+KRN-MKT-001,Marketing,Industry mini-films (x8),video,TBD,karina_mkt_industry_###.mp4,MP4/WebM,16:9,V5,TBD,NEEDED,One per industry segment
+KRN-MKT-002,Marketing,Testimonial clips,video,TBD,karina_mkt_testimonial_###.mp4,MP4/WebM,16:9,V6,TBD,NEEDED,
+KRN-MKT-003,Marketing,OG / social share images,image,TBD,karina_mkt_og_###.jpg,JPG,1.91:1 1200x630,I12,TBD,NEEDED,Per key page
+KRN-MKT-004,Marketing,Ad creatives / banners,image,TBD,karina_mkt_ad_###.jpg,JPG/WebP,various,I12,TBD,NEEDED,
+KRN-MKT-005,Marketing,Brochure / datasheet visuals,image,TBD,karina_mkt_brochure_###.jpg,JPG/PDF,A4,I9,TBD,NEEDED,
+KRN-LOGO-001,Logo,Primary logo (color),logo,TBD,karina_logo_primary.svg,SVG,vector,I13,TBD,NEEDED,
+KRN-LOGO-002,Logo,Logo light (on dark),logo,TBD,karina_logo_light.svg,SVG,vector,I13,TBD,NEEDED,
+KRN-LOGO-003,Logo,Logo dark (on light),logo,TBD,karina_logo_dark.svg,SVG,vector,I13,TBD,NEEDED,
+KRN-LOGO-004,Logo,Logo monochrome,logo,TBD,karina_logo_mono.svg,SVG,vector,I13,TBD,NEEDED,
+KRN-LOGO-005,Logo,Symbol / mark only,logo,TBD,karina_symbol.svg,SVG,vector,I13,TBD,NEEDED,
+KRN-LOGO-006,Logo,Wordmark only,logo,TBD,karina_wordmark.svg,SVG,vector,I13,TBD,NEEDED,
+KRN-LOGO-007,Logo,Favicon,logo,TBD,karina_favicon.ico,ICO/PNG,16-512px,I13,TBD,NEEDED,
+KRN-LOGO-008,Logo,App / touch icons,logo,TBD,karina_appicon_###.png,PNG,180/192/512,I13,TBD,NEEDED,
+KRN-ICON-001,Icon,Value-prop icons (realistic/durable/compliant),icon,TBD,karina_icon_value_###.svg,SVG,24-48px,I11,TBD,NEEDED,
+KRN-ICON-002,Icon,Feature icons (tech),icon,TBD,karina_icon_feature_###.svg,SVG,24-48px,I11,TBD,NEEDED,
+KRN-ICON-003,Icon,Industry / category icons,icon,TBD,karina_icon_industry_###.svg,SVG,24-48px,I11,TBD,NEEDED,8 industries
+KRN-ICON-004,Icon,UI icons (nav/search/social/arrows),icon,TBD,karina_icon_ui_###.svg,SVG,16-24px,I11,TBD,NEEDED,RTL-safe directional variants
+KRN-ICON-005,Icon,Certification / standard badges,icon,TBD,karina_badge_###.svg,SVG,vector,I9,TBD,NEEDED,SOLAS/IMO-context badges
