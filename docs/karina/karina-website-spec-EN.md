@@ -1,766 +1,462 @@
 # KARINA — International Website Specification (Characterization Document)
 
-**Version:** 1.0 · **Date:** 2026‑07‑25 · **Status:** Specification only — no code, no deploy, no publish
-**Product:** KARINA — Professional Maritime Training Manikin (Man‑Overboard / Water‑Rescue Training Doll)
-**Deliverable:** A fully standalone, international marketing & lead‑generation website.
+**Version:** 2.0 (reconciled with live site — single source of truth) · **Date:** 2026‑07‑26
+**Status:** Specification only — no code, no deploy, no publish
+**Product:** KARINA — *The Ultimate Maritime Rescue Dummy* — a life‑size, life‑weight, anatomically‑shaped **Man‑Overboard (MOB) training mannequin**.
+**Deliverable:** A standalone, international marketing & lead‑generation website.
+
+> **v2.0 note:** This version replaces the assumptions in v1.0 with facts extracted from the live KARINA landing page. Product facts, branding, and positioning are governed by [`karina-brand-facts-SOURCE-OF-TRUTH.md`](./karina-brand-facts-SOURCE-OF-TRUTH.md). Key corrections: KARINA is a **single product** (not a 4‑model family); IP is a **registered patent** (no SOLAS/IMO certification is claimed); the launch is anchored to the **Monaco Yacht Show, September 2026**.
 
 ---
 
 ## 0. Table of Contents
-
-1. [Project Overview & Goals](#1-project-overview--goals)
-2. [Site Map](#2-site-map)
-3. [Pages & Sections](#3-pages--sections)
-4. [Navigation Hierarchy](#4-navigation-hierarchy)
-5. [Wireframes (per page)](#5-wireframes)
-6. [User Flows](#6-user-flows)
-7. [UI Component Library](#7-ui-component-library)
-8. [Animation List](#8-animation-list)
-9. [Required Videos & Images](#9-required-videos--images)
-10. [SEO Strategy](#10-seo-strategy)
-11. [Localization (EN/HE) & RTL](#11-localization)
-12. [Technical, Accessibility & Performance Requirements](#12-technical-accessibility--performance)
-13. [Appendix — Content Inventory & Open Questions](#13-appendix)
+1. [Product & Brand Facts](#1-product--brand-facts)
+2. [Project Goals & Audiences](#2-project-goals--audiences)
+3. [Site Map](#3-site-map)
+4. [Pages & Sections](#4-pages--sections)
+5. [Navigation Hierarchy](#5-navigation-hierarchy)
+6. [Wireframes](#6-wireframes)
+7. [User Flows](#7-user-flows)
+8. [UI Component Library](#8-ui-component-library)
+9. [Animation List](#9-animation-list)
+10. [Required Videos & Images](#10-required-videos--images)
+11. [SEO Strategy](#11-seo-strategy)
+12. [Localization (EN/HE)](#12-localization)
+13. [Technical, Accessibility & Performance](#13-technical-accessibility--performance)
+14. [Appendix](#14-appendix)
 
 ---
 
-## 1. Project Overview & Goals
+## 1. Product & Brand Facts
 
-### 1.1 Product in one line
-KARINA is a life‑size, marine‑grade **training manikin** used to run realistic **man‑overboard (MOB)**, water‑rescue and recovery drills — for ship crews, navies, coast guards, offshore installations, cruise lines, ports, maritime academies, SAR teams and lifeguards.
+**What it is:** KARINA is a life‑size (158 cm) female‑form training mannequin that behaves like a real casualty in water — head floats, body submerges, realistic drift and tow — solving the core flaw of standard MOB training buoys.
 
-### 1.2 Business goals
+**Technical specifications (from the live site):**
+| Attribute | Value |
+|---|---|
+| Total height | 158 cm · life‑size female form |
+| Dry weight | 70 kg · matches average adult female |
+| In‑water weight | 55–65 kg · anatomically accurate buoyancy |
+| Shoulder width | 42 cm |
+| Buoyancy profile | Head floats · body submerges · realistic drift |
+| Construction | Waterproof fabric · internal filling · calibrated weights |
+| Retrieval | Integrated towing strap · compatible with standard rescue gear |
+| IP status | **Patent registered** · prototype complete · production ready |
+
+**Key features:** True MOB behavior · Calibrated weight · Professional tow strap (waist + thigh) · Open‑water ready (ocean/port/lake/pool) · Visual realism (anatomical form) · Durable & low maintenance.
+
+**Brand:** Navy `#0d1b2e`/`#122536` + Gold `#c9a84c`/`#dfc078` + Cream `#f4ede0`. Fonts: **Cormorant Garamond** (display, serif) + **Montserrat** (body). Tone: luxury, maritime, minimal — *"Designed for realism. Engineered for safety."* Logo today is a gold **text wordmark** (no vector logo file yet).
+
+**Launch anchor:** **Monaco Yacht Show — September 2026** (international debut).
+
+**Founder:** **Karin Keren** — Entrepreneur · Skipper · Inventor (Israel); patent holder.
+
+**Contact:** `karin@karinkeren.com` · WhatsApp/phone `+972‑54‑624‑8546`.
+
+---
+
+## 2. Project Goals & Audiences
+
+### 2.1 Business goals
 | # | Goal | Primary KPI |
 |---|------|-------------|
-| G1 | Generate qualified B2B leads | Quote requests / demo requests submitted |
-| G2 | Establish authority & trust (safety, compliance) | Time on Resources, datasheet downloads |
-| G3 | Support the distributor/reseller network | "Find a distributor" interactions, partner applications |
-| G4 | Educate the market (drills, standards) | Video plays, training‑guide reads |
-| G5 | International reach | Organic traffic by country, locale coverage |
+| G1 | Generate qualified B2B leads / demo requests | "Request Information" & "Book a Demonstration" submissions |
+| G2 | Convert Monaco Yacht Show interest | Demo bookings tagged Monaco 2026 |
+| G3 | Establish credibility (patent, realism, founder story) | Time on Technology/About, spec‑sheet downloads |
+| G4 | International reach | Organic traffic by country; EN/HE coverage |
 
-### 1.3 Primary audiences (personas)
-- **P1 — Safety / HSE Officer** (shipping, offshore): needs compliance proof, drill realism, datasheets.
-- **P2 — Fleet / Procurement Manager**: needs models comparison, pricing path, bulk/quote.
-- **P3 — Training Coordinator** (academy, SAR, lifeguard): needs training protocols, videos, durability.
-- **P4 — Distributor / Reseller**: needs partner program, margins, marketing assets.
-- **P5 — Navy / Coast Guard buyer**: needs specs, ruggedness, procurement/tender support.
+### 2.2 Audiences (the 8 segments the product serves)
+Naval & Coast Guard · Sailing Schools & Skipper Courses · Superyacht Crew Certification · Maritime Police & Rescue · Lifeguard Training Centers · Offshore & Oil‑Platform Workers · Maritime Academies · Cruise & Ferry Operators.
 
-### 1.4 Success definition
-A visitor can, within ~2 minutes: understand what KARINA is, see it work (video), find the right model, confirm it meets their standard, and take one clear action — **Request a Quote** or **Find a Distributor**.
+### 2.3 Primary conversion
+**Request Information** (primary) and **Book a Demonstration** (Monaco / on‑site). No e‑commerce.
 
 ---
 
-## 2. Site Map
+## 3. Site Map
 
 ```
-KARINA.com  (default: EN  ·  locale switch: EN | HE  ·  extensible: ES/FR/DE/EL/ZH)
+KARINA.com  (default: EN  ·  locale switch: EN | HE  ·  extensible: FR/IT/ES/EL)
 │
-├── / …………………………………………………… Home
-│
-├── /product ……………………………………… Product (overview / hub)
-│   ├── /product/karina-pro ………… KARINA Pro   (adult, full-weight MOB)
-│   ├── /product/karina-lite ……… KARINA Lite  (lightweight / drill volume)
-│   ├── /product/karina-cadet …… KARINA Cadet (child-size / lifeguard)
-│   ├── /product/karina-sar ……… KARINA SAR   (weighted / helicopter & rough-sea)
-│   ├── /product/compare ………………… Model Comparison
-│   └── /product/accessories …… Accessories & Spare Parts
-│
-├── /technology ……………………………… Features & Technology
-│
-├── /industries ……………………………… Industries / Use Cases (hub)
-│   ├── /industries/commercial-shipping
-│   ├── /industries/navy-coast-guard
+├── / ………………………………………… Home
+├── /product …………………………… The KARINA Mannequin (single product)
+│   └── /product/specifications … Technical Specifications
+├── /technology ……………………… How It Works (buoyancy, weight, tow, materials)
+├── /industries ……………………… Who Needs KARINA (hub)
+│   ├── /industries/naval-coast-guard
+│   ├── /industries/sailing-schools
+│   ├── /industries/superyacht-crew
+│   ├── /industries/maritime-police-rescue
+│   ├── /industries/lifeguard
 │   ├── /industries/offshore-energy
-│   ├── /industries/cruise-passenger
-│   ├── /industries/ports-harbors
 │   ├── /industries/maritime-academies
-│   ├── /industries/search-and-rescue
-│   └── /industries/lifeguard-water-safety
-│
-├── /specifications ………………………… Technical Specifications
-│
-├── /compliance …………………………………… Compliance & Certifications (SOLAS/IMO context)
-│
-├── /resources ……………………………………… Resources (hub)
-│   ├── /resources/training ……………… Training & Drill Protocols
-│   ├── /resources/videos ………………… Video Library
-│   ├── /resources/downloads …………… Datasheets, Manuals, CAD
-│   ├── /resources/case-studies …… Case Studies
-│   ├── /resources/blog ……………………… News & Blog
-│   │   └── /resources/blog/{slug} … Article
-│   └── /resources/faq …………………………… FAQ
-│
-├── /distributors ……………………………… Find a Distributor / Where to Buy (map)
-│   └── /distributors/become-a-partner … Partner / Reseller Program
-│
-├── /about ……………………………………………… About the Company
-│   ├── /about/story …………………………… Story / Mission
-│   ├── /about/careers ……………………… Careers (optional / phase 2)
-│   └── /about/press ………………………… Press & Media Kit
-│
-├── /quote ……………………………………………… Request a Quote  (primary conversion)
-├── /demo ………………………………………………… Book a Demo / Trial  (secondary conversion)
-├── /contact ………………………………………… Contact
-│
-└── System / Utility
-    ├── /search ……………………………………… Search results
-    ├── /404 …………………………………………… Not found
-    ├── /500 …………………………………………… Error
-    ├── /sitemap.xml, /robots.txt … Machine
-    ├── /legal/privacy ………………………… Privacy Policy
-    ├── /legal/terms ………………………………… Terms of Use
-    ├── /legal/cookies ……………………………… Cookie Policy
-    └── /legal/accessibility ………………… Accessibility Statement
+│   └── /industries/cruise-ferry
+├── /patent ……………………………… Patent & Innovation (IP status, no cert claims)
+├── /monaco ……………………………… Monaco Yacht Show 2026 (debut + book a demo)
+├── /about ………………………………… Karin Keren — the inventor / story
+├── /resources ………………………… Resources (hub)
+│   ├── /resources/videos ………… Video library
+│   ├── /resources/downloads …… Spec sheet, brochure
+│   └── /resources/faq …………………… FAQ
+├── /request-info ……………………… Request Information  (primary conversion)
+├── /book-demo …………………………… Book a Demonstration  (secondary conversion)
+├── /contact ……………………………… Contact
+└── System: /search · /404 · /500 · sitemap.xml · robots.txt
+    └── /legal/{privacy,terms,cookies,accessibility}
 ```
 
-**Depth rule:** No primary content is deeper than **3 clicks** from Home.
+**Depth rule:** no primary content deeper than 3 clicks from Home.
 
 ---
 
-## 3. Pages & Sections
+## 4. Pages & Sections
 
-Legend for reusable blocks: **[Header]** global header · **[Footer]** global footer · **[CTA‑Band]** conversion band (Quote/Demo) · **[Breadcrumb]** on all non‑home pages.
+Reusable blocks: **[Header]** · **[Footer]** · **[CTA‑Band]** (Request Info / Book Demo) · **[Breadcrumb]** on all non‑home pages.
 
-### 3.1 Home `/`
-1. **Hero** — cinematic MOB‑drill background video, headline, sub‑headline, dual CTA (Request a Quote / Watch it work).
-2. **Trust bar** — logos/segments served + key standard badges (SOLAS/IMO context).
-3. **What is KARINA** — 3‑column value props (Realistic · Durable · Compliant).
-4. **Product family** — 4 model cards (Pro / Lite / Cadet / SAR) → product pages.
-5. **See it in action** — featured drill video + short stat counters (weight, buoyancy, drills survived, years UV‑rated).
-6. **Industries strip** — horizontally scrollable industry tiles → industry pages.
-7. **Why KARINA** — differentiators (realistic human dynamics, recovery harness, high‑visibility, saltwater/UV resistance).
-8. **Compliance & standards** — badges + link to `/compliance`.
-9. **Featured case study** — quote + result metric.
-10. **Resources teaser** — latest training guide / video / article (3 cards).
-11. **Distributor CTA** — "Global network" + map thumbnail → `/distributors`.
-12. **[CTA‑Band]** — Request a Quote.
-13. **Newsletter signup**.
-14. **[Footer]**.
+### 4.1 Home `/`
+1. **Hero** — full‑bleed image/video of KARINA in the sea, wordmark, "The Ultimate Maritime Rescue Dummy", sub "A medical & educational training solution for seafaring", event tag "Monaco Yacht Show · Sept 2026", CTA (Request Information / Watch it work). Stat strip: 158 cm · 70 kg · 55–65 kg in water.
+2. **The Challenge** — "MOB Training Has a Fatal Flaw" (false muscle memory · wrong weight & drag · no human shape → KARINA solves all three).
+3. **What is KARINA** — 3 value props (Realistic · Life‑weight · Anatomical).
+4. **Technical Specifications** — spec strip + link to full specs.
+5. **Why KARINA** — 6 feature cards (True MOB behavior, calibrated weight, tow strap, open‑water, visual realism, durable).
+6. **Who Needs KARINA** — 8 audience tiles → industry pages.
+7. **Monaco** — debut banner → `/monaco` (Book a Demonstration).
+8. **The Inventor** — Karin Keren teaser → `/about`.
+9. **Patent badge** — "Patent Registered" → `/patent`.
+10. **[CTA‑Band]** — Request Information · **Contact** (email + WhatsApp).
+11. **[Footer]**.
 
-### 3.2 Product hub `/product`
-1. [Breadcrumb] 2. Intro/positioning 3. Model selector cards (4) 4. Comparison table teaser → `/product/compare` 5. Accessories teaser 6. "How to choose" guided helper 7. [CTA‑Band] 8. [Footer].
+### 4.2 Product `/product`
+1. [Breadcrumb] 2. Product hero (gallery/360) + wordmark + one‑liner + CTA (Request Info / Download spec sheet) 3. Key spec strip 4. Highlights (image↔text ×4: buoyancy, weight, tow strap, durability) 5. In‑water demo video 6. Full spec table → `/product/specifications` 7. Best for (8 audience chips) 8. Patent note 9. [CTA‑Band] 10. [Footer].
 
-### 3.3 Product detail (template) `/product/{model}`
-Applies to Pro / Lite / Cadet / SAR.
-1. [Breadcrumb]
-2. **Product hero** — 360°/gallery, model name, one‑liner, badges, dual CTA (Quote / Datasheet).
-3. **Key specs strip** — weight, height, buoyancy, material, visibility, recovery points.
-4. **Highlights** — 3–5 feature blocks (image/text alternating).
-5. **In‑water demo video**.
-6. **Full spec table** (mirrors `/specifications`, filtered to model).
-7. **Best for** — industries/use cases chips → industry pages.
-8. **Accessories compatible**.
-9. **Compliance for this model**.
-10. **Related models** / compare CTA.
-11. **[CTA‑Band]** 12. [Footer].
+### 4.3 Specifications `/product/specifications`
+1. [Breadcrumb] 2. Full spec table (height, weights, shoulder width, buoyancy profile, construction, retrieval, IP status) 3. Materials & environmental notes (ocean/port/lake/pool) 4. Packaging & shipping (TBD) 5. Download spec sheet (PDF) 6. [CTA‑Band] 7. [Footer].
 
-### 3.4 Model comparison `/product/compare`
-1. [Breadcrumb] 2. Sticky comparison table (models × attributes, highlight differences) 3. "Recommended for you" helper 4. [CTA‑Band] 5. [Footer].
+### 4.4 Technology `/technology`
+1. Hero 2. Anatomy/buoyancy interactive (annotated: head floats / body submerges) 3. Calibrated weight system (internal metal weights) 4. Professional tow strap (waist + thigh) 5. Materials & durability 6. Open‑water performance 7. [CTA‑Band] 8. [Footer].
 
-### 3.5 Accessories `/product/accessories`
-1. [Breadcrumb] 2. Category grid (harnesses, throw lines, storage bags, repair kits, ballast, hi‑vis panels, transponders) 3. Item cards (image, name, compatibility, "Add to quote") 4. [CTA‑Band] 5. [Footer].
+### 4.5 Industries hub `/industries` + detail template
+Hub: intro + 8 audience tiles. Detail: [Breadcrumb] · segment hero · why this segment needs realistic MOB training · how KARINA fits · relevant feature highlights · testimonial (when available) · [CTA‑Band].
 
-### 3.6 Technology `/technology`
-1. Hero 2. Anatomy interactive (annotated cutaway of the manikin) 3. Materials & durability 4. Human‑realistic dynamics (weight distribution, buoyancy) 5. Recovery & lifting system 6. Visibility & detection (hi‑vis, reflective, optional transponder) 7. Manufacturing & QA 8. [CTA‑Band] 9. [Footer].
+### 4.6 Patent & Innovation `/patent`
+1. [Breadcrumb] 2. The innovation (first true human‑form MOB mannequin) 3. Patent status (registered · prototype complete · production ready) 4. What it does NOT claim — legal‑accurate note (no SOLAS/IMO certification claim unless/until obtained) 5. [CTA‑Band] 6. [Footer].
 
-### 3.7 Industries hub `/industries`
-1. Intro 2. Industry tiles (8) 3. "Not sure?" contact prompt 4. [CTA‑Band] 5. [Footer].
+### 4.7 Monaco `/monaco`
+1. Hero (Monaco/superyacht) 2. "KARINA makes her international debut" 3. Event details (Monaco Yacht Show, September 2026) 4. Book a live demonstration (form/scheduling) 5. Gallery (once available) 6. [Footer].
 
-### 3.8 Industry detail (template) `/industries/{segment}`
-1. [Breadcrumb] 2. Segment hero (context imagery) 3. Challenge/regulatory context for the segment 4. How KARINA solves it 5. Recommended model(s) 6. Segment case study / testimonial 7. Relevant compliance 8. [CTA‑Band] 9. [Footer].
+### 4.8 About `/about`
+1. Section label "The Mind Behind KARINA" 2. Karin Keren — Entrepreneur · Skipper · Inventor 3. Story/mission (identified the gap; realistic human‑shaped MOB training) 4. Credentials (Patent Holder · Open‑Water Skipper · Monaco 2026) 5. [CTA‑Band] 6. [Footer].
 
-### 3.9 Specifications `/specifications`
-1. [Breadcrumb] 2. Filterable master spec table (all models) 3. Materials & environmental ratings 4. Dimensions & weights 5. Packaging & shipping data 6. Download datasheet (PDF) 7. [CTA‑Band] 8. [Footer].
+### 4.9 Resources `/resources` (+ /videos, /downloads, /faq)
+Hub with videos, downloads (spec sheet, brochure), FAQ (Product, Patent, Shipping, Training, Demo). Each ends in [CTA‑Band].
 
-### 3.10 Compliance `/compliance`
-1. [Breadcrumb] 2. Standards context (SOLAS, IMO MSC, MOB drill requirements) 3. Certification/badge grid 4. How KARINA supports drill compliance 5. Downloadable compliance docs 6. Disclaimer (legal) 7. [CTA‑Band] 8. [Footer].
+### 4.10 Request Information `/request-info` (primary)
+Intro/reassurance · form (name, org, role, country, use case/segment, message) · trust elements · confirmation with reference # · [Footer].
 
-### 3.11 Resources hub `/resources`
-1. Intro + search/filter 2. Featured resource 3. Tabs/cards: Training · Videos · Downloads · Case Studies · Blog · FAQ 4. Newsletter 5. [Footer].
+### 4.11 Book a Demonstration `/book-demo`
+Form (org, region, Monaco vs on‑site, preferred date, segment) + scheduling embed placeholder + confirmation.
 
-### 3.12 Training `/resources/training`
-1. [Breadcrumb] 2. Intro 3. Drill protocol library (step‑by‑step accordions) 4. Downloadable drill checklists 5. Related videos 6. [CTA‑Band] 7. [Footer].
+### 4.12 Contact `/contact`
+Email (`karin@karinkeren.com`), WhatsApp (`+972‑54‑624‑8546`), form, response‑time note, [Footer].
 
-### 3.13 Video library `/resources/videos`
-1. [Breadcrumb] 2. Filter bar (industry, model, drill type) 3. Video grid (lightbox player) 4. Load more 5. [Footer].
-
-### 3.14 Downloads `/resources/downloads`
-1. [Breadcrumb] 2. Filter (type: datasheet/manual/CAD/brochure; model) 3. Download list (gated vs open flagged) 4. [Footer].
-
-### 3.15 Case studies `/resources/case-studies` & detail
-List: filterable cards. Detail: challenge → solution → result metrics → quote → related model/CTA.
-
-### 3.16 Blog `/resources/blog` & article `/resources/blog/{slug}`
-List: featured + grid + categories/tags + pagination. Article: title, meta, hero, body (rich), share, author, related posts, [CTA‑Band].
-
-### 3.17 FAQ `/resources/faq`
-1. [Breadcrumb] 2. Search 3. Category accordions (Product, Compliance, Shipping, Training, Warranty) 4. "Still need help?" → contact 5. [Footer].
-
-### 3.18 Distributors `/distributors`
-1. [Breadcrumb] 2. Interactive world map + region filter 3. Distributor list (name, region, contact) 4. "No distributor in your region?" → contact 5. Become‑a‑partner CTA 6. [Footer].
-
-### 3.19 Become a partner `/distributors/become-a-partner`
-1. [Breadcrumb] 2. Value proposition for partners 3. Program tiers/benefits 4. Application form 5. FAQ 6. [Footer].
-
-### 3.20 About `/about` (+ /story, /press, /careers)
-Company mission, story timeline, values, team (optional), press kit downloads, media contacts, careers listing (phase 2).
-
-### 3.21 Request a Quote `/quote` (primary conversion)
-1. Intro/reassurance (response time, privacy) 2. Multi‑step form: (a) products & quantities (b) use case/industry (c) region (d) contact & company 3. Trust elements (logos, "no spam") 4. Confirmation state 5. [Footer].
-
-### 3.22 Demo `/demo`
-Book a live/virtual demo or on‑site trial: form (org, region, preferred date, model interest) + calendar/scheduling embed placeholder + confirmation.
-
-### 3.23 Contact `/contact`
-1. Contact options (form, email, phone, regional offices) 2. Map/offices 3. Response‑time note 4. [Footer].
-
-### 3.24 Utility pages
-Search results, 404 (with helpful links + search), 500, legal pages (privacy/terms/cookies/accessibility), sitemap.
+### 4.13 Utility
+Search, 404 (underwater visual + links), 500, legal (privacy/terms/cookies/accessibility).
 
 ---
 
-## 4. Navigation Hierarchy
+## 5. Navigation Hierarchy
 
-### 4.1 Global header (desktop)
+### 5.1 Header (desktop)
 ```
-[KARINA logo]   Product ▾   Technology   Industries ▾   Resources ▾   Compliance   About ▾      🔍   🌐 EN|HE   [ Request a Quote ]
+[KARINA wordmark]   Product ▾   Technology   Who Needs It ▾   Patent   Monaco   About      🌐 EN|HE   [ Request Information ]
 ```
-**Mega‑menu contents**
-- **Product ▾** → Pro · Lite · Cadet · SAR | Compare Models · Accessories | *(promo cell: featured model image + "Which KARINA is right for you?")*
-- **Industries ▾** → the 8 segments in a 2‑column list | *(promo cell: featured case study)*
-- **Resources ▾** → Training · Videos · Downloads · Case Studies · Blog · FAQ
-- **About ▾** → Story · Press · Distributors · Contact
+- **Product ▾** → The Mannequin · Specifications · Technology
+- **Who Needs It ▾** → the 8 audiences
+- Persistent CTA: **Request Information**; secondary quick‑contact (WhatsApp) icon.
 
-**Persistent CTA:** `Request a Quote` (visually primary), plus search 🔍 and locale switch 🌐.
+### 5.2 Header (mobile)
+`[☰]  [KARINA]  [Request Info]` → off‑canvas accordion; WhatsApp + locale + search at top; sticky "Request Information" bottom.
 
-### 4.2 Global header (mobile)
-```
-[☰]  [KARINA logo]  [ Quote ]
-```
-Off‑canvas drawer: accordion nav mirroring desktop; language switch + search at top; sticky "Request a Quote" at bottom.
+### 5.3 Footer (columns)
+Product (Mannequin, Specs, Technology) · Who Needs It (8 audiences) · Company (About, Patent, Monaco, Resources, Contact) · Utility (locale, WhatsApp, email, legal, © 2026 KARINA · Patent Registered · Inventor: Karin Keren · Israel).
 
-### 4.3 Footer (4–5 columns)
-- **Product:** Pro, Lite, Cadet, SAR, Compare, Accessories
-- **Solutions:** all 8 industries
-- **Resources:** Training, Videos, Downloads, Case Studies, Blog, FAQ, Compliance, Specifications
-- **Company:** About, Press, Careers, Distributors, Become a Partner, Contact
-- **Utility bar:** locale switch · newsletter · social icons · legal (Privacy/Terms/Cookies/Accessibility) · © line.
-
-### 4.4 Secondary navigation
-- **Breadcrumbs** on every non‑home page.
-- **In‑page anchor nav** (sticky sub‑nav) on long pages: Technology, Specifications, Product detail, Compliance.
-- **Contextual "next step"** links at section ends (e.g. product → compliance → quote).
+### 5.4 Secondary nav
+Breadcrumbs on all non‑home pages; sticky in‑page anchor nav on Technology & Specifications; contextual "next step" links (product → technology → request info).
 
 ---
 
-## 5. Wireframes
+## 6. Wireframes
 
-Low‑fidelity, structure only. `▓` = media/video, `■` = image, `▤` = text block, `◼` = button.
+`▓` media/video · `■` image · `▤` text · `◼` button. (Shown LTR for structure; RTL mirrored for Hebrew.)
 
-### 5.1 Home
+### 6.1 Home
 ```
 ┌───────────────────────────────────────────────────────────────┐
-│ [logo]  Product Technology Industries Resources About   🌐 [Quote]│  ← sticky header
+│ [KARINA]  Product Technology Who-Needs-It Patent Monaco About  🌐 [Request Info]│
 ├───────────────────────────────────────────────────────────────┤
-│ ▓▓▓▓▓▓▓▓▓▓  HERO video (MOB drill)  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ │
-│   H1: Train for the moment that matters                        │
-│   sub: The professional maritime rescue manikin                │
-│   ◼ Request a Quote     ◻ Watch it work                        │
+│ ▓ HERO — KARINA in the sea (navy/gold)                        │
+│   ◆ Monaco Yacht Show · Sept 2026                             │
+│   KARINA — The Ultimate Maritime Rescue Dummy                 │
+│   ◼ Request Information   ◻ Watch it work                     │
+│   stats: [158cm] [70kg] [55–65kg in water]                   │
 ├───────────────────────────────────────────────────────────────┤
-│ trust bar:  [seg] [seg] [seg] [seg]   · standards badges       │
+│ THE CHALLENGE — "MOB Training Has a Fatal Flaw"               │
+│ [False muscle memory][Wrong weight & drag][No human shape][✦KARINA]│
 ├───────────────────────────────────────────────────────────────┤
-│  What is KARINA                                                │
-│  ┌───────┐   ┌───────┐   ┌───────┐                             │
-│  │Realis.│   │Durable│   │Compli.│   (3 value cards, icons)     │
-│  └───────┘   └───────┘   └───────┘                             │
+│ Specs strip: height | dry wt | in-water | buoyancy | tow      │
 ├───────────────────────────────────────────────────────────────┤
-│  Product family                                                │
-│  ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐                               │
-│  │ ■Pro│ │■Lite│ │■Cadet│ │■SAR │  each: img/name/one-liner/→   │
-│  └─────┘ └─────┘ └─────┘ └─────┘                               │
+│ Why KARINA — 6 feature cards                                  │
 ├───────────────────────────────────────────────────────────────┤
-│  See it in action    ▓▓▓▓ featured video ▓▓▓▓                  │
-│  counters:  [80kg] [1:1 buoyancy] [500+ drills] [10yr UV]      │
+│ Who Needs KARINA — [8 audience tiles]                         │
 ├───────────────────────────────────────────────────────────────┤
-│  Industries →  [tile][tile][tile][tile][tile] ▸ (scroll)       │
+│ 🇲🇨 Monaco Yacht Show 2026  ◼ Book a Demonstration            │
 ├───────────────────────────────────────────────────────────────┤
-│  Why KARINA   ▤ text  |  ■ image (alternating rows ×3)         │
+│ The Inventor — ■ Karin Keren  → About                         │
 ├───────────────────────────────────────────────────────────────┤
-│  Compliance badges …………………………  → Learn more                  │
+│ ⚓ Patent Registered → learn more                             │
 ├───────────────────────────────────────────────────────────────┤
-│  “Case study quote”  — result metric        ◼ Read case        │
+│ CTA-BAND: Request Information · ✉ karin@karinkeren.com · 💬 WA │
 ├───────────────────────────────────────────────────────────────┤
-│  Resources: [card][card][card]                                 │
-├───────────────────────────────────────────────────────────────┤
-│  ▓ world map thumb   Global distributor network  ◼ Find one    │
-├───────────────────────────────────────────────────────────────┤
-│  CTA-BAND:  Ready to run your next drill?   ◼ Request a Quote  │
-├───────────────────────────────────────────────────────────────┤
-│  Newsletter  [email____] ◼                                     │
-├───────────────────────────────────────────────────────────────┤
-│  FOOTER  (Product | Solutions | Resources | Company | utility) │
+│ FOOTER                                                        │
 └───────────────────────────────────────────────────────────────┘
 ```
 
-### 5.2 Product detail (Pro/Lite/Cadet/SAR)
+### 6.2 Product
 ```
-┌───────────── header ──────────────────────────────────────────┐
-│ breadcrumb: Home / Product / KARINA Pro                        │
-├───────────────────────────────┬───────────────────────────────┤
-│  ■ 360° / gallery              │  KARINA Pro                   │
-│  [thumb][thumb][thumb]         │  one-liner                    │
-│                                │  badges: SOLAS-context, UV10y │
-│                                │  ◼ Request a Quote            │
-│                                │  ◻ Download datasheet         │
-├───────────────────────────────┴───────────────────────────────┤
-│ key specs strip: weight | height | buoyancy | material | vis   │
-├───────────────────────────────────────────────────────────────┤
-│ Highlights   ■ image | ▤ text   (alternating ×4)               │
-├───────────────────────────────────────────────────────────────┤
-│ ▓ In-water demo video                                          │
-├───────────────────────────────────────────────────────────────┤
-│ Full spec table  ▤▤▤▤▤▤                                        │
-├───────────────────────────────────────────────────────────────┤
-│ Best for:  [shipping][offshore][SAR] chips                     │
-├───────────────────────────────────────────────────────────────┤
-│ Compatible accessories  [card][card][card]                     │
-├───────────────────────────────────────────────────────────────┤
-│ Compliance for this model  badges + link                       │
-├───────────────────────────────────────────────────────────────┤
-│ Related models  [Lite][SAR]   ◼ Compare all                   │
-├───────────── CTA-BAND ──────────  FOOTER ─────────────────────┤
+│ breadcrumb: Home / Product                                    │
+│ ■ gallery/360        │  KARINA                               │
+│ [thumb][thumb]       │  one-liner · ⚓ Patent Registered      │
+│                      │  ◼ Request Information ◻ Spec sheet    │
+│ spec strip: 158cm | 70kg | 55–65kg | tow strap | waterproof   │
+│ Highlights ■|▤ (buoyancy / weight / tow / durability) ×4      │
+│ ▓ in-water demo video                                         │
+│ full spec table  ▤▤▤ → Specifications                         │
+│ Best for: [naval][sailing][superyacht][police][lifeguard]…    │
+│ CTA-BAND · FOOTER                                             │
 ```
 
-### 5.3 Model comparison
+### 6.3 Technology
 ```
-│ breadcrumb                                                     │
-│ ┌────────────┬────────┬────────┬────────┬────────┐            │
-│ │ Attribute  │  Pro   │  Lite  │ Cadet  │  SAR   │  ← sticky  │
-│ ├────────────┼────────┼────────┼────────┼────────┤            │
-│ │ Weight     │  80kg  │  40kg  │  25kg  │  95kg  │            │
-│ │ Buoyancy   │  ✓✓✓   │  ✓✓    │  ✓✓    │  ✓✓✓   │            │
-│ │ … rows …   │        │        │        │        │            │
-│ │ [Quote]    │  ◼     │  ◼     │  ◼     │  ◼     │            │
-│ └────────────┴────────┴────────┴────────┴────────┘            │
-│ “Recommended for you” helper (answer 2 Qs → model)            │
+│ sticky sub-nav: Buoyancy · Weight · Tow · Materials · Open-water│
+│ ▓ hero                                                        │
+│ [Buoyancy] ■ annotated cutaway (head floats / body submerges) │
+│ [Weight] ■|▤ calibrated internal weights                      │
+│ [Tow] ▓ waist+thigh strap detail                              │
+│ [Materials] ▤ waterproof fabric / internal filling            │
+│ CTA-BAND · FOOTER                                             │
 ```
 
-### 5.4 Industry detail
+### 6.4 Industry detail
 ```
-│ breadcrumb                                                     │
-│ ▓ segment hero (e.g. offshore rig at dusk)  H1 + sub          │
-│ Challenge / regulatory context  ▤▤▤                            │
-│ How KARINA solves it   ■ | ▤  (×3)                             │
-│ Recommended model(s)  [card][card]                             │
-│ “Quote from customer”  — metric                                │
-│ Relevant compliance badges                                     │
-│ CTA-BAND · FOOTER                                              │
+│ breadcrumb                                                    │
+│ ▓ segment hero (e.g. coast guard)  H1 + sub                  │
+│ Why realistic MOB training matters here ▤                     │
+│ How KARINA fits ■|▤ ×3                                        │
+│ Feature highlights · testimonial (if any)                     │
+│ CTA-BAND · FOOTER                                             │
 ```
 
-### 5.5 Technology
+### 6.5 Monaco
 ```
-│ sticky sub-nav: Anatomy · Materials · Dynamics · Recovery · QA │
-│ ▓ hero                                                         │
-│ [Anatomy] interactive cutaway ■ with + hotspots               │
-│ [Materials] ▤ | ■                                              │
-│ [Dynamics] ■ | ▤                                               │
-│ [Recovery] ▓ short loop                                        │
-│ [Visibility] ■ hi-vis / reflective                            │
-│ [QA] ▤                                                         │
-│ CTA-BAND · FOOTER                                              │
+│ ▓ Monaco / superyacht hero                                   │
+│ H1: KARINA — International Debut · Monaco Yacht Show Sept 2026 │
+│ event details ▤ · ◼ Book a Demonstration                     │
+│ gallery (when available) · FOOTER                            │
 ```
 
-### 5.6 Specifications
+### 6.6 Patent
 ```
-│ breadcrumb + sticky sub-nav                                    │
-│ filter chips: [All][Pro][Lite][Cadet][SAR]                     │
-│ master spec table (responsive → stacked cards on mobile)       │
-│ Materials & env ratings ▤                                      │
-│ Dimensions/weights ▤   Packaging/shipping ▤                    │
-│ ◼ Download full datasheet (PDF)                                │
-│ CTA-BAND · FOOTER                                              │
+│ breadcrumb                                                    │
+│ The innovation ▤ · Patent status: Registered / Prototype / Prod-ready│
+│ Legal-accurate note: no SOLAS/IMO certification claimed       │
+│ CTA-BAND · FOOTER                                            │
 ```
 
-### 5.7 Compliance
+### 6.7 About (Inventor)
 ```
-│ breadcrumb                                                     │
-│ standards context ▤▤                                           │
-│ badge grid  [■][■][■][■]                                       │
-│ how KARINA supports drill compliance ▤ | ■                     │
-│ downloadable docs list                                         │
-│ legal disclaimer (small)                                       │
-│ CTA-BAND · FOOTER                                              │
+│ "The Mind Behind KARINA"                                     │
+│ ■ Karin Keren  │  Entrepreneur · Skipper · Inventor          │
+│                │  story/mission ▤                            │
+│ tags: [Patent Holder][Open-Water Skipper][Monaco 2026]        │
+│ CTA-BAND · FOOTER                                            │
 ```
 
-### 5.8 Resources hub
+### 6.8 Request Information
 ```
-│ intro + [search____] filter                                    │
-│ ▓ featured resource (wide card)                                │
-│ tabs: Training | Videos | Downloads | Cases | Blog | FAQ       │
-│ card grid (12) → load more                                     │
-│ newsletter                                                     │
-│ FOOTER                                                         │
-```
-
-### 5.9 Video library
-```
-│ filter bar: [industry ▾][model ▾][drill type ▾]                │
-│ ┌▓──┐ ┌▓──┐ ┌▓──┐                                             │
-│ │play│ │play│ │play│   grid, click → lightbox player           │
-│ └───┘ └───┘ └───┘                                             │
-│ ◼ Load more · FOOTER                                          │
+│ Request Information                                           │
+│ ┌ name / org / role / country / segment ▾ / message ┐        │
+│ │ ◼ Send                                            │        │
+│ side: ✉ karin@karinkeren.com · 💬 WhatsApp · "reply within 1 business day"│
+│ → confirmation (reference #) · FOOTER                        │
 ```
 
-### 5.10 Distributors
+### 6.9 404
 ```
-│ breadcrumb                                                     │
-│ ┌───────────────────────────┐  region filter ▾                │
-│ │  ◯ interactive world map  │  ┌ distributor list ┐          │
-│ │   ● ● pins per region     │  │ name / region /→ │          │
-│ └───────────────────────────┘  └──────────────────┘          │
-│ “No distributor near you?” ◼ Contact us                       │
-│ Become a partner CTA · FOOTER                                  │
-```
-
-### 5.11 Request a Quote (multi‑step)
-```
-│  Step ● ─ ○ ─ ○ ─ ○   (Products · Use case · Region · Contact)│
-│  ┌──────────────────────────────────────────┐                 │
-│  │ [Pro ▢] qty[__]  [Lite ▢] qty[__] …       │                 │
-│  │ ◼ Next                                    │                 │
-│  └──────────────────────────────────────────┘                 │
-│  side: trust logos · “We reply within 1 business day” · 🔒     │
-│  → confirmation screen with reference # + next steps           │
-```
-
-### 5.12 Blog article
-```
-│ breadcrumb · category                                          │
-│ H1 · author · date · read time                                 │
-│ ▓/■ hero                                                       │
-│ ┌ body (rich text, images, pull-quotes) ┐  │ sticky share    │
-│ tags · author bio · related posts [3]                          │
-│ CTA-BAND · FOOTER                                              │
-```
-
-### 5.13 Contact
-```
-│ ┌ form: name/company/region/message ┐  │ ┌ offices/phone/email ┐│
-│ │ ◼ Send                            │  │ │ map · response note  ││
-│ FOOTER                                                         │
-```
-
-### 5.14 404
-```
-│  ▓ subtle underwater visual                                    │
-│  “This one drifted off course.”                                │
-│  [search____]  · popular links: Product · Industries · Contact │
+│ ▓ underwater visual · "This one drifted off course." · [search] · links │
 ```
 
 ---
 
-## 6. User Flows
+## 7. User Flows
 
-### 6.1 Primary — Safety officer → Quote
+### 7.1 Primary — segment buyer → Request Information
 ```
-Google (search: "man overboard training manikin SOLAS")
-  → Home  OR  Industry/Compliance landing
-  → reads value props / watches demo video
-  → Product hub → picks model (or Compare / "help me choose")
-  → Product detail → checks specs & compliance → downloads datasheet
-  → clicks "Request a Quote"
-  → Quote form (products → use case → region → contact)
-  → Confirmation (reference #, expected reply time)
-  → [email nurture]
+Search ("man overboard training dummy" / "MOB rescue mannequin")
+ → Home → The Challenge → Why KARINA → Technology/Specs
+ → download spec sheet → Request Information (segment + message)
+ → confirmation (reference #) → [email/WhatsApp follow-up]
 ```
 
-### 6.2 Distributor discovery → local buy
+### 7.2 Monaco → Book a Demonstration
 ```
-Home/Product → "Find a Distributor"
-  → Distributors map → filter by region
-  → distributor found → contact distributor
-      └─ if none → "Contact us" → Contact form (routed to regional sales)
+Home/Monaco banner → /monaco → event details → Book a Demonstration
+ → form (Monaco vs on-site, date, segment) → confirmation
 ```
 
-### 6.3 Become a partner
+### 7.3 Quick contact (mobile)
 ```
-Footer/Distributors → "Become a Partner"
-  → value prop + tiers → Application form → Confirmation → [sales follow-up]
-```
-
-### 6.4 Researcher / trainer → resources
-```
-Home/Resources → Training or Videos
-  → reads drill protocol / plays video
-  → downloads checklist (open) or datasheet (gated → light form)
-  → nurtured to Quote/Demo via CTA-band
+Any page → sticky WhatsApp / Request Info → short form or wa.me/972546248546
 ```
 
-### 6.5 "Help me choose" model helper
+### 7.4 Credibility path
 ```
-Product hub or Compare → "Which KARINA is right?"
-  → Q1 use case (drill volume / rough sea / lifeguard / child)
-  → Q2 environment (open sea / harbor / pool)
-  → Q3 handling (crane/heli / manual)
-  → recommended model card → Product detail / Quote
+Home → Patent → Technology → About (Karin Keren) → Request Information
 ```
 
-### 6.6 Mobile quick‑contact
+### 7.5 Locale switch
 ```
-Any page → sticky bottom "Request a Quote"
-  → short mobile-optimized form (fewer steps) → Confirmation
-```
-
-### 6.7 Locale switch
-```
-Any page → 🌐 EN|HE → same page in target locale (URL locale-prefixed) → RTL/LTR applied
+Any page → 🌐 EN|HE → equivalent page, RTL/LTR applied
 ```
 
-**Global flow rules:** every content page ends in a CTA‑band; every form ends in an explicit confirmation state; every dead end (404/no‑distributor) offers a next action.
+**Global rules:** every content page ends in a CTA‑band; every form ends in a confirmation; every dead end offers a next action.
 
 ---
 
-## 7. UI Component Library
+## 8. UI Component Library
 
-### 7.1 Global / layout
-- Top bar (announcement — optional, dismissible)
-- Sticky header + mega‑menu (desktop) / off‑canvas drawer (mobile)
-- Locale switcher (EN/HE, extensible)
-- Site search (overlay) + results component
-- Breadcrumbs
-- Sticky in‑page sub‑nav (anchor scrollspy)
-- Footer (multi‑column) + newsletter form + social row
-- CTA band (reusable conversion strip)
-- Cookie consent banner
-- Back‑to‑top button
+**Global/layout:** announcement bar (Monaco countdown, dismissible) · sticky header + dropdowns / off‑canvas mobile · locale switch (EN/HE) · site search · breadcrumbs · sticky in‑page anchor nav · footer + WhatsApp/email row · CTA band · cookie consent · back‑to‑top.
 
-### 7.2 Content blocks
-- Hero (video / image / split variants)
-- Value‑prop cards (icon + title + text)
-- Feature row (image↔text alternating)
-- Stat / counter block
-- Product card
-- Model comparison table (sticky header, mobile‑stack)
-- Spec table (filterable, responsive)
-- Industry tile / segment card
-- Case‑study card + case‑study detail layout
-- Blog card + article layout + pull‑quote
-- Resource card (type badge: video/PDF/guide)
-- Accordion (FAQ, drill protocols)
-- Tabs
-- Badge / certification chip
-- Testimonial / quote block
-- Timeline (About story)
-- Interactive anatomy diagram (hotspots + tooltips)
-- Interactive distributor map + region filter + list
+**Content blocks:** hero (image/video) · challenge cards · value‑prop cards · feature cards · stat strip · spec table · audience tile · industry detail layout · interactive buoyancy/anatomy diagram · testimonial/quote · inventor bio block · patent badge · Monaco event block · timeline (story).
 
-### 7.3 Media
-- Responsive image (art‑directed, `srcset`)
-- Video hero (muted autoplay loop, poster, reduced‑motion fallback)
-- Lightbox video player
-- Image gallery / 360° viewer
-- Logo strip / marquee
+**Media:** responsive image (`srcset`) · video hero (muted loop, poster, reduced‑motion fallback) · lightbox player · gallery/360 viewer · logo/wordmark.
 
-### 7.4 Forms & inputs
-- Text / email / phone / textarea / select / country‑select
-- Quantity stepper
-- Multi‑step form wizard (progress indicator)
-- Checkbox / radio / toggle
-- File‑gate (email for gated download)
-- Form validation states (inline errors, success)
-- Confirmation / thank‑you panel
-- Newsletter inline form
-- Scheduling embed placeholder (demo booking)
+**Forms:** text/email/phone/textarea/select/country‑select · segment select · multi‑step (request info / book demo) · validation states · confirmation panel · scheduling embed placeholder · WhatsApp deep‑link button.
 
-### 7.5 Interactive / utility
-- Buttons (primary / secondary / ghost / icon)
-- Chips / filter pills
-- Pagination / "Load more"
-- Toast / notification
-- Modal / drawer
-- Tooltip / popover
-- Skeleton loaders
-- Empty states (no results, no distributor)
-- Error states (404/500 content)
-- Progress bar / scroll indicator
+**Interactive/utility:** buttons (primary gold / secondary / ghost / icon / WhatsApp) · chips/filters · pagination/load‑more · toast · modal/drawer · tooltip · skeleton loaders · empty/error states · scroll progress.
 
-### 7.6 States to define for each component
-Default · Hover · Focus (visible ring) · Active · Disabled · Loading · Error · Empty · RTL mirror.
+**States per component:** default · hover · focus (visible ring) · active · disabled · loading · error · empty · RTL mirror.
 
 ---
 
-## 8. Animation List
+## 9. Animation List
 
-> All animations respect `prefers-reduced-motion` (disabled/minimized when set). Durations 150–600 ms, easing = ease‑out for entrances.
+> All respect `prefers-reduced-motion`. 150–600 ms, ease‑out entrances. Marine/gold‑restrained motion.
 
-| # | Where | Animation | Trigger | Notes |
-|---|-------|-----------|---------|-------|
-| A1 | Hero | Background drill video slow zoom / subtle parallax | Load / scroll | Poster first; lazy video |
-| A2 | Hero text | Staggered fade‑up of H1 → sub → CTAs | On load | 80 ms stagger |
-| A3 | Header | Shrink/elevate on scroll; hide on scroll‑down, show on scroll‑up | Scroll | |
-| A4 | Mega‑menu | Fade + slight slide‑down open | Hover/focus | |
-| A5 | Value cards | Fade‑up on enter viewport | Scroll (IO) | |
-| A6 | Stat counters | Count‑up numbers | Enter viewport | Once |
-| A7 | Product cards | Image scale + shadow lift on hover | Hover | |
-| A8 | Industry strip | Horizontal scroll snap + edge fade | Drag/scroll | |
-| A9 | Feature rows | Alternating slide‑in (image L / text R) | Scroll | |
-| A10 | Anatomy diagram | Hotspot pulse; tooltip pop; cutaway reveal | Hover/tap | Key differentiator |
-| A11 | Comparison table | Column highlight on hover; diff‑cell emphasis | Hover | |
-| A12 | Accordion (FAQ/drills) | Smooth height expand + chevron rotate | Click | |
-| A13 | Tabs | Sliding active indicator | Click | |
-| A14 | Distributor map | Pin drop + cluster expand; region hover highlight | Load/hover | |
-| A15 | Multi‑step form | Step transition slide + progress fill | Next/Back | |
-| A16 | Buttons | Press/ripple + focus ring; loading spinner | Interaction | |
-| A17 | CTA band | Subtle wave/current motion background | Ambient | Very low intensity |
-| A18 | Lightbox | Scale‑in open, backdrop fade | Open/close | |
-| A19 | Toasts | Slide‑in from edge + auto‑dismiss | Event | |
-| A20 | Page transitions | Fade / route progress bar | Navigation | Optional |
-| A21 | Scroll progress | Thin top progress bar on articles | Scroll | |
-| A22 | Newsletter success | Check‑mark draw animation | Submit | |
-| A23 | Back‑to‑top | Fade in past 1 viewport; smooth scroll | Scroll | |
-| A24 | Skeletons | Shimmer while loading media/lists | Load | |
-
-**Motion principles:** purposeful, water/marine‑inspired but restrained; never block interaction; GPU‑friendly (transform/opacity only); full reduced‑motion parity.
+| # | Where | Animation | Trigger |
+|---|-------|-----------|---------|
+| A1 | Hero | Slow zoom / gentle parallax on sea image/video | load/scroll |
+| A2 | Hero text | Staggered fade‑up (wordmark → sub → CTA → stats) | load |
+| A3 | Header | Shrink/elevate on scroll; hide‑down/show‑up | scroll |
+| A4 | Announcement | Monaco countdown subtle pulse | ambient |
+| A5 | Challenge cards | Fade‑up on enter; highlight the "KARINA solves" card | scroll |
+| A6 | Stat strip | Count‑up (158 / 70 / 55–65) | enter viewport |
+| A7 | Feature cards | Lift + shadow on hover | hover |
+| A8 | Audience tiles | Scroll‑snap row / hover highlight | scroll/hover |
+| A9 | Buoyancy diagram | Hotspot pulse; water‑line reveal (head floats/body submerges) | hover/tap |
+| A10 | Gold divider | Shimmer sweep | ambient (subtle) |
+| A11 | Dropdown menus | Fade + slide‑down | hover/focus |
+| A12 | Accordion (FAQ) | Height expand + chevron rotate | click |
+| A13 | Multi‑step form | Step slide + progress fill | next/back |
+| A14 | Buttons | Press + focus ring; loading spinner | interaction |
+| A15 | CTA band | Subtle current/wave motion | ambient |
+| A16 | Lightbox | Scale‑in + backdrop fade | open/close |
+| A17 | Monaco block | Flag/parallax subtle | scroll |
+| A18 | Toasts | Slide‑in + auto‑dismiss | event |
+| A19 | Scroll progress | Thin top bar on long pages | scroll |
+| A20 | Confirmation | Check‑mark draw | submit |
+| A21 | Back‑to‑top | Fade in past 1 viewport | scroll |
+| A22 | Skeletons | Shimmer while loading | load |
 
 ---
 
-## 9. Required Videos & Images
+## 10. Required Videos & Images
 
-### 9.1 Video assets
-| ID | Asset | Use | Spec / notes |
-|----|-------|-----|--------------|
-| V1 | **Hero drill film** (30–60 s, loopable, muted) | Home hero, product heroes | Cinematic MOB drill; multiple crops (16:9, 9:16, poster) |
-| V2 | **Product demo — in water** (per model, 60–90 s) | Product detail, video library | Show buoyancy, recovery, visibility |
-| V3 | **Recovery/lift sequence** (15–20 s loop) | Technology › Recovery | Crane/heli/manual variants |
-| V4 | **Anatomy/tech explainer** (60–90 s, animated) | Technology | Cutaway, materials |
-| V5 | **Industry mini‑films** (30–45 s ×8) | Industry pages | Shipping, offshore, cruise, SAR, etc. |
-| V6 | **Testimonial clips** (30–60 s) | Case studies, home | Customer voice |
-| V7 | **Training/drill protocol** (2–4 min ×N) | Resources › Training | Step‑by‑step |
-| V8 | **Brand film** (60–90 s) | About | Mission/story |
+Governed by the Media Library: [`media-library/`](./media-library/) — 9 categories (Hero, Gallery, Technology, Training, Rescue, Monaco, Founder, Concept Vision, Marketing) + logos + icons. Full per‑asset list with filenames, formats and recommended dimensions in [`media-library/media-registry.csv`](./media-library/media-registry.csv) and [`media-library/missing-assets.md`](./media-library/missing-assets.md).
 
-**Video delivery:** compressed MP4/WebM, adaptive where possible, poster images, captions/subtitles (EN+HE), reduced‑motion static fallback.
+**Already live (HAVE):** Hero image ("KARINA floating in the sea") and Technical Diagram (both on the Base44 CDN). **`public/images/karin.jpg`** available for the founder/About.
 
-### 9.2 Photography / image assets
-| ID | Asset | Use |
-|----|-------|-----|
-| I1 | Product studio shots — each model, multiple angles + 360° frames | Product pages, cards |
-| I2 | Detail/macro — materials, harness, hi‑vis, reflective, stitching | Technology, specs |
-| I3 | In‑context action stills — deck, water, rough sea, night hi‑vis | Heroes, industries |
-| I4 | Industry environment imagery (8 segments) | Industry pages, tiles |
-| I5 | People/training in action (crew running drills) | Training, case studies |
-| I6 | Accessories product shots | Accessories page |
-| I7 | Anatomy cutaway illustration (annotated) | Technology interactive |
-| I8 | World/region map artwork + pins | Distributors |
-| I9 | Compliance/certification badge set | Compliance, product, home |
-| I10 | Team/company/press images | About |
-| I11 | Icon set (value props, features, categories) | Global |
-| I12 | OG/social share images (per key page) | SEO/social |
-| I13 | Favicon / app icons / logo variants (light/dark, RTL‑safe) | Global |
+**Highest‑priority to produce:** in‑water demo video (Rescue) · buoyancy/anatomy cutaway (Technology) · studio + 360 product shots (Gallery) · Karin Keren portrait/action (Founder) · Monaco event imagery (Monaco) · vector logo + favicon (Logos) · real icon set (Icons) · OG/social images (Marketing) · spec‑sheet & brochure.
 
-### 9.3 Documents (linked media)
-Datasheets (per model, PDF, EN+HE) · full brochure · compliance docs · drill checklists · CAD/3D files · press/media kit.
-
-**Asset guidelines:** consistent marine/professional look; hi‑vis colors true‑to‑product; safe‑area for text overlays on heroes; all imagery available in appropriate resolutions/formats (AVIF/WebP + fallback); alt text specified for every image (accessibility + SEO).
+**Video delivery:** MP4+WebM, poster, captions EN/HE, reduced‑motion static fallback. **Images:** AVIF/WebP + JPG fallback, alt text per image.
 
 ---
 
-## 10. SEO Strategy
+## 11. SEO Strategy
 
-### 10.1 Objectives
-Rank internationally for high‑intent B2B maritime‑safety queries; win category authority for "man overboard / MOB training manikin"; support multilingual reach.
+### 11.1 Keyword themes
+- **Transactional:** "man overboard training dummy", "MOB rescue mannequin", "maritime rescue training dummy", "man overboard drill equipment", "rescue mannequin for sale".
+- **Segment:** "coast guard MOB training", "sailing school man overboard drill", "superyacht crew rescue training", "lifeguard rescue mannequin".
+- **Informational (resources/FAQ):** "how to run a man overboard drill", "man overboard recovery techniques", "MOB drill checklist", "why buoys fail MOB training".
+- **Brand/event:** "KARINA rescue mannequin", "KARINA Monaco Yacht Show 2026", "Karin Keren KARINA".
 
-### 10.2 Keyword themes (seed)
-- **Transactional:** "man overboard training manikin", "MOB rescue dummy", "water rescue manikin for sale", "maritime rescue training doll", "SOLAS MOB drill equipment".
-- **Segment:** "navy man overboard training", "offshore MOB drill manikin", "cruise ship rescue drill dummy", "lifeguard rescue manikin".
-- **Informational (blog/resources):** "how to run a man overboard drill", "SOLAS MOB drill requirements", "MOB recovery techniques", "man overboard procedure checklist".
-- **Comparison/brand:** "KARINA manikin", "[competitor] alternative", "best rescue training manikin".
+Each primary page owns one cluster; resources capture informational long‑tail feeding Request Information.
 
-Each primary page owns **one** keyword cluster; blog captures informational long‑tail feeding the funnel.
+### 11.2 On‑page
+Unique title (≤60) + meta description (≤155) per page, localized · single H1 · logical H2/H3 mirroring sections · clean human URLs (per site map) · hub‑and‑spoke internal links · image alt text + descriptive filenames · breadcrumb markup.
 
-### 10.3 On‑page SEO (per page requirements)
-- Unique `<title>` (≤60 chars) & meta description (≤155) — templated per page type, localized.
-- One `<h1>` per page; logical H2/H3 outline mirroring sections.
-- Descriptive, keyword‑aware, human URLs (already reflected in site map).
-- Internal linking: hub‑and‑spoke (Product/Industries/Resources hubs → children; contextual cross‑links product↔industry↔compliance↔quote).
-- Image alt text + descriptive filenames; captions where useful.
-- Breadcrumb markup on all pages.
+### 11.3 Technical
+- i18n: locale‑prefixed URLs (`/en/`, `/he/`), `hreflang` incl. `x-default`, per‑locale sitemaps.
+- XML sitemap + robots.txt · self‑referencing canonicals · Core Web Vitals (LCP<2.5s, INP<200ms, CLS<0.1) · mobile‑first · HTTPS/HTTP2 · next‑gen images · lazy‑load.
+- Structured data (JSON‑LD): `Organization` (KARINA / Karin Keren), `Product` (the mannequin, spec properties), `BreadcrumbList`, `FAQPage`, `VideoObject`, `Event` (Monaco Yacht Show 2026), `Person` (Karin Keren).
 
-### 10.4 Technical SEO
-- **Internationalization:** locale‑prefixed URLs (`/en/…`, `/he/…`), `hreflang` tags (incl. `x-default`), per‑locale sitemaps.
-- XML sitemap(s) + `robots.txt`; clean canonical tags (self‑referencing; canonical for filtered/paginated views).
-- Fast, Core‑Web‑Vitals‑optimized (see §12): LCP < 2.5s, INP < 200ms, CLS < 0.1.
-- Mobile‑first, responsive, no interstitial traps.
-- HTTPS, HTTP/2+, compression, image next‑gen formats, lazy‑loading.
-- Handle pagination (blog), faceted filters (specs/videos) without index bloat (canonical/`noindex` filtered states as needed).
-- Structured data (JSON‑LD): `Organization`, `Product` (+ `Offer`/aggregate where legit), `BreadcrumbList`, `FAQPage` (FAQ), `VideoObject` (videos), `Article` (blog), `LocalBusiness`/distributor data where applicable.
+### 11.4 Content & authority
+Resources/FAQ targeting MOB‑drill informational queries → CTA. Monaco Yacht Show 2026 as a PR/event‑SEO hook (Event schema, press). Founder story for E‑E‑A‑T. Backlinks from maritime‑safety, sailing‑school, and event/press outlets.
 
-### 10.5 Content & authority
-- Resource/blog engine targeting informational queries (drills, standards, techniques) → conversion CTAs.
-- Case studies as social proof + long‑tail capture.
-- Digital PR / backlinks from maritime‑safety, standards, training bodies, distributor sites.
-- Video SEO (VideoObject schema, transcripts, hosting strategy, optional YouTube presence feeding site).
+### 11.5 Measurement
+Search Console per locale · analytics goals mapped to G1–G4 · event tracking (Request Info submit, Book Demo, spec‑sheet download, WhatsApp click, video play) · rank tracking for seed clusters.
 
-### 10.6 Local / international considerations
-- `hreflang` correctness EN↔HE (and future locales); avoid duplicate‑content penalties via canonical + hreflang.
-- Localized keywords (not literal translation) per market.
-- Distributor pages can capture regional/local intent.
-
-### 10.7 Measurement
-Search Console (per locale), analytics goals mapped to G1–G5, event tracking (quote submit, datasheet download, video play, distributor lookup), rank tracking for the seed clusters.
-
-### 10.8 Launch SEO checklist
-Redirect map (if any legacy) · sitemap submitted · robots verified · structured data validated · titles/metas/hreflang audited · CWV pass · 404/500 handled · analytics & Search Console verified per locale.
+### 11.6 Launch checklist
+Sitemap submitted · robots verified · structured data validated (incl. Event) · titles/metas/hreflang audited · CWV pass · 404/500 handled · analytics + Search Console per locale.
 
 ---
 
-## 11. Localization
+## 12. Localization
 
-- **Launch locales:** English (default, `x-default`) and Hebrew (RTL). Architecture must support adding ES/FR/DE/EL/ZH without rework.
-- **RTL:** full mirroring for Hebrew — layout direction, nav, breadcrumbs, sliders, icons that imply direction, form alignment; numerals/units handled correctly; typography stack includes robust Hebrew fonts.
-- **Content model:** every page, component string, alt text, meta, and document (datasheets) has an EN and HE variant; fallback to EN if a locale string is missing.
-- **Locale switch:** persists selection; switches to the equivalent page (not home) where it exists; URL locale‑prefixed.
-- **Translation:** professional, market‑adapted (transcreation for headlines/CTAs, not literal); consistent terminology glossary (marine/safety terms).
-- **Formats:** dates, numbers, phone, address formats localized; contact routing by region.
-
----
-
-## 12. Technical, Accessibility & Performance
-
-*(Non‑build requirements the future implementation must satisfy — stated here as spec constraints.)*
-
-- **Accessibility:** target **WCAG 2.2 AA** — semantic landmarks, keyboard operability, visible focus, color contrast, alt text, captioned video, form labels/errors, skip‑link, reduced‑motion support, ARIA only where needed; published Accessibility Statement.
-- **Performance:** Core Web Vitals green; image/video optimization; code‑split; lazy‑load below‑fold media; CDN; preconnect/preload critical assets; total weight budget per page.
-- **Responsive:** mobile‑first; breakpoints for phone/tablet/desktop/wide; touch targets ≥44px.
-- **Browser support:** current + 1 previous of major browsers; graceful degradation.
-- **Privacy/compliance:** cookie consent, GDPR‑ready forms (consent, data‑use), privacy policy; form spam protection.
-- **Analytics & tracking:** event schema for KPI goals; consent‑gated.
-- **CMS:** structured, localizable content types (page, product, industry, resource, case study, blog post, distributor, FAQ, download) — selection is phase 2.
-- **Security:** HTTPS, form validation/sanitization, rate‑limiting on submissions.
+- **Launch:** English (default, `x-default`) + Hebrew (RTL). Extensible to FR/IT/ES/EL (Monaco/Med markets).
+- **RTL:** full mirroring for Hebrew — layout, nav, breadcrumbs, sliders, directional icons, form alignment; robust Hebrew font paired with the brand stack (Cormorant Garamond/Montserrat both support Hebrew fallbacks — specify a Hebrew display + body pairing).
+- **Content model:** every page/string/alt/meta/document has EN + HE; fallback to EN.
+- **Locale switch:** persists; switches to the equivalent page; locale‑prefixed URL.
+- **Translation:** transcreation for headlines/CTAs; consistent marine/safety glossary; numbers/units (cm, kg) and phone formats localized.
 
 ---
 
-## 13. Appendix
-
-### 13.1 Content inventory (to be produced before build)
-Copy for every page/section · model spec data · compliance claims (legal‑reviewed) · all V/I assets (§9) · datasheets & documents · distributor list · translations (EN/HE).
-
-### 13.2 Conversion inventory
-Primary: Request a Quote. Secondary: Book a Demo, Download datasheet, Find a Distributor, Become a Partner, Newsletter. Each needs a form, confirmation, and routing/nurture definition.
-
-### 13.3 Open questions (need stakeholder input)
-1. Confirm the exact product line‑up & model names (Pro/Lite/Cadet/SAR are proposed).
-2. Confirm real compliance/certification claims permitted in marketing.
-3. Is a phase‑2 e‑commerce/accessories store desired?
-4. Launch locales beyond EN/HE?
-5. Existing brand assets (logo, colors, fonts) or design from scratch?
-6. Distributor data source & partner program details.
-7. Preferred demo‑scheduling / CRM / email tools for lead routing.
-8. Company/manufacturer name & "About" content.
-
-### 13.4 Suggested build phasing (informational)
-- **Phase 1 (MVP):** Home, Product (hub + 4 details + compare), Industries (hub + 8), Specifications, Compliance, Resources (hub + videos + downloads + FAQ), Distributors, About, Quote/Demo/Contact, legal, EN+HE.
-- **Phase 2:** Blog/case‑study engine at scale, partner portal, accessories store, added locales, advanced personalization.
+## 13. Technical, Accessibility & Performance
+*(Spec constraints for the future build.)*
+- **Accessibility:** WCAG 2.2 AA — semantic landmarks, keyboard, visible focus, contrast (verify gold `#c9a84c` on navy meets AA for text sizes used), alt text, captioned video, labelled forms, skip‑link, reduced‑motion, accessibility statement.
+- **Performance:** CWV green; image/video optimization; code‑split; lazy‑load; CDN; per‑page weight budget.
+- **Responsive:** mobile‑first; ≥44px touch targets.
+- **Privacy:** cookie consent, GDPR‑ready forms, privacy policy, form spam protection.
+- **CMS:** localizable content types (page, product, industry, resource, FAQ, video, download) — selection is phase 2.
+- **Security:** HTTPS, form validation/sanitization, rate‑limiting.
 
 ---
 
-*End of English specification. Hebrew mirror: `karina-website-spec-HE.md`.*
+## 14. Appendix
+
+### 14.1 To produce before build
+Copy per page (EN/HE) · media assets (see Media Library) · spec sheet & brochure · founder photography · Monaco assets · vector logo + favicon + icon set · translations · legal‑reviewed patent/claims wording.
+
+### 14.2 Open questions
+1. Confirm additional launch locales beyond EN/HE (FR/IT for Monaco?).
+2. Any certification pathway to claim later (currently patent only)?
+3. Distributor/reseller plan (not present on current site) — include now or phase 2?
+4. Demo scheduling / CRM tool for lead routing.
+5. Where are the FLOW / ChatGPT concept renders (if any) — to add to Media Library.
+
+### 14.3 Phasing
+- **Phase 1 (MVP):** Home, Product (+specs), Technology, Industries (hub + 8), Patent, Monaco, About, Resources (videos/downloads/FAQ), Request Info / Book Demo / Contact, legal, EN+HE.
+- **Phase 2:** case studies/testimonials engine, distributor network, added locales, richer video library.
+
+---
+
+*End of English specification v2.0. Hebrew mirror: `karina-website-spec-HE.md`. Product facts: `karina-brand-facts-SOURCE-OF-TRUTH.md`.*

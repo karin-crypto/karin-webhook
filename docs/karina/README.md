@@ -3,9 +3,11 @@
 > **Status:** Specification / Characterization only. **No code, no deployment, no publishing.**
 > This package defines *what* the KARINA international website must be and do. It does **not** implement it.
 
-**Product:** KARINA — a professional maritime training manikin ("man‑overboard" / water‑rescue training doll) for commercial shipping, navies, coast guards, offshore, cruise, ports, maritime academies, SAR teams and lifeguards.
+**Product:** KARINA — *The Ultimate Maritime Rescue Dummy* — a **single**, life‑size (158 cm), life‑weight (70 kg) female‑form **Man‑Overboard (MOB) training mannequin**. Patent registered. Debuting at the **Monaco Yacht Show, September 2026**. Inventor: **Karin Keren**.
 
-**Scope:** A brand‑new, fully standalone **international** website, independent from any existing site/system.
+**Scope:** A standalone **international** marketing & lead‑generation website, independent from any existing site/system.
+
+**Source of truth:** [`karina-brand-facts-SOURCE-OF-TRUTH.md`](./karina-brand-facts-SOURCE-OF-TRUTH.md) — real product facts, specs, branding, and contact, extracted from the live KARINA landing page. All other documents defer to it.
 
 ---
 
@@ -13,38 +15,33 @@
 
 | File | Language | Purpose |
 |------|----------|---------|
-| `karina-website-spec-EN.md` | English 🇬🇧 | Full specification — the master reference. |
-| `karina-website-spec-HE.md` | Hebrew 🇮🇱 (RTL) | Full specification — mirror of the English master. |
+| `karina-brand-facts-SOURCE-OF-TRUTH.md` | HE + EN | **Authoritative** product/brand facts (from live site). |
+| `karina-website-spec-EN.md` | English 🇬🇧 | Full specification v2.0 — master reference. |
+| `karina-website-spec-HE.md` | Hebrew 🇮🇱 (RTL) | Full specification v2.0 — mirror. |
+| `media-library/` | HE + EN | Categorized media catalog + registry + missing‑assets list. |
 | `README.md` | English | This overview / index. |
 
-Both language files contain the **same 11 required deliverables**:
+Both spec files contain the **same 11 required deliverables**: Site Map · All Pages · All Sections · Navigation Hierarchy · Wireframes · User Flows · UI Component Library · Animation List · Required Videos & Images · SEO Strategy · delivered in EN + HE.
 
-1. Full Site Map
-2. All Pages
-3. All Sections (per page)
-4. Navigation Hierarchy
-5. Wireframe for every page
-6. User Flows
-7. UI Component Library
-8. Animation List
-9. Required Videos & Images
-10. SEO Strategy
-11. Delivered in both Hebrew and English
+## Confirmed facts (v2.0 — replaces v1.0 assumptions)
 
-## Key assumptions (to confirm with stakeholders)
+- **F1 — Single product.** KARINA is one life‑size female‑form MOB mannequin (158 cm · 70 kg dry · 55–65 kg in water). *Not* a multi‑model family.
+- **F2 — IP.** **Patent registered**; prototype complete; production ready. **No SOLAS/IMO certification is claimed** (any future cert claim must be legally reviewed).
+- **F3 — Conversion.** B2B lead‑gen: **Request Information** + **Book a Demonstration**. No e‑commerce.
+- **F4 — Audiences (8):** Naval & Coast Guard · Sailing Schools & Skipper Courses · Superyacht Crew · Maritime Police & Rescue · Lifeguard · Offshore & Oil‑Platform · Maritime Academies · Cruise & Ferry.
+- **F5 — Launch anchor:** Monaco Yacht Show, September 2026.
+- **F6 — Brand:** Navy `#0d1b2e` + Gold `#c9a84c` + Cream; Cormorant Garamond + Montserrat; gold text wordmark (no vector logo yet).
+- **F7 — Founder:** Karin Keren (Entrepreneur · Skipper · Inventor). Contact: `karin@karinkeren.com` · `+972‑54‑624‑8546`.
+- **F8 — Languages at launch:** EN (default, `x-default`) + HE (RTL); extensible to FR/IT/ES/EL.
 
-These assumptions were made to produce a complete spec. Flag any that are wrong and the spec will be adjusted.
+## Media status
 
-- **A1 — Product nature:** KARINA is a physical maritime *training manikin* sold **B2B**; the site's primary goal is qualified lead / quote generation, not e‑commerce checkout.
-- **A2 — Audience:** Professional/institutional buyers (safety officers, fleet managers, procurement, training coordinators), plus distributors.
-- **A3 — Languages at launch:** English (default, international) + Hebrew (RTL). Architecture must allow adding more locales later (e.g. ES, FR, DE, EL, ZH).
-- **A4 — No online payment at launch.** Optional accessories store is a **phase‑2** consideration only.
-- **A5 — Regulatory framing:** Marketing references SOLAS / IMO / MOB drill contexts; exact certification claims must be legally reviewed before go‑live.
-- **A6 — Brand:** "KARINA" is the product brand; a separate manufacturer/company name may sit behind it (placeholder: "the Company").
+Live site references **2 images** (hero + technical diagram, on Base44 CDN) — cataloged as HAVE with live URLs. `public/images/karin.jpg` cataloged under Founder. All other assets are listed as needed in [`media-library/missing-assets.md`](./media-library/missing-assets.md) with filename · format · dimensions.
+
+> **Access note:** the live domain (`yachting.karinkeren.com`) and Base44 CDN are blocked by this environment's egress policy. Facts/assets above were recovered from the account's Google Drive copy of the landing page. To pull the live binaries directly, allowlist the domain and run in a fresh session.
 
 ## Out of scope for this phase
 
-- Visual design comps / brand identity (colors, logo, typography final)
-- Copywriting final text (placeholder messaging only)
-- CMS selection & build, front‑end/back‑end code
+- Final visual design comps · final copywriting
+- CMS selection & build; front‑end/back‑end code
 - Hosting, DNS, deployment, analytics account setup
