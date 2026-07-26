@@ -369,6 +369,36 @@ setInterval(() => {
   for (const [k, v] of sessionStore) if (now > v.expires) sessionStore.delete(k);
 }, 5 * 60 * 1000);
 
+/* ========================
+   SCHEDULED WHATSAPP DISPATCHER (Keren CRM)
+   Pings the Base44 dispatchScheduledMessages function on an interval so that
+   scheduled client messages ("send X to a client at 08:00") fire on time.
+   Configure via env:
+     KEREN_DISPATCH_URL           https://keren-wealth-flow.base44.app/functions/dispatchScheduledMessages
+     KEREN_DISPATCH_TOKEN         same value as the Base44 SIGNNOW_HOOK_TOKEN (or DISPATCH_TOKEN) secret
+     KEREN_DISPATCH_INTERVAL_SEC  optional, default 120
+   When unset, scheduled messages still flush opportunistically on WhatsApp activity,
+   but not at an exact time.
+   ======================== */
+const DISPATCH_URL      = process.env.KEREN_DISPATCH_URL;
+const DISPATCH_TOKEN    = process.env.KEREN_DISPATCH_TOKEN;
+const DISPATCH_EVERY_MS = (parseInt(process.env.KEREN_DISPATCH_INTERVAL_SEC) || 120) * 1000;
+if (DISPATCH_URL && DISPATCH_TOKEN) {
+  const pingDispatch = async () => {
+    try {
+      const sep = DISPATCH_URL.includes('?') ? '&' : '?';
+      const res = await fetch(`${DISPATCH_URL}${sep}token=${encodeURIComponent(DISPATCH_TOKEN)}`);
+      if (!res.ok) console.warn(`Scheduled dispatch ping returned ${res.status}`);
+    } catch (e) {
+      console.warn('Scheduled dispatch ping failed:', e.message);
+    }
+  };
+  setInterval(pingDispatch, DISPATCH_EVERY_MS);
+  console.log(`Scheduled WhatsApp dispatcher active – pinging every ${DISPATCH_EVERY_MS / 1000}s`);
+} else {
+  console.warn('⚠  KEREN_DISPATCH_URL / KEREN_DISPATCH_TOKEN not set – scheduled WhatsApp messages will only flush on WhatsApp activity');
+}
+
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
   if (!process.env.ROETO_API_URL) console.warn('⚠  ROETO_API_URL not set – Roeto integration disabled (dev/demo mode)');
