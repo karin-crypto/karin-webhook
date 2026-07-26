@@ -1,0 +1,110 @@
+<!--
+  Actuarial-balance comparison — Karin Keren brand (navy/gold), RTL.
+  Fill the {{...}} tokens. Each side can either embed a real mygemel.net screenshot
+  (set the <img src>) OR show the reproduced figure rows below it — keep whichever you use.
+  A reproduced card MUST keep the "שוחזר מנתוני mygemel.net" ribbon so nothing looks forged.
+  Render to PNG/PDF (or an artifact) and hand it to Karin.
+-->
+<meta charset="utf-8" />
+<title>השוואת איזון אקטוארי — {{NEG_FUND_NAME}} מול {{POS_FUND_NAME}}</title>
+<style>
+  :root {
+    --navy: #0f1f3d; --navy-soft: #1c3563; --gold: #c9a24b;
+    --red: #d0322e; --green: #1f9d55; --ink: #1b2431; --muted: #5c6b7a;
+    --line: #e4e8ee; --bg: #f6f7f9;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink); direction: rtl;
+    font-family: "Assistant","Heebo","Rubik",Arial,sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 28px 22px 34px; }
+  .head { text-align: center; margin-bottom: 22px; }
+  .head .brand { color: var(--gold); font-weight: 700; letter-spacing: .04em; font-size: 14px; }
+  .head h1 { margin: 6px 0 2px; color: var(--navy); font-size: 24px; }
+  .head .sub { color: var(--muted); font-size: 14px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: stretch; }
+  .card {
+    background: #fff; border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+    display: flex; flex-direction: column; box-shadow: 0 2px 10px rgba(15,31,61,.06);
+  }
+  .card .top { padding: 14px 16px; border-bottom: 1px solid var(--line); }
+  .card .fund { color: var(--navy); font-weight: 700; font-size: 17px; }
+  .card .track { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .card img { width: 100%; display: block; }
+  .ribbon { font-size: 11px; color: var(--muted); text-align: center; padding: 5px; background: #fbfbfd; border-top: 1px dashed var(--line); }
+  .rows { padding: 12px 16px; }
+  .row { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .row:last-child { border-bottom: 0; }
+  .row .k { color: var(--muted); }
+  .row .v { font-weight: 600; }
+  .balance { font-size: 22px; font-weight: 800; }
+  .neg { color: var(--red); } .pos { color: var(--green); }
+  .calc {
+    margin-top: 18px; background: var(--navy); color: #fff; border-radius: 14px; padding: 18px 20px;
+  }
+  .calc h2 { margin: 0 0 12px; font-size: 16px; color: var(--gold); }
+  .calc .lines { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .calc .cell { background: var(--navy-soft); border-radius: 10px; padding: 12px 14px; text-align: center; }
+  .calc .cell .lbl { font-size: 12px; opacity: .8; }
+  .calc .cell .big { font-size: 20px; font-weight: 800; margin-top: 4px; }
+  .calc .note { margin-top: 12px; font-size: 12px; opacity: .8; line-height: 1.5; }
+  .foot { text-align: center; color: var(--muted); font-size: 12px; margin-top: 16px; }
+  .foot b { color: var(--navy); }
+  @media (max-width: 620px) { .grid, .calc .lines { grid-template-columns: 1fr; } }
+</style>
+
+<div class="wrap">
+  <div class="head">
+    <div class="brand">קארין קרן · תכנון פנסיוני</div>
+    <h1>השוואת איזון אקטוארי</h1>
+    <div class="sub">מקור: mygemel.net · מסלול {{AGE_TRACK}} · דיווח {{REPORT_MONTH}}</div>
+  </div>
+
+  <div class="grid">
+    <!-- הקרן הנוכחית — איזון שלילי -->
+    <div class="card">
+      <div class="top">
+        <div class="fund">{{NEG_FUND_NAME}}</div>
+        <div class="track">{{AGE_TRACK}} · קרן נוכחית</div>
+      </div>
+      <!-- אופציה א': צילום מסך אמיתי -->
+      <img src="{{NEG_SCREENSHOT}}" alt="כרטיס {{NEG_FUND_NAME}} ב-mygemel.net" />
+      <!-- אופציה ב': שחזור מהנתונים (השאר את הריבון אם שיחזרת) -->
+      <div class="rows">
+        <div class="row"><span class="k">איזון אקטוארי</span><span class="v balance neg">{{NEG_BALANCE}}</span></div>
+        <div class="row"><span class="k">סך נכסי המסלול (מיליוני ₪)</span><span class="v">{{NEG_ASSETS}}</span></div>
+        <div class="row"><span class="k">מספר רישוי מסלול</span><span class="v">{{NEG_ROUTE_ID}}</span></div>
+      </div>
+      <div class="ribbon">שוחזר מנתוני mygemel.net</div>
+    </div>
+
+    <!-- קרן היעד/השוואה — איזון חיובי -->
+    <div class="card">
+      <div class="top">
+        <div class="fund">{{POS_FUND_NAME}}</div>
+        <div class="track">{{AGE_TRACK}} · קרן יעד</div>
+      </div>
+      <img src="{{POS_SCREENSHOT}}" alt="כרטיס {{POS_FUND_NAME}} ב-mygemel.net" />
+      <div class="rows">
+        <div class="row"><span class="k">איזון אקטוארי</span><span class="v balance pos">{{POS_BALANCE}}</span></div>
+        <div class="row"><span class="k">סך נכסי המסלול (מיליוני ₪)</span><span class="v">{{POS_ASSETS}}</span></div>
+        <div class="row"><span class="k">מספר רישוי מסלול</span><span class="v">{{POS_ROUTE_ID}}</span></div>
+      </div>
+      <div class="ribbon">שוחזר מנתוני mygemel.net</div>
+    </div>
+  </div>
+
+  <div class="calc">
+    <h2>החישוב</h2>
+    <div class="lines">
+      <div class="cell"><div class="lbl">פער באיזון האקטוארי</div><div class="big">{{GAP_PP}} נק' אחוז</div></div>
+      <div class="cell"><div class="lbl">על צבירה של {{CLIENT_BALANCE}}</div><div class="big">≈ {{SHEKEL_DIFF}}</div></div>
+      <div class="cell"><div class="lbl">לכל ₪100,000 צבירה</div><div class="big">≈ {{PER_100K}}</div></div>
+    </div>
+    <div class="note">האיזון האקטוארי הוא מדד לתקופת איזון אחת ומשתנה מרבעון לרבעון; זהו נתון תומך לצד תשואות ודמי ניהול, ואינו הבטחה לרווח קבוע.</div>
+  </div>
+
+  <div class="foot"><b>קארין קרן</b> · תכנון פנסיוני · 054-524-5380</div>
+</div>
