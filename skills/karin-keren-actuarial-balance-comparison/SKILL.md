@@ -61,7 +61,22 @@ the star of the screenshot.
 
 Get one card image per fund, in this order of preference:
 
-1. **Live screenshot (preferred).** Capture the fund's mygemel.net card with the helper:
+0. **The fund-cards library (check this FIRST).** Karin keeps a library of mygemel.net card
+   screenshots so they're associated with recommendations automatically — no re-uploading each
+   time. Look there before capturing anything new:
+   - **Google Drive folder** `כרטיסי קרנות פנסיה - mygemel`
+     (id `1iYdd6Gurp8GYnEio9ZUnZfES6iX3rbIQ`,
+     https://drive.google.com/drive/folders/1iYdd6Gurp8GYnEio9ZUnZfES6iX3rbIQ).
+     Search it with Drive `search_files` by fund name **and** age track, e.g.
+     `title contains 'הראל' and title contains '50 ומטה'`.
+   - **Repo mirror** `assets/fund-cards/` (for cards committed to version control).
+
+   Files follow the convention `<חברה>__<מסלול-גיל>__<YYYY-MM>.png`, e.g.
+   `הראל__גילאי-50-ומטה__2026-07.png`. Match on fund + age track; if several months exist, use the
+   most recent, and use the **same reporting month** for both funds. If the library has a card for
+   only one of the two funds, take that one from the library and get the other via the steps below.
+
+1. **Live screenshot.** Capture the fund's mygemel.net card with the helper:
    `node scripts/capture-mygemel-card.mjs "<fund mygemel.net URL>" <output.png>`
    (It uses the pre-installed Chromium at a mobile viewport, matching how the cards look on
    phones.) Find the URL by searching the fund + age track on mygemel.net. If the network blocks
@@ -76,6 +91,20 @@ Get one card image per fund, in this order of preference:
 `assets/example-harel-negative.png` (Harel −0.07%) and `assets/example-meitav-positive.png`
 (Meitav +0.10%) show exactly what a real mygemel.net card looks like — use them as the visual
 reference for both live capture framing and any reproduction.
+
+## Step 2b — Pull returns and fees too (the full picture)
+
+The actuarial balance is the headline, but a professional recommendation rests on the whole
+picture. For each fund, also read from its mygemel.net page and carry into the comparison:
+
+- **תשואה ממוצעת** — the average return, same window for both funds (prefer a 5-year / 60-month
+  average; note the window you used).
+- **דמי ניהול** — both figures: **מהפקדה** and **מצבירה**.
+
+The template has rows for these. If a fund is losing on the actuarial balance but clearly winning
+on long-term returns or fees (or vice versa), say so plainly — don't cherry-pick the one metric
+that supports the move. If the returns/fees actually contradict the recommendation, flag it to
+Karin before producing the comparison.
 
 ## Step 3 — Build the side-by-side comparison
 
@@ -118,7 +147,9 @@ Return, in one tidy message:
 - The one caveat line.
 - A short ready-to-paste Hebrew sentence Karin can drop into the recommendation, e.g.:
   > "בבדיקה ב-mygemel.net, האיזון האקטוארי של [קרן נוכחית] עומד על **[−X%]** (שלילי) לעומת
-  > **[+Y%]** ב-[קרן היעד] באותו מסלול גיל — פער של [gap] נק' אחוז לטובת המעבר, כ-[₪] על הצבירה שלך."
+  > **[+Y%]** ב-[קרן היעד] באותו מסלול גיל — פער של [gap] נק' אחוז לטובת המעבר, כ-[₪] על הצבירה
+  > שלך. גם בתשואה ל-5 שנים ובדמי הניהול [קרן היעד] עדיפה/דומה."
+  > (התאם את המשפט האחרון למה שהנתונים באמת מראים.)
 
 ## What "done" looks like
 
@@ -126,4 +157,6 @@ Return, in one tidy message:
   screenshot, Karin's screenshot, or a clearly-labeled faithful reproduction).
 - A side-by-side visual Karin can paste into a proposal or send on WhatsApp.
 - The gap computed in percentage points **and** in shekels on the client's balance.
+- **תשואה ודמי ניהול** shown for both funds, same window — and any metric that contradicts the
+  move surfaced honestly, not hidden.
 - One honest caveat, so the recommendation stays professional and compliant.
