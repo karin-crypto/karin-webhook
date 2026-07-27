@@ -9,6 +9,11 @@ truth; the live copies run from `~/.claude/skills/` in each session.
   fund and notes a negative actuarial balance (איזון אקטוארי שלילי), produces a side-by-side
   mygemel.net comparison of the negative fund vs a positive-balance fund on the same age track,
   and computes the gap and its shekel impact on the client's balance.
+- **`karin-keren-deposit-execution-details/`** — when Karin notes in a recommendation or meeting
+  summary that a transfer/deposit to an investment house or insurance company is needed, produces a
+  ready-to-execute "פרטים לביצוע הפקדה" block from a verified institutions reference (bank transfer
+  and/or masav) merged with the client's product, amount and reference. Never invents account
+  details — reads only verified values from `references/institutions.md`.
 
 ## Installing / updating a live skill
 
