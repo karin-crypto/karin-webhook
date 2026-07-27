@@ -92,6 +92,20 @@ Get one card image per fund, in this order of preference:
 (Meitav +0.10%) show exactly what a real mygemel.net card looks like — use them as the visual
 reference for both live capture framing and any reproduction.
 
+### Save new cards back to the library (build it automatically)
+
+Whenever you obtain a **fresh, real** card that wasn't already in the library — a live capture
+(option 1) or a screenshot Karin pasted (option 2) — save it to the Drive folder
+`כרטיסי קרנות פנסיה - mygemel` (id `1iYdd6Gurp8GYnEio9ZUnZfES6iX3rbIQ`) so the library grows on its
+own and next time it's found in step 0:
+
+- Upload with Drive `create_file` (`parentId` = the folder id, `base64Content` = the PNG,
+  `contentMimeType` = `image/png`, `disableConversionToGoogleType` = true).
+- Name it by the convention `<חברה>__<מסלול-גיל>__<YYYY-MM>.png` (see the fund-cards README).
+- **Skip** the upload if a card for the same fund + age track + reporting month already exists
+  (search first, don't duplicate), and **never** upload a reproduction (option 3) or a
+  screenshot you couldn't verify — the library holds real source cards only.
+
 ## Step 2b — Pull returns and fees too (the full picture)
 
 The actuarial balance is the headline, but a professional recommendation rests on the whole

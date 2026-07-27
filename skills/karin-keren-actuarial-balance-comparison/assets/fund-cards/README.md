@@ -25,3 +25,7 @@ Examples:
 
 Primary drop point for day-to-day use is the **Google Drive folder** (phone-friendly). Add a
 card here only when you want it under version control.
+
+The skill also **writes back** to the Drive folder: every fresh, real card it captures live (or
+that Karin pastes) is uploaded there under the naming convention — so the library builds itself
+over time. Reproductions and unverified images are never saved.
