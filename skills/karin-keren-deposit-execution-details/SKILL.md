@@ -53,6 +53,15 @@ institution requires** on the deposit (e.g. ת.ז + מספר פוליסה), and 
 
 - Match by institution name; if an institution runs different accounts per product (e.g. גמל vs
   פנסיה vs ביטוח), pick the row for the right product.
+- **CRITICAL — product family + legal entity decide the account, not the brand.** The same brand
+  (כלל, הראל, מיטב, מגדל, הפניקס…) operates through **separate legal entities with separate
+  accounts**: an **insurance/policy entity** for פוליסות ביטוח/חיסכון (e.g. "כלל חברה לביטוח בע״מ",
+  "הראל חברה לביטוח בע״מ") and a **gemel/pension entity** for קופות גמל / השתלמות / פנסיה / גמל
+  להשקעה (e.g. "כלל פנסיה וגמל בע״מ", "הראל פנסיה וגמל בע״מ", "מיטב גמל ופנסיה בע״מ"). A policy and a
+  provident fund at the *same brand* almost always have **different account numbers and a different
+  מוטב**. So resolve every lookup as **(brand → product family → legal entity → account)** and
+  **never reuse a policy account for a gemel/pension product or vice versa.** If the reference has an
+  account for one entity but not the other, use only the matching one and report the other as missing.
 - **Some institutions have more than one account set for the same product depending on the
   depositor's bank.** For example, **מיטב** lists one set of accounts for deposits *from banks other
   than Mizrahi* and another *for deposits through bank Mizrahi* (for pension the account is the same;
