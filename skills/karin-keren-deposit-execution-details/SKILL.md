@@ -53,8 +53,15 @@ institution requires** on the deposit (e.g. ת.ז + מספר פוליסה), and 
 
 - Match by institution name; if an institution runs different accounts per product (e.g. גמל vs
   פנסיה vs ביטוח), pick the row for the right product.
+- **Some institutions have more than one account set for the same product depending on the
+  depositor's bank.** For example, **מיטב** lists one set of accounts for deposits *from banks other
+  than Mizrahi* and another *for deposits through bank Mizrahi* (for pension the account is the same;
+  for גמל/השתלמות/גמל להשקעה it differs). When the reference shows such variants, pick the account by
+  **both the product and the bank the money is sent from** — and if the source bank is unknown, ask
+  Karin, or show both and label which is which. Never merge the two into one.
 - If the row (or a field you need for the chosen method) is blank / marked "— (לאימות)", **do not
-  fabricate it** — report it as missing and ask Karin to fill it.
+  fabricate it** — report it as missing and ask Karin to fill it. (E.g. Meitav's masab מוסד code is
+  not yet verified — a bank transfer works, but a הרשאה block needs it added first.)
 
 ## Step 3 — Build the block
 
