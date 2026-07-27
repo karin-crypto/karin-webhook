@@ -60,8 +60,11 @@ institution requires** on the deposit (e.g. ת.ז + מספר פוליסה), and 
   **both the product and the bank the money is sent from** — and if the source bank is unknown, ask
   Karin, or show both and label which is which. Never merge the two into one.
 - If the row (or a field you need for the chosen method) is blank / marked "— (לאימות)", **do not
-  fabricate it** — report it as missing and ask Karin to fill it. (E.g. Meitav's masab מוסד code is
-  not yet verified — a bank transfer works, but a הרשאה block needs it added first.)
+  fabricate it** — report it as missing and ask Karin to fill it.
+- **Masab (הרשאה) codes are per product too.** Meitav, for example, uses one מוסד code for
+  gemel+hishtalmut (39976), another for the IRA products (54334), and separate codes for
+  gemel-investment (07267) and each pension track (28452 / 46769) — pick by product. Note pension
+  standing orders at Meitav are debited only on the 10th of the month.
 
 ## Step 3 — Build the block
 
