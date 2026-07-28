@@ -5,8 +5,9 @@ description: >
   Use this skill WHENEVER Karin recommends a ניוד / consolidation / moving of savings (המלצה על ניוד,
   איחוד חסכונות, ריכוז כספים, "לנייד ל...", "לרכז את החסכונות") — compute the insured's TOTAL existing
   accumulation (סך הצבירה) across all their relevant funds, find the matching tier in the verified fee
-  schedule, and state the resulting management fee at the destination company (currently Clal / כלל —
-  חיסכון פיננסי). Trigger even if Karin doesn't ask for the fee explicitly — stating the post-transfer
+  schedule for the RIGHT product family, and state the resulting management fee at the destination
+  company (currently Clal / כלל — separate schedules for חיסכון פיננסי, ניוד גמל והשתלמות, and גמל
+  להשקעה). Trigger even if Karin doesn't ask for the fee explicitly — stating the post-transfer
   management fee is the expected companion to a transfer recommendation. Use ONLY the verified fee
   schedule in references/fee-schedules.md; never invent a rate. If the client's product family or the
   accumulation isn't covered by a verified schedule, say so rather than guessing.
@@ -25,8 +26,10 @@ From the portfolio analysis / recommendation / meeting summary, add up the clien
 balances (צבירה)** across the relevant funds being consolidated. Be explicit about:
 
 - Which balances you included (list them), and the **total**.
-- The **product family** — the Clal schedule below is for **חיסכון פיננסי** (קופת גמל להשקעה /
-  פוליסת חיסכון). Don't apply it to pension/hishtalmut unless a schedule for those is verified.
+- The **product family**, and pick the matching Clal schedule — they differ:
+  **חיסכון פיננסי** (פוליסת חיסכון) 1%→0.75% by accumulation · **ניוד גמל והשתלמות** 0.65/0.62/0.60%
+  by accumulation · **גמל להשקעה** flat 0.70%. Never apply one product's schedule to another, and
+  don't apply any of these to pension unless a pension schedule is verified.
 - If some balances are unknown, state the total is partial and which figure is missing.
 
 ## Step 2 — Read the fee off the verified schedule
