@@ -9,6 +9,9 @@ truth; the live copies run from `~/.claude/skills/` in each session.
   fund and notes a negative actuarial balance (איזון אקטוארי שלילי), produces a side-by-side
   mygemel.net comparison of the negative fund vs a positive-balance fund on the same age track,
   and computes the gap and its shekel impact on the client's balance.
+- **`karin-keren-management-fees/`** — when Karin recommends a ניוד / consolidation, sums the
+  client's total accumulation and states the resulting management fee at the destination company
+  (Clal financial-savings tiers) from a verified fee schedule. Never invents a rate.
 - **`karin-keren-deposit-execution-details/`** — when Karin notes in a recommendation or meeting
   summary that a transfer/deposit to an investment house or insurance company is needed, produces a
   ready-to-execute "פרטים לביצוע הפקדה" block from a verified institutions reference (bank transfer
