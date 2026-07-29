@@ -1,21 +1,24 @@
 # KARINA — Website (hand-built static site)
 
-Premium, self-contained single-page site implementing the KARINA spec. Navy + Gold brand, Cormorant Garamond + Montserrat, bilingual **EN/HE with full RTL**, restrained scroll animations.
+**Direction:** KARINA — **Marine Robot Ambassador** · *Deep. Smart. Human. · Built to explore. Designed to protect.*
+Premium, self-contained single-page site. Deep-ocean palette (abyss blue + cyan HUD + amber alert), monospace telemetry, bilingual **EN/HE with full RTL**, restrained HUD/scanline motion. Uses the real concept imagery provided by the client.
 
 ## Files
-- `index.html` — the complete site. Fully self-contained (inline CSS + JS). No build step, no dependencies.
+- `index.html` — the complete site (inline CSS + JS; no build step, no dependencies).
+- `assets/karina_ambassador.jpg`, `assets/karina_biometric.jpg` — optimized web imagery (cropped from the supplied concept posters; originals in `../media-library/assets/08-concept-vision/`).
+- `assets/video/karina_concept_video_01–03.mov` — concept films (play on hosting; see note).
+- `_robot_body.html` — body-only source template (image tokens) used to generate `index.html` and the preview.
 
-## Preview
-A live preview was published as an Artifact during the build session. In the Artifact, external assets are blocked by CSP, so brand fonts fall back to a serif/sans system stack and the two live photos don't load — the design is built to look intentional without them.
+## Live preview
+Published as an Artifact during the build session: **https://claude.ai/code/artifact/a4b4f98c-e4b2-4b9d-b995-144b360f88ae**
+The preview embeds the two images inline (data URIs) so they render despite the Artifact CSP; brand fonts fall back to a system sans stack there. The films are placeholders in the preview and play from `assets/video/` when hosted.
 
-## Hosting (real fonts + live photos)
-Host `index.html` on any static host (Netlify, Vercel, GitHub Pages, Cloudflare Pages, or this repo's Railway host). When served from a normal host:
-- **Google Fonts load** → real Cormorant Garamond + Montserrat.
-- **Live photography** can be wired in: the two live images referenced by the site live on the Base44 CDN (see `../media-library/media-registry.csv`, rows `KRN-HERO-001` / `KRN-TECH-001`). Drop real product/hero imagery into the hero and a Technology "plate" as desired.
+## Hosting
+Serve `index.html` on any static host (Netlify, Vercel, GitHub Pages, Cloudflare Pages, or this repo's Railway host). On a normal host: Google Fonts (Montserrat) load, and images/films resolve from `assets/`.
 
-## What's real vs. pending
-- **Real now:** all copy (EN/HE), specs, branding, structure, animations, buoyancy diagram, contact (email + WhatsApp), Monaco framing, patent-accurate claims.
-- **Pending media:** professional photography, in-water demo video, a vector logo and icon set — the biggest levers for a top-tier finish. See `../media-library/missing-assets.md`.
+**Video note:** the source films are `.mov` (QuickTime/H.264). Safari plays them; for reliable Chrome/Firefox playback, transcode to `.mp4` (H.264) + `.webm` and update the `<source>` in the Films section. No transcoder was available in the build environment.
 
-## Claims discipline
-Patent **registered**; KARINA is presented as a **training aid**. No SOLAS/IMO certification is claimed anywhere. Keep it that way until any certification is legally confirmed.
+## Content & claims
+Copy and capability claims (depth rating 1000 m, autonomous AI navigation, biometric + behavioral analytics, real-time distress detection) are taken directly from the client-supplied concept materials. Coordinates/telemetry mirror the posters (Mediterranean Sea). Contact: karin@karinkeren.com · WhatsApp +972-54-624-8546.
+
+> A previous build explored a "MOB rescue training mannequin" direction; the project has since committed to the **Marine Robot Ambassador** direction (this site). The earlier spec/copy docs under `docs/karina/` still describe the mannequin framing and should be reconciled to this direction if they are to be kept.
