@@ -1,13 +1,24 @@
-# KARINA — Website Specification (Characterization) Package
+# KARINA — Website Package
 
-> **Status:** Specification / Characterization only. **No code, no deployment, no publishing.**
-> This package defines *what* the KARINA international website must be and do. It does **not** implement it.
+> ## ✅ Current direction — **KARINA · Marine Robot Ambassador**
+> *Deep. Smart. Human. · Built to explore. Designed to protect.*
+> The project has committed to the **Marine Robot Ambassador** direction. The **built site** is the primary deliverable: [`site/`](./site/) (self‑contained `index.html` + real client imagery + concept films).
+> **Live preview:** https://claude.ai/code/artifact/a4b4f98c-e4b2-4b9d-b995-144b360f88ae
 
-**Product:** KARINA — *The Ultimate Maritime Rescue Dummy* — a **single**, life‑size (158 cm), life‑weight (70 kg) female‑form **Man‑Overboard (MOB) training mannequin**. Patent registered. Debuting at the **Monaco Yacht Show, September 2026**. Inventor: **Karin Keren**.
+**Product (current):** KARINA — an AI‑powered **marine‑robot ambassador**: autonomous navigation, biometric + behavioral intelligence, real‑time distress detection. Deep‑water rated. Creator: **Karin Keren**. Contact: `karin@karinkeren.com` · WhatsApp `+972‑54‑624‑8546`.
 
-**Scope:** A standalone **international** marketing & lead‑generation website, independent from any existing site/system.
+---
 
-**Source of truth:** [`karina-brand-facts-SOURCE-OF-TRUTH.md`](./karina-brand-facts-SOURCE-OF-TRUTH.md) — real product facts, specs, branding, and contact, extracted from the live KARINA landing page. All other documents defer to it.
+### Package map
+| Path | What it is | Reflects current direction? |
+|---|---|---|
+| [`site/`](./site/) | **The built website** (Marine Robot Ambassador) — primary deliverable | ✅ Yes |
+| [`media-library/`](./media-library/) | Categorized media catalog + registry; client concept posters & films under `assets/08-concept-vision/` | ✅ Yes (assets) |
+| `karina-website-spec-EN.md` / `-HE.md` | Full site specification (site map, wireframes, flows, UI, SEO) | ⚠️ Earlier *rescue‑mannequin* framing — reusable structure, copy needs reconciliation |
+| `karina-brand-facts-SOURCE-OF-TRUTH.md` | Facts from the original live landing page | ⚠️ Documents the earlier *mannequin* concept |
+| `content/` | Page copy (EN/HE) + spec sheet | ⚠️ Written for the *mannequin* concept |
+
+> **Note on the earlier docs:** the spec, brand‑facts and content files were produced for an earlier *MOB rescue‑training‑mannequin* concept (from the original live landing page). They are kept as a valid exploration and a reusable structural blueprint. Say the word and I'll reconcile their copy to the Marine Robot Ambassador direction.
 
 ---
 
