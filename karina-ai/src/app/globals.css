@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===========================================================================
+   KARINA AI — Global design tokens (theme-aware).
+   Semantic colors are HSL triplets so Tailwind's <alpha-value> works.
+   Default theme is dark (deep-ocean); a light theme is provided for
+   accessibility and future user preference.
+   =========================================================================== */
+
+:root {
+  /* Deep-ocean (default) theme */
+  --background: 213 58% 6%;   /* ~#04070D abyss */
+  --surface: 212 48% 9%;      /* ~#0A1524 deep  */
+  --foreground: 200 40% 96%;  /* mist           */
+  --muted: 205 20% 68%;       /* muted foam     */
+  --border: 208 34% 20%;      /* ocean border   */
+  --primary: 205 62% 42%;     /* marine         */
+  --accent: 187 68% 53%;      /* aqua           */
+
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --background: 200 44% 97%;
+  --surface: 0 0% 100%;
+  --foreground: 212 48% 12%;
+  --muted: 208 18% 38%;
+  --border: 205 28% 86%;
+  --primary: 205 62% 38%;
+  --accent: 191 70% 40%;
+
+  color-scheme: light;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display font-semibold text-balance;
+  }
+
+  /* Accessible focus ring across all interactive elements. */
+  :where(a, button, input, textarea, select, [tabindex]):focus-visible {
+    @apply outline-none ring-2 ring-accent ring-offset-2 ring-offset-background rounded-sm;
+  }
+
+  ::selection {
+    @apply bg-accent/30 text-foreground;
+  }
+}
+
+@layer components {
+  /* Glass surface — used sparingly, only where depth aids hierarchy. */
+  .glass {
+    @apply bg-surface/60 backdrop-blur-glass border border-white/10 shadow-glass;
+  }
+
+  /* Subtle ocean gradient background wash. */
+  .ocean-wash {
+    background-image:
+      radial-gradient(60% 50% at 50% -10%, rgba(56, 198, 217, 0.12), transparent 70%),
+      radial-gradient(50% 40% at 100% 0%, rgba(30, 111, 184, 0.14), transparent 60%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

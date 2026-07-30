@@ -1,0 +1,347 @@
+// =============================================================================
+// KARINA AI — Data model (Phase 1 foundation)
+//
+// This schema DEFINES the platform's core entities so future phases have a
+// stable foundation. It is intentionally comprehensive but not yet migrated:
+// tables are created as each capability is switched on. Enums and relations
+// express intent; fields will be refined alongside real features.
+//
+// Provider is PostgreSQL. Set DATABASE_URL in .env.local to generate/migrate.
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- Identity & access -------------------------------------------------------
+
+enum UserRole {
+  MEMBER
+  INSTRUCTOR
+  ORG_ADMIN
+  STAFF
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  role          UserRole  @default(MEMBER)
+  emailVerified DateTime?
+  imageUrl      String?
+
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  accounts      Account[]
+  sessions      Session[]
+  membership    Membership?
+  conversations Conversation[]
+  enrollments   Enrollment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId])
+}
+
+// OAuth / credential accounts (auth provider agnostic).
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  provider          String
+  providerAccountId String
+  type              String
+  accessToken       String?
+  refreshToken      String?
+  expiresAt         Int?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// Organizations: schools, academies, charter/equipment companies, rescue orgs.
+model Organization {
+  id      String  @id @default(cuid())
+  name    String
+  slug    String  @unique
+  kind    String? // e.g. "sailing_school", "academy", "charter", "rescue"
+  website String?
+
+  members User[]
+  seats   Int?    // purchased seats for team memberships
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// --- Memberships & payments --------------------------------------------------
+
+enum MembershipTier {
+  FREE
+  INDIVIDUAL
+  PROFESSIONAL
+  ORGANIZATION
+}
+
+enum MembershipStatus {
+  ACTIVE
+  TRIALING
+  PAST_DUE
+  CANCELED
+}
+
+model Membership {
+  id                 String           @id @default(cuid())
+  userId             String           @unique
+  tier               MembershipTier   @default(FREE)
+  status             MembershipStatus @default(ACTIVE)
+  externalCustomerId String? // payments provider customer id
+  currentPeriodEnd   DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  payments Payment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Payment {
+  id           String   @id @default(cuid())
+  membershipId String
+  amountCents  Int
+  currency     String   @default("usd")
+  status       String
+  externalId   String? // payments provider charge/invoice id
+  createdAt    DateTime @default(now())
+
+  membership Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+
+  @@index([membershipId])
+}
+
+// --- AI conversations (chat / voice / avatar share this model) ---------------
+
+enum ConversationChannel {
+  CHAT
+  VOICE
+  AVATAR
+}
+
+enum MessageRole {
+  USER
+  KARINA
+  SYSTEM
+}
+
+model Conversation {
+  id      String              @id @default(cuid())
+  userId  String?
+  channel ConversationChannel @default(CHAT)
+  title   String?
+
+  user     User?     @relation(fields: [userId], references: [id])
+  messages Message[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Message {
+  id             String      @id @default(cuid())
+  conversationId String
+  role           MessageRole
+  content        String
+
+  // Retrieval provenance: which knowledge chunks grounded this answer.
+  citations Citation[]
+
+  createdAt DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+}
+
+// --- Knowledge base ----------------------------------------------------------
+
+model KnowledgeDocument {
+  id        String   @id @default(cuid())
+  title     String
+  source    String? // origin / attribution of the material
+  body      String
+  tags      String[]
+  published Boolean  @default(false)
+
+  chunks    KnowledgeChunk[]
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+}
+
+// A retrievable slice of a document. Vector embeddings live in the vector DB;
+// this row keeps the canonical text + a reference id to that vector.
+model KnowledgeChunk {
+  id         String  @id @default(cuid())
+  documentId String
+  content    String
+  vectorId   String? // id in the external vector store
+  position   Int     @default(0)
+
+  document  KnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  citations Citation[]
+
+  @@index([documentId])
+}
+
+model Citation {
+  id        String @id @default(cuid())
+  messageId String
+  chunkId   String
+
+  message Message        @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  chunk   KnowledgeChunk @relation(fields: [chunkId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, chunkId])
+}
+
+// --- Courses & training ------------------------------------------------------
+
+model Course {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  summary     String?
+  level       String? // e.g. "intro", "skipper", "instructor"
+  published   Boolean  @default(false)
+
+  lessons     Lesson[]
+  enrollments Enrollment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Lesson {
+  id       String @id @default(cuid())
+  courseId String
+  title    String
+  body     String?
+  position Int    @default(0)
+
+  course   Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  progress LessonProgress[]
+
+  @@index([courseId])
+}
+
+model Enrollment {
+  id         String   @id @default(cuid())
+  userId     String
+  courseId   String
+  completedAt DateTime?
+  createdAt  DateTime @default(now())
+
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course   Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  progress LessonProgress[]
+
+  @@unique([userId, courseId])
+}
+
+model LessonProgress {
+  id           String   @id @default(cuid())
+  enrollmentId String
+  lessonId     String
+  completed    Boolean  @default(false)
+  updatedAt    DateTime @updatedAt
+
+  enrollment Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  lesson     Lesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([enrollmentId, lessonId])
+}
+
+// --- Content: blog & media ---------------------------------------------------
+
+model BlogPost {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  title       String
+  excerpt     String?
+  body        String
+  coverImage  String?
+  published   Boolean   @default(false)
+  publishedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MediaAsset {
+  id       String  @id @default(cuid())
+  url      String
+  kind     String  // "image" | "video" | "document"
+  alt      String?
+  caption  String?
+  createdAt DateTime @default(now())
+}
+
+// --- Partners & inbound ------------------------------------------------------
+
+model Partner {
+  id       String  @id @default(cuid())
+  name     String
+  kind     String? // "school" | "academy" | "charter" | "equipment" | "rescue"
+  website  String?
+  logoUrl  String?
+  approved Boolean @default(false) // only approved partners are shown publicly
+
+  createdAt DateTime @default(now())
+}
+
+model ContactSubmission {
+  id           String   @id @default(cuid())
+  name         String
+  email        String
+  organization String?
+  message      String
+  handled      Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@index([email])
+}
+
+// --- Analytics (lightweight, first-party) -----------------------------------
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  name      String
+  userId    String?
+  path      String?
+  props     Json?
+  createdAt DateTime @default(now())
+
+  @@index([name])
+  @@index([createdAt])
+}
