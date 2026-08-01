@@ -1,7 +1,9 @@
 # KARINA — Website (hand-built static site)
 
 **Direction:** KARINA — **Marine Robot Ambassador** · *Deep. Smart. Human. · Built to explore. Designed to protect.*
-Premium, self-contained single-page site. Deep-ocean palette (abyss blue + cyan HUD + amber alert), monospace telemetry, bilingual **EN/HE with full RTL**, restrained HUD/scanline motion. Uses the real concept imagery provided by the client.
+`index.html` is the **Editorial / Cinematic** treatment (chosen direction): full-bleed hero imagery with a slow ken-burns, large Cormorant-serif display, brass accent, roman-numeral mission sequence, full-bleed image bands, and a featured film — bilingual **EN/HE with full RTL**. Built from `../site-variants/editorial_body.html`.
+The earlier **Mission Console / HUD** treatment (deep-ocean + cyan HUD + telemetry) is preserved as an alternate at `../site-variants/console_body.html`.
+Preview (Editorial): https://claude.ai/code/artifact/9e22eda8-f381-4c0d-978e-4e66f93725fb
 
 ## Files
 - `index.html` — the complete site (inline CSS + JS; no build step, no dependencies).
