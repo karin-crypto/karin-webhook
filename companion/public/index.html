@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aria — Your AI Companion</title>
+  <meta name="description" content="Meet Aria, a caring AI companion who's always here to talk. 18+ only." />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span> <span id="brandName">Aria</span></div>
+    <div>
+      <button class="btn btn-ghost btn-sm" onclick="openAuth('login')">Sign in</button>
+      <button class="btn btn-primary btn-sm" onclick="openAuth('register')">Get started</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <section class="hero">
+      <div class="avatar-glow">💗</div>
+      <h1>Meet <span class="gradient-text" id="heroName">Aria</span>,<br />your AI companion</h1>
+      <p class="lead">Someone who's always happy to hear from you. Warm, attentive, and
+        genuinely interested in your day — whenever you want to talk.</p>
+      <button class="btn btn-primary" onclick="openAuth('register')">Start chatting free</button>
+      <p class="small muted" style="margin-top:.8rem">18+ only · <span id="bonusLine">Free credits on sign-up</span></p>
+    </section>
+
+    <section class="features">
+      <div class="feature card">
+        <div class="ico">💬</div>
+        <h3>Always there</h3>
+        <p class="muted small">Chat any time of day. She remembers your conversation and picks up right where you left off.</p>
+      </div>
+      <div class="feature card">
+        <div class="ico">🎟️</div>
+        <h3>Simple credits</h3>
+        <p class="muted small">Start with free credits. Top up whenever you like — one credit per message, no surprises.</p>
+      </div>
+      <div class="feature card">
+        <div class="ico">✨</div>
+        <h3>Go unlimited</h3>
+        <p class="muted small">Prefer no limits? A monthly membership unlocks unlimited messages.</p>
+      </div>
+      <div class="feature card">
+        <div class="ico">🔒</div>
+        <h3>Private</h3>
+        <p class="muted small">Your conversations are yours. Sign in securely and pick up on any device.</p>
+      </div>
+    </section>
+
+    <p class="disclaimer">
+      Aria is an AI companion for entertainment and emotional support. She is not a real person and
+      cannot provide medical, legal, or financial advice. You must be 18 or older to use this service.
+    </p>
+    <div style="height:3rem"></div>
+  </div>
+
+  <!-- Auth modal -->
+  <div id="authModal" class="modal-backdrop hidden">
+    <div class="modal card">
+      <div class="tabs">
+        <div class="tab" data-tab="login" onclick="switchTab('login')">Sign in</div>
+        <div class="tab" data-tab="register" onclick="switchTab('register')">Create account</div>
+      </div>
+
+      <!-- Login -->
+      <form id="loginForm" class="hidden" onsubmit="return doLogin(event)">
+        <div class="field"><label>Email</label><input type="email" name="email" autocomplete="email" required /></div>
+        <div class="field"><label>Password</label><input type="password" name="password" autocomplete="current-password" required /></div>
+        <p class="form-error" id="loginErr"></p>
+        <button class="btn btn-primary btn-block" type="submit">Sign in</button>
+      </form>
+
+      <!-- Register -->
+      <form id="registerForm" class="hidden" onsubmit="return doRegister(event)">
+        <div class="field"><label>Display name</label><input name="displayName" maxlength="40" required /></div>
+        <div class="field"><label>Email</label><input type="email" name="email" autocomplete="email" required /></div>
+        <div class="field"><label>Password (8+ characters)</label><input type="password" name="password" autocomplete="new-password" minlength="8" required /></div>
+        <div class="field"><label>Date of birth</label><input type="date" name="dob" required /></div>
+        <div class="field checkbox">
+          <input type="checkbox" id="ageConfirm" name="ageConfirmed" required />
+          <label for="ageConfirm">I confirm that I am at least <b>18 years old</b> and agree to the terms.</label>
+        </div>
+        <p class="form-error" id="registerErr"></p>
+        <button class="btn btn-primary btn-block" type="submit">Create account</button>
+      </form>
+
+      <p class="small muted center" style="margin-top:1rem;cursor:pointer" onclick="closeAuth()">Close</p>
+    </div>
+  </div>
+
+  <script src="/js/common.js"></script>
+  <script>
+    // If already signed in, go straight to the app.
+    if (Auth.token) location.href = "/app.html";
+
+    let cfg = null;
+    api("/api/config", { auth: false }).then((c) => {
+      cfg = c;
+      document.getElementById("brandName").textContent = c.characterName;
+      document.getElementById("heroName").textContent = c.characterName;
+      document.title = `${c.characterName} — Your AI Companion`;
+      document.getElementById("bonusLine").textContent = `${c.signupBonus} free credits on sign-up`;
+    }).catch(() => {});
+
+    function openAuth(tab) {
+      document.getElementById("authModal").classList.remove("hidden");
+      switchTab(tab || "register");
+    }
+    function closeAuth() { document.getElementById("authModal").classList.add("hidden"); }
+    function switchTab(tab) {
+      document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === tab));
+      document.getElementById("loginForm").classList.toggle("hidden", tab !== "login");
+      document.getElementById("registerForm").classList.toggle("hidden", tab !== "register");
+    }
+
+    async function doLogin(e) {
+      e.preventDefault();
+      const f = e.target, err = document.getElementById("loginErr");
+      err.textContent = "";
+      try {
+        const { token } = await api("/api/auth/login", {
+          auth: false, method: "POST",
+          body: { email: f.email.value, password: f.password.value },
+        });
+        Auth.token = token;
+        location.href = "/app.html";
+      } catch (ex) { err.textContent = ex.message; }
+      return false;
+    }
+
+    async function doRegister(e) {
+      e.preventDefault();
+      const f = e.target, err = document.getElementById("registerErr");
+      err.textContent = "";
+      try {
+        const { token } = await api("/api/auth/register", {
+          auth: false, method: "POST",
+          body: {
+            displayName: f.displayName.value,
+            email: f.email.value,
+            password: f.password.value,
+            dob: f.dob.value,
+            ageConfirmed: f.ageConfirmed.checked,
+          },
+        });
+        Auth.token = token;
+        location.href = "/app.html";
+      } catch (ex) { err.textContent = ex.message; }
+      return false;
+    }
+  </script>
+</body>
+</html>

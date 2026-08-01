@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aria — Chat</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span> <span id="brandName">Aria</span></div>
+    <div style="display:flex;align-items:center;gap:.6rem">
+      <span class="credit-pill" id="creditPill" title="Credits">🎟️ <span id="creditCount">–</span></span>
+      <button class="btn btn-ghost btn-sm" id="adminLink" onclick="location.href='/admin.html'" style="display:none">Admin</button>
+      <button class="btn btn-ghost btn-sm" onclick="Auth.logout()">Sign out</button>
+    </div>
+  </div>
+
+  <div class="app-shell">
+    <!-- Sidebar: store + subscription -->
+    <aside class="sidebar">
+      <div id="subStatus"></div>
+
+      <h3 style="margin-top:1rem">Go unlimited</h3>
+      <div class="card" style="padding:1rem;margin-bottom:1.5rem">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <b id="subLabel">Unlimited Monthly</b>
+          <span class="gradient-text" style="font-weight:800" id="subPrice">$19.99</span>
+        </div>
+        <p class="muted small" style="margin:.4rem 0 .8rem">Unlimited messages, every month.</p>
+        <button class="btn btn-primary btn-block btn-sm" id="subBtn" onclick="buySubscription()">Subscribe</button>
+      </div>
+
+      <h3>Buy credits</h3>
+      <div id="packs"></div>
+      <p class="muted small" id="billingNote"></p>
+
+      <hr style="border-color:var(--border);margin:1.25rem 0" />
+      <button class="btn btn-ghost btn-block btn-sm" onclick="resetChat()">Clear chat history</button>
+    </aside>
+
+    <!-- Chat -->
+    <section class="chat-col">
+      <div class="chat-head">
+        <div class="chat-avatar">💗</div>
+        <div>
+          <div style="font-weight:700" id="charName">Aria</div>
+          <div class="small" style="color:var(--ok)">● online</div>
+        </div>
+      </div>
+      <div class="chat-messages" id="messages"></div>
+      <form class="chat-input" onsubmit="return sendMessage(event)">
+        <textarea id="msgInput" placeholder="Type a message…" rows="1"
+                  onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage(event)}"></textarea>
+        <button class="btn btn-primary" type="submit" id="sendBtn">Send</button>
+      </form>
+    </section>
+  </div>
+
+  <script src="/js/common.js"></script>
+  <script>
+    if (!Auth.token) location.href = "/";
+
+    let cfg = null, me = null;
+    const $ = (id) => document.getElementById(id);
+
+    async function boot() {
+      try {
+        cfg = await api("/api/config", { auth: false });
+        me = await api("/api/me");
+      } catch { Auth.logout(); return; }
+
+      $("brandName").textContent = cfg.characterName;
+      $("charName").textContent = cfg.characterName;
+      document.title = `${cfg.characterName} — Chat`;
+      $("subLabel").textContent = cfg.subscription.label;
+      $("subPrice").textContent = money(cfg.subscription.amountCents);
+      if (cfg.billingMode === "sandbox") {
+        $("billingNote").textContent = "Sandbox mode — purchases are simulated (no real charge).";
+      }
+      $("adminLink").style.display = me.user.isAdmin ? "" : "none";
+
+      renderPacks();
+      renderSubStatus();
+      updateCredits(me.user.credits);
+      await loadHistory();
+    }
+
+    function updateCredits(n) {
+      me.user.credits = n;
+      $("creditCount").textContent = me.subscribed ? "∞" : n;
+      $("creditPill").title = me.subscribed ? "Unlimited (subscribed)" : `${n} credits`;
+    }
+
+    function renderSubStatus() {
+      const el = $("subStatus");
+      if (me.subscribed) {
+        el.innerHTML = `<div class="badge ok">✨ Unlimited member</div>`;
+        $("subBtn").textContent = "You're subscribed";
+        $("subBtn").disabled = true;
+      } else {
+        el.innerHTML = `<div class="badge">Free / pay-as-you-go</div>`;
+      }
+    }
+
+    function renderPacks() {
+      $("packs").innerHTML = cfg.creditPacks.map((p) => `
+        <div class="pack ${p.highlight ? "highlight" : ""}">
+          <div>
+            <div class="credits-n">${p.credits} <span class="muted small">credits</span></div>
+            <div class="price">${money(p.amountCents)}${p.highlight ? ' · <span class="badge">Best value</span>' : ""}</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="buyPack('${p.id}', this)">Buy</button>
+        </div>`).join("");
+    }
+
+    async function loadHistory() {
+      const { history } = await api("/api/chat/history");
+      const box = $("messages");
+      box.innerHTML = "";
+      if (!history.length) {
+        addMsg("assistant", `Hey ${esc(me.user.displayName)} 🥰 I'm so glad you're here. How are you feeling today?`);
+      } else {
+        history.forEach((m) => addMsg(m.role, m.content));
+      }
+      scrollDown();
+    }
+
+    function addMsg(role, content) {
+      const div = document.createElement("div");
+      div.className = `msg ${role}`;
+      div.textContent = content;
+      $("messages").appendChild(div);
+      return div;
+    }
+    function scrollDown() { const b = $("messages"); b.scrollTop = b.scrollHeight; }
+
+    async function sendMessage(e) {
+      if (e) e.preventDefault();
+      const input = $("msgInput");
+      const text = input.value.trim();
+      if (!text) return false;
+
+      if (!me.subscribed && me.user.credits < 1) { promptOutOfCredits(); return false; }
+
+      input.value = "";
+      input.style.height = "46px";
+      addMsg("user", text);
+      scrollDown();
+
+      const typing = addMsg("assistant", `${cfg.characterName} is typing…`);
+      typing.classList.add("typing");
+      $("sendBtn").disabled = true;
+
+      try {
+        const { reply, credits, subscribed } = await api("/api/chat", { method: "POST", body: { message: text } });
+        typing.remove();
+        addMsg("assistant", reply);
+        me.subscribed = subscribed;
+        updateCredits(subscribed ? me.user.credits : credits);
+      } catch (ex) {
+        typing.remove();
+        if (ex.data && ex.data.outOfCredits) { promptOutOfCredits(); }
+        else { addMsg("assistant", "⚠️ " + ex.message); }
+      } finally {
+        $("sendBtn").disabled = false;
+        scrollDown();
+      }
+      return false;
+    }
+
+    function promptOutOfCredits() {
+      addMsg("assistant", "I'd love to keep chatting 💕 You're out of credits — grab a pack or go unlimited from the menu.");
+      scrollDown();
+    }
+
+    async function buyPack(packId, btn) {
+      if (btn) { btn.disabled = true; btn.textContent = "…"; }
+      try {
+        const r = await api("/api/checkout/credits", { method: "POST", body: { packId } });
+        if (r.mode === "stripe" && r.url) { location.href = r.url; return; }
+        updateCredits(r.credits);      // sandbox: credited instantly
+        flash("Credits added! 🎉");
+      } catch (ex) { alert(ex.message); }
+      finally { if (btn) { btn.disabled = false; btn.textContent = "Buy"; } }
+    }
+
+    async function buySubscription() {
+      const btn = $("subBtn");
+      btn.disabled = true;
+      try {
+        const r = await api("/api/checkout/subscription", { method: "POST" });
+        if (r.mode === "stripe" && r.url) { location.href = r.url; return; }
+        me.subscribed = true;          // sandbox
+        renderSubStatus();
+        updateCredits(me.user.credits);
+        flash("You're now unlimited! ✨");
+      } catch (ex) { alert(ex.message); btn.disabled = false; }
+    }
+
+    async function resetChat() {
+      if (!confirm("Clear your entire chat history? This can't be undone.")) return;
+      await api("/api/chat/reset", { method: "POST" });
+      await loadHistory();
+    }
+
+    function flash(text) {
+      const d = addMsg("assistant", text);
+      d.style.background = "rgba(74,222,128,.12)";
+      d.style.borderColor = "rgba(74,222,128,.35)";
+      scrollDown();
+    }
+
+    // auto-grow textarea
+    $("msgInput").addEventListener("input", (e) => {
+      e.target.style.height = "46px";
+      e.target.style.height = Math.min(e.target.scrollHeight, 140) + "px";
+    });
+
+    // Returned from Stripe checkout — refresh state.
+    if (new URLSearchParams(location.search).get("checkout") === "success") {
+      history.replaceState({}, "", "/app.html");
+    }
+
+    boot();
+  </script>
+</body>
+</html>

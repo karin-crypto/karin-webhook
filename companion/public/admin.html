@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aria — Admin</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span> Admin</div>
+    <div style="display:flex;gap:.6rem">
+      <button class="btn btn-ghost btn-sm" onclick="location.href='/app.html'">← Back to chat</button>
+      <button class="btn btn-ghost btn-sm" onclick="Auth.logout()">Sign out</button>
+    </div>
+  </div>
+
+  <div class="container" style="padding-top:1.5rem;padding-bottom:3rem">
+    <h1>Dashboard</h1>
+    <p class="muted" id="modeNote"></p>
+
+    <div class="stat-grid" id="stats"></div>
+
+    <h2 style="margin-top:2rem">Users</h2>
+    <div class="table-wrap">
+      <table id="usersTable">
+        <thead><tr>
+          <th>ID</th><th>Name</th><th>Email</th><th>Credits</th><th>Plan</th><th>Msgs</th><th>Joined</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <h2 style="margin-top:2rem">Recent transactions</h2>
+    <div class="table-wrap">
+      <table id="txTable">
+        <thead><tr>
+          <th>ID</th><th>User</th><th>Type</th><th>Amount</th><th>Credits</th><th>Status</th><th>When</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="/js/common.js"></script>
+  <script>
+    if (!Auth.token) location.href = "/";
+
+    async function boot() {
+      let stats, users, txs;
+      try {
+        [stats, users, txs] = await Promise.all([
+          api("/api/admin/stats"),
+          api("/api/admin/users"),
+          api("/api/admin/transactions"),
+        ]);
+      } catch (ex) {
+        document.querySelector(".container").innerHTML =
+          `<div class="card" style="margin-top:2rem"><h2>Access denied</h2><p class="muted">${esc(ex.message)}</p></div>`;
+        return;
+      }
+
+      document.getElementById("modeNote").textContent =
+        `Billing mode: ${stats.billingMode}` + (stats.billingMode === "sandbox" ? " (simulated purchases)" : "");
+
+      document.getElementById("stats").innerHTML = `
+        <div class="stat"><div class="n">${stats.users}</div><div class="l">Total users</div></div>
+        <div class="stat"><div class="n gradient-text">${money(stats.revenueCents)}</div><div class="l">Total revenue</div></div>
+        <div class="stat"><div class="n">${stats.activeSubscriptions}</div><div class="l">Active subscriptions</div></div>
+      `;
+
+      document.querySelector("#usersTable tbody").innerHTML = users.users.map((u) => `
+        <tr>
+          <td>${u.id}</td>
+          <td>${esc(u.displayName)} ${u.isAdmin ? '<span class="badge">admin</span>' : ""}</td>
+          <td>${esc(u.email)}</td>
+          <td>${u.subscribed ? "∞" : u.credits}</td>
+          <td>${u.subscribed ? '<span class="badge ok">Unlimited</span>' : '<span class="badge">Free</span>'}</td>
+          <td>${u.messages}</td>
+          <td class="muted small">${fmtDate(u.createdAt)}</td>
+        </tr>`).join("") || `<tr><td colspan="7" class="muted">No users yet.</td></tr>`;
+
+      document.querySelector("#txTable tbody").innerHTML = txs.transactions.map((t) => `
+        <tr>
+          <td>${t.id}</td>
+          <td>${esc(t.email || ("#" + (t.userId ?? "?")))}</td>
+          <td>${t.type}</td>
+          <td>${money(t.amountCents)}</td>
+          <td>${t.credits || "–"}</td>
+          <td><span class="badge ${t.status === "complete" ? "ok" : "warn"}">${t.status}</span></td>
+          <td class="muted small">${fmtDate(t.createdAt)}</td>
+        </tr>`).join("") || `<tr><td colspan="7" class="muted">No transactions yet.</td></tr>`;
+    }
+
+    function fmtDate(s) {
+      if (!s) return "";
+      const d = new Date(s);
+      return isNaN(d) ? s : d.toLocaleDateString() + " " + d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    }
+
+    boot();
+  </script>
+</body>
+</html>
