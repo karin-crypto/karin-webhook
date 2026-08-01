@@ -140,6 +140,8 @@
   .film:hover{border-color:var(--cyan);}
   .film video{width:100%;display:block;aspect-ratio:9/16;object-fit:cover;background:#03101b;}
   .film figcaption{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--cyan);padding:10px 12px;border-top:1px solid var(--line);}
+  .film.feature{max-width:440px;margin:0 auto 26px;border-color:var(--hud);box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 50px rgba(67,208,230,.08);}
+  .film.feature figcaption{font-size:10px;color:var(--cyan-2);}
 
   /* vision */
   .vision{display:grid;grid-template-columns:auto 1fr;gap:40px;align-items:center;}
@@ -290,6 +292,7 @@
     <div class="eyebrow" data-en="Films" data-he="סרטונים">Films</div>
     <h2 class="h2" data-en="KARINA in <b>motion.</b>" data-he="KARINA <b>בתנועה.</b>">KARINA in <b>motion.</b></h2>
   </div>
+  <figure class="film feature reveal"><video controls playsinline preload="none" poster="assets/video/poster_04.jpg"><source src="assets/video/karina_concept_video_04.mp4" type="video/mp4"></video><figcaption>◈ FEATURED FILM · KARINA</figcaption></figure>
   <div class="wrap films reveal">
     <figure class="film"><video controls playsinline preload="none" poster="assets/video/poster_01.jpg"><source src="assets/video/karina_concept_video_01.mp4" type="video/mp4"></video><figcaption>FILM 01 · CONCEPT</figcaption></figure>
     <figure class="film"><video controls playsinline preload="none" poster="assets/video/poster_02.jpg"><source src="assets/video/karina_concept_video_02.mp4" type="video/mp4"></video><figcaption>FILM 02 · CONCEPT</figcaption></figure>
