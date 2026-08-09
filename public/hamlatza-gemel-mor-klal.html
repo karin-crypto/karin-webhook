@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>המלצה לניוד קופת גמל – מור ← כלל | קרן קרן</title>
+  <meta name="description" content="המלצה מקצועית לניוד קופת גמל ממסלול אלפא מור לבני 50 ומטה לכלל תמר עד 50 – על בסיס תשואה עודפת בשנה האחרונה ודמי ניהול מופחתים." />
+  <meta name="robots" content="noindex" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    :root { --mor:#7c3aed; --klal:#0891b2; }
+    body { background: var(--off); }
+
+    /* ---- top bar ---- */
+    .rec-topbar {
+      background: var(--navy);
+      color: #fff;
+      padding: 1rem 0;
+      position: sticky; top: 0; z-index: 900;
+      box-shadow: 0 2px 20px rgba(10,22,40,.25);
+    }
+    .rec-topbar .container { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+    .rec-topbar .logo { color:#fff; font-weight:800; font-size:1.15rem; }
+    .rec-topbar .logo span { color: var(--gold); }
+    .rec-topbar .back { color:var(--gold); font-weight:600; font-size:.95rem; }
+    .rec-topbar .back:hover { text-decoration:underline; }
+
+    /* ---- hero ---- */
+    .rec-hero {
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy3) 100%);
+      color:#fff; padding: 3.5rem 0 6rem;
+      position:relative; overflow:hidden;
+    }
+    .rec-hero::after{
+      content:""; position:absolute; inset:0;
+      background: radial-gradient(circle at 85% 15%, rgba(201,168,76,.18), transparent 45%);
+    }
+    .rec-hero .container { position:relative; z-index:1; }
+    .rec-badge {
+      display:inline-flex; align-items:center; gap:.5rem;
+      background: rgba(201,168,76,.15); color: var(--gold3);
+      border:1px solid rgba(201,168,76,.4);
+      padding:.4rem 1rem; border-radius:100px; font-weight:600; font-size:.9rem;
+      margin-bottom:1.25rem;
+    }
+    .rec-hero h1 { font-size: clamp(1.8rem, 4vw, 2.9rem); line-height:1.2; font-weight:800; margin-bottom:1rem; }
+    .rec-hero h1 em { font-style:normal; color: var(--gold); }
+    .rec-hero .lead { font-size:1.15rem; color: rgba(255,255,255,.82); max-width: 720px; }
+    .rec-meta { display:flex; flex-wrap:wrap; gap:1.5rem 2.5rem; margin-top:1.75rem; font-size:.95rem; color: rgba(255,255,255,.7); }
+    .rec-meta strong { color:#fff; display:block; font-size:1.05rem; margin-top:.15rem; }
+
+    /* ---- layout wrap ---- */
+    .rec-wrap { max-width: 1080px; margin: -4.5rem auto 4rem; padding: 0 1.5rem; position:relative; z-index:2; }
+    .card {
+      background:#fff; border-radius: var(--radius-lg);
+      box-shadow: var(--shadow); border:1px solid var(--border);
+      padding: 2rem; margin-bottom: 1.75rem;
+    }
+    .card h2 { font-size:1.45rem; font-weight:800; color:var(--navy); margin-bottom:.35rem; display:flex; align-items:center; gap:.6rem; }
+    .card .sub { color:var(--gray); margin-bottom:1.5rem; }
+    .num-chip {
+      display:inline-flex; align-items:center; justify-content:center;
+      width:34px; height:34px; border-radius:10px;
+      background: var(--gold-grad); color:var(--navy); font-weight:800; font-size:1rem; flex:none;
+    }
+
+    /* ---- current fund summary ---- */
+    .facts { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap:1rem; }
+    .fact { background: var(--off); border:1px solid var(--border); border-radius:var(--radius); padding:1.1rem 1.25rem; }
+    .fact .k { font-size:.85rem; color:var(--gray); margin-bottom:.3rem; }
+    .fact .v { font-size:1.35rem; font-weight:800; color:var(--navy); }
+    .fact .v small { font-size:.8rem; font-weight:600; color:var(--gray2); }
+
+    /* ---- comparison ---- */
+    .vs-grid { display:grid; grid-template-columns:1fr auto 1fr; align-items:stretch; gap:1rem; }
+    .vs-card { border-radius:var(--radius-lg); padding:1.6rem 1.4rem; border:2px solid var(--border); position:relative; }
+    .vs-card.from { background:#faf9ff; border-color:#e6dcfb; }
+    .vs-card.to   { background:#f0fbfe; border-color:#bfe9f3; box-shadow: 0 8px 30px rgba(8,145,178,.14); }
+    .vs-tag { position:absolute; top:-13px; inset-inline-start:1.4rem; font-size:.75rem; font-weight:700; padding:.25rem .8rem; border-radius:100px; }
+    .vs-card.from .vs-tag { background:#7c3aed; color:#fff; }
+    .vs-card.to   .vs-tag { background:#0891b2; color:#fff; }
+    .vs-card h3 { font-size:1.15rem; font-weight:800; color:var(--navy); margin-bottom:.15rem; }
+    .vs-card .track { font-size:.85rem; color:var(--gray); margin-bottom:1.1rem; }
+    .vs-rows { display:flex; flex-direction:column; gap:.65rem; }
+    .vs-row { display:flex; align-items:baseline; justify-content:space-between; gap:.5rem; border-bottom:1px dashed var(--border); padding-bottom:.55rem; }
+    .vs-row:last-child { border-bottom:none; padding-bottom:0; }
+    .vs-row .lbl { font-size:.9rem; color:var(--gray); }
+    .vs-row .val { font-size:1.15rem; font-weight:800; color:var(--navy); }
+    .vs-row .val.pos { color:var(--green); }
+    .vs-row .val.hi  { color:#0891b2; }
+    .vs-arrow { display:flex; align-items:center; justify-content:center; font-size:2rem; color:var(--gold); font-weight:800; }
+    .win-flag { display:inline-block; margin-inline-start:.4rem; font-size:.72rem; font-weight:700; color:#fff; background:var(--green); padding:.1rem .5rem; border-radius:100px; vertical-align:middle; }
+
+    /* ---- highlight strip ---- */
+    .highlights { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:1rem; }
+    .hl {
+      background: linear-gradient(135deg,#fff,var(--off));
+      border:1px solid var(--border); border-radius:var(--radius); padding:1.4rem;
+      border-inline-start:4px solid var(--gold);
+    }
+    .hl .big { font-size:1.9rem; font-weight:900; color:var(--navy); line-height:1; }
+    .hl .big.green { color:var(--green); }
+    .hl .cap { font-size:.9rem; color:var(--gray); margin-top:.5rem; }
+
+    /* ---- fee callout ---- */
+    .fee-callout {
+      display:flex; flex-wrap:wrap; align-items:center; gap:1.25rem;
+      background: linear-gradient(135deg, #0d9e45 0%, #0b7a37 100%);
+      color:#fff; border-radius:var(--radius-lg); padding:1.6rem 2rem;
+    }
+    .fee-callout .ico { font-size:2.2rem; }
+    .fee-callout .txt { flex:1; min-width:220px; }
+    .fee-callout .txt strong { display:block; font-size:1.2rem; margin-bottom:.2rem; }
+    .fee-numbers { display:flex; align-items:center; gap:.75rem; font-weight:900; }
+    .fee-numbers .old { font-size:1.6rem; opacity:.65; text-decoration:line-through; }
+    .fee-numbers .new { font-size:2.4rem; }
+    .fee-numbers .to { font-size:1.6rem; }
+
+    /* ---- screenshot ---- */
+    .shot-frame { background: var(--off); border:1px solid var(--border); border-radius:var(--radius); padding:1rem; }
+    .shot-frame img { border-radius:10px; margin:0 auto; box-shadow: var(--shadow-sm); max-width:420px; width:100%; }
+    .shot-cap { text-align:center; font-size:.85rem; color:var(--gray2); margin-top:.85rem; }
+
+    /* ---- steps ---- */
+    .steps { display:flex; flex-direction:column; gap:1rem; }
+    .step { display:flex; gap:1rem; align-items:flex-start; }
+    .step .dot { width:30px; height:30px; border-radius:50%; background:var(--gold-grad); color:var(--navy); font-weight:800; display:flex; align-items:center; justify-content:center; flex:none; font-size:.9rem; }
+    .step .body strong { color:var(--navy); }
+
+    /* ---- cta ---- */
+    .rec-cta { text-align:center; background:var(--navy); color:#fff; border-radius:var(--radius-lg); padding:2.5rem 1.5rem; }
+    .rec-cta h2 { color:#fff; justify-content:center; }
+    .rec-cta p { color:rgba(255,255,255,.8); margin:.5rem 0 1.5rem; }
+    .cta-buttons { display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; }
+
+    .disclaimer { font-size:.82rem; color:var(--gray2); line-height:1.7; background:var(--off2); border-radius:var(--radius); padding:1.25rem 1.5rem; }
+    .disclaimer strong { color:var(--gray); }
+
+    @media (max-width: 760px){
+      .vs-grid { grid-template-columns:1fr; }
+      .vs-arrow { transform: rotate(90deg); padding:.25rem 0; }
+      .card { padding:1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <div class="rec-topbar">
+    <div class="container">
+      <a href="index.html" class="logo">קרן קרן <span>|</span> פיננסים</a>
+      <a href="index.html" class="back">→ חזרה לאתר</a>
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <section class="rec-hero">
+    <div class="container">
+      <span class="rec-badge">✦ המלצה פנסיונית אישית</span>
+      <h1>המלצה לניוד קופת גמל<br />ממסלול <em>אלפא מור</em> ל־<em>כלל תמר עד 50</em></h1>
+      <p class="lead">מסלול לבני 50 ומטה. הניוד מומלץ על בסיס תשואה עודפת משמעותית בשנה האחרונה, לצד הפחתת דמי הניהול ל־0.6%.</p>
+      <div class="rec-meta">
+        <div>מוגש עבור<strong>רפאל אטוס</strong></div>
+        <div>מאת<strong>קרן קרן · סוכנת פנסיונית</strong></div>
+        <div>סוג מוצר<strong>קופת גמל · מסלול 50 ומטה</strong></div>
+        <div>נכון לתאריך<strong>אוגוסט 2026</strong></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="rec-wrap">
+
+    <!-- 1. CURRENT FUND -->
+    <div class="card">
+      <h2><span class="num-chip">1</span> הקופה הקיימת</h2>
+      <p class="sub">קופת גמל מור – אלפא מור תגמולים, מסלול לבני 50 ומטה (תלוי גיל).</p>
+      <div class="facts">
+        <div class="fact"><div class="k">צבירה נוכחית</div><div class="v">₪773,423</div></div>
+        <div class="fact"><div class="k">גוף מנהל</div><div class="v" style="font-size:1.15rem">מור גמל ופנסיה</div></div>
+        <div class="fact"><div class="k">דמי ניהול מצבירה</div><div class="v">0.7%</div></div>
+        <div class="fact"><div class="k">חשיפה למניות</div><div class="v">63.3%</div></div>
+        <div class="fact"><div class="k">הפקדה חודשית</div><div class="v">₪5,058</div></div>
+        <div class="fact"><div class="k">תשואה שנה אחרונה</div><div class="v" style="color:var(--gray)">14.41%</div></div>
+      </div>
+    </div>
+
+    <!-- 2. COMPARISON -->
+    <div class="card">
+      <h2><span class="num-chip">2</span> השוואת תשואות – מור מול כלל</h2>
+      <p class="sub">שני המסלולים באותה רמת סיכון (מסלול לבני 50 ומטה, תלוי גיל). כך הם השיגו בפועל:</p>
+      <div class="vs-grid">
+        <div class="vs-card from">
+          <span class="vs-tag">הקופה הנוכחית</span>
+          <h3>אלפא מור תגמולים</h3>
+          <div class="track">מור · מסלול לבני 50 ומטה</div>
+          <div class="vs-rows">
+            <div class="vs-row"><span class="lbl">תשואה שנה</span><span class="val">14.41%</span></div>
+            <div class="vs-row"><span class="lbl">3 שנים</span><span class="val">48.70%</span></div>
+            <div class="vs-row"><span class="lbl">5 שנים</span><span class="val">53.25%</span></div>
+            <div class="vs-row"><span class="lbl">דמי ניהול</span><span class="val">0.70%</span></div>
+          </div>
+        </div>
+
+        <div class="vs-arrow">←</div>
+
+        <div class="vs-card to">
+          <span class="vs-tag">המסלול המומלץ</span>
+          <h3>כלל תמר עד 50</h3>
+          <div class="track">כלל · מסלול לבני 50 ומטה</div>
+          <div class="vs-rows">
+            <div class="vs-row"><span class="lbl">תשואה שנה</span><span class="val pos">18.56%<span class="win-flag">+4.15%</span></span></div>
+            <div class="vs-row"><span class="lbl">3 שנים</span><span class="val hi">50.70%</span></div>
+            <div class="vs-row"><span class="lbl">5 שנים</span><span class="val hi">51.32%</span></div>
+            <div class="vs-row"><span class="lbl">דמי ניהול מוצעים</span><span class="val pos">0.60%</span></div>
+          </div>
+        </div>
+      </div>
+      <p class="sub" style="margin:1.25rem 0 0; font-size:.9rem;">כלל תמר עד 50 הובילה את קבוצת קופות הגמל לבני 50 ומטה בשנה האחרונה (18.56%), מעל הממוצע הענפי (16.20%), בעוד מסלול מור נמצא מתחת לממוצע.</p>
+    </div>
+
+    <!-- 3. WHY / HIGHLIGHTS -->
+    <div class="card">
+      <h2><span class="num-chip">3</span> מדוע כדאי לנייד</h2>
+      <div class="highlights">
+        <div class="hl">
+          <div class="big green">+4.15%</div>
+          <div class="cap">תשואה עודפת בשנה האחרונה לטובת כלל תמר עד 50 (18.56% מול 14.41%).</div>
+        </div>
+        <div class="hl">
+          <div class="big green">~₪32,000</div>
+          <div class="cap">הפרש התשואה השנתי במונחי שקלים על הצבירה הקיימת (להמחשה בלבד).*</div>
+        </div>
+        <div class="hl">
+          <div class="big">0.6%</div>
+          <div class="cap">דמי ניהול מופחתים במקום 0.7% – חיסכון של ~₪773 בשנה על הצבירה.</div>
+        </div>
+        <div class="hl">
+          <div class="big green">מוביל</div>
+          <div class="cap">מסלול כלל דורג ראשון בקבוצת קופות הגמל לחוסכים עד גיל 50.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. FEE CALLOUT -->
+    <div class="fee-callout">
+      <div class="ico">💰</div>
+      <div class="txt">
+        <strong>דמי ניהול מופחתים בניוד</strong>
+        במסגרת הניוד סוכם על הפחתת דמי הניהול מצבירה – פחות עלות, יותר תשואה נטו בכיסך.
+      </div>
+      <div class="fee-numbers">
+        <span class="old">0.7%</span>
+        <span class="to">←</span>
+        <span class="new">0.6%</span>
+      </div>
+    </div>
+
+    <!-- 5. SCREENSHOT -->
+    <div class="card">
+      <h2><span class="num-chip">4</span> צילום מסך – נתוני התשואות</h2>
+      <p class="sub">טבלת קופות הגמל המובילות לחוסכים עד גיל 50, על בסיס תשואה מצטברת לפני דמי ניהול.</p>
+      <div class="shot-frame">
+        <img src="images/mygemel-gemel-50.png" alt="טבלת תשואות קופות גמל מובילות לחוסכים עד גיל 50 – מקור: mygemel.net" loading="lazy" />
+        <p class="shot-cap">מקור: mygemel.net · קופות גמל מובילות לחוסכים עד גיל 50 · תשואה מצטברת לפני דמי ניהול</p>
+      </div>
+    </div>
+
+    <!-- 6. STEPS -->
+    <div class="card">
+      <h2><span class="num-chip">5</span> השלבים לביצוע הניוד</h2>
+      <div class="steps">
+        <div class="step"><div class="dot">1</div><div class="body"><strong>אישור ההמלצה</strong> – סקירה משותפת של ההמלצה ואישור הכיוון.</div></div>
+        <div class="step"><div class="dot">2</div><div class="body"><strong>חתימה על טופס ניוד</strong> – מעבר הצבירה במסלול פטור ממס וללא אירוע מס.</div></div>
+        <div class="step"><div class="dot">3</div><div class="body"><strong>עיגון דמי ניהול 0.6%</strong> – הפחתת דמי הניהול מעוגנת מול כלל בעת ההצטרפות.</div></div>
+        <div class="step"><div class="dot">4</div><div class="body"><strong>מעקב שוטף</strong> – בקרה על ביצועי הקופה והתאמות לאורך זמן.</div></div>
+      </div>
+    </div>
+
+    <!-- 7. CTA -->
+    <div class="rec-cta">
+      <h2>רוצה להתקדם עם הניוד?</h2>
+      <p>אני כאן לכל שאלה – נוכל להשלים את התהליך תוך דקות.</p>
+      <div class="cta-buttons">
+        <a href="https://wa.me/972502423356?text=%D7%94%D7%99%D7%99%20%D7%A7%D7%A8%D7%9F%2C%20%D7%A8%D7%95%D7%A6%D7%94%20%D7%9C%D7%94%D7%AA%D7%A7%D7%93%D7%9D%20%D7%A2%D7%9D%20%D7%A0%D7%99%D7%95%D7%93%20%D7%A7%D7%95%D7%A4%D7%AA%20%D7%94%D7%92%D7%9E%D7%9C" target="_blank" rel="noopener" class="btn btn-primary">התחילו בוואטסאפ ←</a>
+        <a href="tel:+972502423356" class="btn btn-ghost">חייגו 050-242-3356</a>
+      </div>
+    </div>
+
+    <!-- DISCLAIMER -->
+    <p class="disclaimer" style="margin-top:1.75rem;">
+      <strong>הבהרה:</strong> נתוני התשואה הם נומינליים ברוטו לפני ניכוי דמי ניהול, מבוססים על נתוני עבר (מקור: mygemel.net ורשות שוק ההון) ואינם מהווים התחייבות לתשואה עתידית. הפרש התשואה במונחי שקלים (~₪32,000) הוא חישוב להמחשה בלבד (773,423 ₪ × 4.15%), בהנחת שמירה על אותה צבירה ותשואה – בפועל התשואה משתנה מעת לעת. תשואות עבר אינן מעידות על תשואות עתידיות. יש לזכור כי בטווח של 5 שנים מסלול מור הציג תשואה מצטברת דומה ואף מעט גבוהה יותר; ההמלצה מתמקדת בביצועי השנה האחרונה ובהפחתת דמי הניהול. מסמך זה אינו מהווה ייעוץ השקעות אישי ואינו תחליף לבחינה פרטנית של מכלול השיקולים. אין לראות באמור המלצה לפעולה ללא היוועצות אישית.
+    </p>
+
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-bottom" style="border:none; padding-top:1rem;">
+        <p class="footer-legal">© 2026 קרן קרן. כל הזכויות שמורות. | סוכנת פנסיונית מורשית</p>
+        <p class="footer-legal">מידע זה אינו מהווה ייעוץ השקעות. אנא התייעצו עם מומחה לפני קבלת החלטה.</p>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
