@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>תבניות וואטסאפ | קרן קרן פיננסים</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/tools.css" />
+  <link rel="stylesheet" href="../css/whatsapp.css" />
+</head>
+<body>
+  <header class="tool-header">
+    <div class="tool-header-inner">
+      <div class="tool-brand">
+        <div class="tool-brand-mark">
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M24 6L38 14V24C38 32 31 39.5 24 42C17 39.5 10 32 10 24V14L24 6Z" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M18 24L22 28L30 20" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <h1>תבניות וואטסאפ</h1>
+          <p>קרן קרן | פיננסים</p>
+        </div>
+      </div>
+      <div class="tool-header-actions">
+        <a href="index.html" class="btn btn-ghost btn-sm">← ארגז הכלים</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="tool-main">
+    <div class="container">
+      <div class="page-intro">
+        <h2>הודעות מוכנות לשליחה</h2>
+        <p>מלאי את פרטי הנמען למעלה — כל התבניות מתמלאות אוטומטית. אפשר לערוך כל הודעה לפני השליחה, להעתיק, או לפתוח ישר בוואטסאפ.</p>
+      </div>
+
+      <!-- recipient details -->
+      <div class="panel wa-fields">
+        <div class="panel-title"><span class="num">✎</span> פרטי הנמען</div>
+        <div class="grid-3">
+          <div class="field"><label>שם הלקוח</label><input id="v-name" data-field placeholder="ישראל" /></div>
+          <div class="field"><label>טלפון (לפתיחה בוואטסאפ)</label><input id="v-phone" data-field placeholder="050-0000000" inputmode="tel" /></div>
+          <div class="field"><label>תאריך</label><input id="v-date" data-field placeholder="יום ראשון 15.9" /></div>
+        </div>
+        <div class="grid-3">
+          <div class="field"><label>שעה</label><input id="v-time" data-field placeholder="10:00" /></div>
+          <div class="field"><label>סכום / נתון</label><input id="v-amount" data-field placeholder="1,200 ₪" /></div>
+          <div class="field"><label>נושא / מוצר</label><input id="v-topic" data-field placeholder="קרן השתלמות" /></div>
+        </div>
+      </div>
+
+      <!-- category filter -->
+      <div class="wa-filters" id="waFilters"></div>
+
+      <!-- template cards -->
+      <div class="wa-grid" id="waGrid"></div>
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+  <script src="../js/whatsapp.js"></script>
+</body>
+</html>

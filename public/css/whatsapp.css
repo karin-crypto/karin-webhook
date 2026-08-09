@@ -1,0 +1,54 @@
+/* =========================================================
+   תבניות וואטסאפ – עיצוב
+   ========================================================= */
+.wa-fields { margin-bottom: 1.5rem; }
+
+/* category chips */
+.wa-filters { display: flex; flex-wrap: wrap; gap: .55rem; margin-bottom: 1.5rem; }
+.wa-chip {
+  border: 1.5px solid var(--border); background: #fff; color: var(--gray);
+  padding: .45rem 1rem; border-radius: 99px; font-size: .86rem; font-weight: 600;
+  cursor: pointer; transition: var(--trans); display: inline-flex; align-items: center; gap: .4rem;
+}
+.wa-chip:hover { border-color: var(--gold); color: var(--navy); }
+.wa-chip.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+.wa-chip .cnt { font-size: .72rem; opacity: .7; }
+
+/* grid of template cards */
+.wa-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.3rem;
+}
+.wa-card {
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm); overflow: hidden; display: flex; flex-direction: column;
+  transition: var(--trans);
+}
+.wa-card:hover { box-shadow: var(--shadow); }
+.wa-card-head {
+  padding: .95rem 1.2rem; display: flex; align-items: center; gap: .6rem;
+  border-bottom: 1px solid var(--off2);
+}
+.wa-card-emoji {
+  width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center;
+  background: var(--off2); font-size: 1.1rem; flex-shrink: 0;
+}
+.wa-card-head h3 { font-size: .98rem; font-weight: 800; color: var(--navy); flex: 1; }
+.wa-card-cat { font-size: .7rem; font-weight: 700; color: var(--gray2); background: var(--off); padding: .2rem .55rem; border-radius: 99px; }
+
+/* chat-bubble styled message */
+.wa-bubble-wrap { padding: 1.1rem 1.2rem; background: #e9edf2; flex: 1; }
+.wa-bubble {
+  background: #d9fdd3; border-radius: 12px 12px 12px 4px; padding: .7rem .85rem;
+  position: relative; box-shadow: 0 1px 1px rgba(0,0,0,.06);
+}
+.wa-bubble textarea {
+  width: 100%; border: none; background: transparent; resize: vertical; min-height: 118px;
+  font-size: .9rem; line-height: 1.6; color: #111b21; font-family: 'Heebo', sans-serif;
+}
+.wa-bubble textarea:focus { outline: none; }
+.wa-bubble-time { display: block; text-align: left; font-size: .66rem; color: #667781; margin-top: .2rem; }
+
+.wa-card-actions { display: flex; gap: .55rem; padding: .9rem 1.2rem; }
+.wa-card-actions .btn { flex: 1; }
+
+.wa-empty { grid-column: 1 / -1; }

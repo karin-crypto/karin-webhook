@@ -1,0 +1,87 @@
+/* =========================================================
+   כלי השוואה – טבלה עם סימון מנצח
+   ========================================================= */
+.cmp-toolbar {
+  display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap; margin-bottom: 1.2rem;
+}
+.cmp-check { display: inline-flex; align-items: center; gap: .45rem; font-size: .9rem; font-weight: 600; color: var(--gray); cursor: pointer; }
+.cmp-check input { width: 17px; height: 17px; accent-color: var(--gold); cursor: pointer; }
+
+.cmp-table-wrap { padding: 0; overflow-x: auto; }
+.cmp-table { width: 100%; border-collapse: collapse; min-width: 560px; }
+
+.cmp-table th, .cmp-table td {
+  padding: .85rem 1rem; text-align: right; border-bottom: 1px solid var(--border); vertical-align: middle;
+}
+.cmp-table tr:last-child td { border-bottom: none; }
+
+/* row-label column */
+.cmp-table .cmp-rowlabel {
+  font-weight: 700; color: var(--navy); background: var(--off); font-size: .9rem;
+  width: 170px; position: sticky; right: 0; z-index: 1;
+}
+.cmp-table .cmp-rowlabel small { display: block; font-weight: 500; color: var(--gray2); font-size: .74rem; }
+
+/* option header cells */
+.cmp-colhead { background: var(--navy); color: #fff; }
+.cmp-colhead:first-child { background: var(--navy); }
+.cmp-colhead.cmp-rowlabel { background: var(--navy3); color: #fff; }
+.cmp-col-title { display: flex; flex-direction: column; gap: .5rem; }
+.cmp-col-title input {
+  width: 100%; background: rgba(255,255,255,.1); border: 1.5px solid rgba(255,255,255,.2);
+  color: #fff; border-radius: 8px; padding: .45rem .6rem; font-weight: 700; font-size: .95rem;
+}
+.cmp-col-title input::placeholder { color: #b7c2d6; }
+.cmp-col-title input:focus { outline: none; border-color: var(--gold); background: rgba(255,255,255,.16); }
+.cmp-col-actions { display: flex; justify-content: flex-start; }
+.cmp-remove {
+  background: rgba(255,255,255,.12); border: none; color: #fff; border-radius: 7px;
+  width: 26px; height: 26px; display: grid; place-items: center; cursor: pointer; transition: var(--trans);
+}
+.cmp-remove:hover { background: var(--red); }
+
+/* data cells */
+.cmp-table td.cmp-data { font-size: .92rem; }
+.cmp-table td.cmp-data input, .cmp-table td.cmp-data select {
+  width: 100%; border: 1.5px solid var(--border); border-radius: 8px; padding: .5rem .6rem;
+  font-size: .9rem; background: #fff; color: var(--text);
+}
+.cmp-table td.cmp-data input:focus, .cmp-table td.cmp-data select:focus {
+  outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,168,76,.14);
+}
+.cmp-suffix-wrap { position: relative; }
+
+/* winner highlight */
+.cmp-data.cmp-win {
+  background: var(--green-bg);
+  box-shadow: inset 3px 0 0 var(--green);
+}
+.cmp-data.cmp-win input { border-color: var(--green); font-weight: 700; }
+.cmp-win-tag {
+  display: inline-flex; align-items: center; gap: .25rem;
+  font-size: .68rem; font-weight: 800; color: var(--green); margin-top: .35rem;
+}
+.cmp-win-tag svg { width: 12px; height: 12px; }
+
+/* score row */
+.cmp-score-row td { background: var(--off); border-top: 2px solid var(--border); }
+.cmp-score { display: flex; flex-direction: column; align-items: flex-start; gap: .2rem; }
+.cmp-score .cmp-score-num {
+  font-size: 1.5rem; font-weight: 800; color: var(--navy); line-height: 1;
+}
+.cmp-score.cmp-best .cmp-score-num { color: var(--green); }
+.cmp-score .cmp-score-badge {
+  font-size: .7rem; font-weight: 800; padding: .18rem .55rem; border-radius: 99px;
+  background: var(--green); color: #fff;
+}
+
+.cmp-note { color: var(--gray); font-size: .86rem; margin-top: 1rem; }
+
+@media print {
+  .no-print { display: none !important; }
+  .tool-main { padding: 1rem 0; }
+  .cmp-table-wrap { box-shadow: none; border: 1px solid var(--border); }
+  .cmp-colhead { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .cmp-data.cmp-win, .cmp-score-badge { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .cmp-col-title input { color: #fff; -webkit-text-fill-color: #fff; }
+}

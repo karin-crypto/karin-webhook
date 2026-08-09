@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>כלי השוואה | קרן קרן פיננסים</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/tools.css" />
+  <link rel="stylesheet" href="../css/compare.css" />
+</head>
+<body>
+  <header class="tool-header no-print">
+    <div class="tool-header-inner">
+      <div class="tool-brand">
+        <div class="tool-brand-mark">
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M24 6L38 14V24C38 32 31 39.5 24 42C17 39.5 10 32 10 24V14L24 6Z" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M18 24L22 28L30 20" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <h1>כלי השוואה</h1>
+          <p>קרן קרן | פיננסים</p>
+        </div>
+      </div>
+      <div class="tool-header-actions">
+        <a href="index.html" class="btn btn-ghost btn-sm">← ארגז הכלים</a>
+        <button class="btn btn-outline btn-sm" onclick="loadDemo()">מילוי לדוגמה</button>
+        <button class="btn btn-navy btn-sm" onclick="window.print()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          הדפסה / PDF
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="tool-main">
+    <div class="container">
+      <div class="page-intro no-print">
+        <h2>השוואה זו לצד זו</h2>
+        <p>הוסיפי 2–4 אפשרויות (מסלולים, קרנות, מוצרים או תיקים של עובדים שונים) — הכלי מסמן אוטומטית את הבחירה המשתלמת ביותר בכל שורה: דמי ניהול נמוכים, תשואה גבוהה וצבירה.</p>
+      </div>
+
+      <div class="cmp-toolbar no-print">
+        <button class="btn btn-outline btn-sm" id="addColBtn" onclick="addOption()">＋ הוספת אפשרות</button>
+        <label class="cmp-check"><input type="checkbox" id="highlightToggle" checked onchange="renderTable()" /> סימון הבחירה המשתלמת</label>
+      </div>
+
+      <div class="cmp-table-wrap panel">
+        <table class="cmp-table" id="cmpTable"></table>
+      </div>
+
+      <p class="cmp-note no-print">
+        💡 טיפ: בדמי ניהול — נמוך יותר עדיף; בתשואה ובצבירה — גבוה יותר עדיף. הסימון הירוק מציין את המנצח בכל שורה.
+      </p>
+    </div>
+  </main>
+
+  <div class="toast no-print" id="toast"></div>
+  <script src="../js/compare.js"></script>
+</body>
+</html>
