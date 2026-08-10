@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>מחשבון הסכם — נמל חיפה 2026 | קרן קרן פיננסים</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/tools.css" />
+  <link rel="stylesheet" href="../css/agreement.css" />
+</head>
+<body>
+  <header class="tool-header no-print">
+    <div class="tool-header-inner">
+      <div class="tool-brand">
+        <div class="tool-brand-mark">
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M24 6L38 14V24C38 32 31 39.5 24 42C17 39.5 10 32 10 24V14L24 6Z" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M18 24L22 28L30 20" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <h1>מחשבון הסכם — נמל חיפה 2026</h1>
+          <p>קרן קרן | פיננסים</p>
+        </div>
+      </div>
+      <div class="tool-header-actions">
+        <a href="index.html" class="btn btn-ghost btn-sm">← ארגז הכלים</a>
+        <button class="btn btn-outline btn-sm" onclick="loadDemo()">מילוי לדוגמה</button>
+        <button class="btn btn-navy btn-sm" onclick="window.print()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          הדפסה / PDF
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="tool-main">
+    <div class="container">
+      <div class="page-intro no-print">
+        <h2>סימולטור זכאות ומענקים — הסכם פברואר 2026</h2>
+        <p>הזינו את פרטי העובד/ת — הכלי בודק זכאות לכל מסלול (פרישה מרצון, מענק חד־פעמי, תוספת שכר והגנת פרמיה) לפי הנתונים המדויקים של ההסכם האחרון, ומאפשר להשוות מול הסכמים קודמים.</p>
+      </div>
+
+      <div class="agr-layout">
+        <!-- ======= INPUTS ======= -->
+        <section class="agr-inputs">
+          <div class="panel">
+            <div class="panel-title"><span class="num">✎</span> פרטי העובד/ת</div>
+            <div class="field"><label>דור</label>
+              <select id="i-gen" data-in>
+                <option value="א">דור א׳</option>
+                <option value="ב-מייסד">דור ב׳ — מייסד</option>
+                <option value="ב-לא-מייסד">דור ב׳ — לא מייסד</option>
+              </select>
+            </div>
+            <div class="field"><label>מגזר</label>
+              <select id="i-sector" data-in>
+                <option value="תפעול">תפעול</option>
+                <option value="אחר">אחר / מנהלה</option>
+              </select>
+            </div>
+            <div class="grid-2">
+              <div class="field"><label>גיל</label><input id="i-age" data-in type="number" min="18" max="80" placeholder="52" /></div>
+              <div class="field"><label>ותק בנמל (שנים)</label><input id="i-vetek" data-in type="number" min="0" max="55" placeholder="24" /></div>
+            </div>
+            <div class="grid-2">
+              <div class="field"><label>גיל פרישת חובה</label><input id="i-retage" data-in type="number" min="60" max="75" value="67" /></div>
+              <div class="field"><label>שנים עד פרישת חובה</label><input id="i-yearsleft" data-in type="number" min="0" max="40" placeholder="מחושב אוטומטית" /></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-title"><span class="num">₪</span> נתוני שכר ופרמיה <span class="agr-opt">(לא חובה)</span></div>
+            <div class="field"><label>שכר בסיס חודשי ברוטו (₪)</label><input id="i-salary" data-in type="number" min="0" placeholder="14000" /></div>
+            <div class="grid-2">
+              <div class="field"><label>ערך שעת פרמיה (₪)</label><input id="i-premrate" data-in type="number" min="0" step="0.1" placeholder="70" /></div>
+              <div class="field"><label>משמרות בחודש</label><input id="i-shifts" data-in type="number" min="0" max="31" placeholder="18" /></div>
+            </div>
+            <div class="field"><label>חישוב רטרו שכר עד תאריך</label><input id="i-retro-to" data-in type="date" /></div>
+          </div>
+        </section>
+
+        <!-- ======= RESULTS ======= -->
+        <section class="agr-results" id="results"></section>
+      </div>
+
+      <!-- ======= AGREEMENT COMPARISON ======= -->
+      <section class="panel no-print" style="margin-top:1.5rem">
+        <div class="panel-title"><span class="num">⇄</span> השוואת הסכמים — נתוני מפתח</div>
+        <p class="agr-cmp-hint">עמודת <b>פברואר 2026</b> מלאה בנתוני ההסכם האחרון. הוסיפי עמודות והזיני את נתוני ההסכמים הקודמים כדי לראות מה השתנה.</p>
+        <div style="overflow-x:auto">
+          <table class="agr-cmp-table" id="cmpTable"></table>
+        </div>
+        <button class="btn btn-outline btn-sm" style="margin-top:1rem" onclick="addAgreementCol()">＋ הוספת הסכם קודם</button>
+      </section>
+
+      <p class="agr-disclaimer">
+        הכלי מרכז את עיקרי הסכם נמל חיפה מפברואר 2026 לצורך הערכה ראשונית בלבד, ואינו מהווה ייעוץ פנסיוני/משפטי או התחייבות של החברה או הוועד.
+        עלות הפרישה בפועל, גובה פנסיית הגישור והמענק היחסי נקבעים בסימולציה אישית מטעם ההנהלה ובכפוף לתנאי ההסכם המלא.
+      </p>
+    </div>
+  </main>
+
+  <div class="toast no-print" id="toast"></div>
+  <script src="../js/agreement.js"></script>
+</body>
+</html>
