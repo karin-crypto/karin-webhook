@@ -297,3 +297,13 @@ document.getElementById('i-retro-to').value = new Date().toISOString().slice(0, 
 document.querySelectorAll('[data-in]').forEach(el => el.addEventListener('input', render));
 render();
 renderCmp();
+
+/* when embedded in the portal iframe, report content height to the parent so it can size the frame */
+if (document.documentElement.classList.contains('embed')) {
+  const postHeight = () => {
+    parent.postMessage({ type: 'agr-embed-height', height: document.body.scrollHeight }, '*');
+  };
+  if (window.ResizeObserver) new ResizeObserver(postHeight).observe(document.body);
+  window.addEventListener('load', postHeight);
+  postHeight();
+}

@@ -93,6 +93,13 @@
   border-top: 1px solid var(--border); padding-top: 1rem;
 }
 
+/* embedded inside the client portal (iframe) — drop own header/chrome */
+.embed .tool-header { display: none !important; }
+.embed .tool-main { padding: .25rem 0 1.5rem; }
+.embed .container { padding: 0; }
+.embed .agr-inputs { top: .5rem; }
+.embed body, .embed { background: transparent; }
+
 @media print {
   .no-print { display: none !important; }
   .agr-layout { display: block; }
