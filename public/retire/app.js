@@ -110,6 +110,9 @@ function calc() {
   renderCompare(v, b);
   renderSteps(v, b);
   renderWa(v, b);
+  // prefill bridge-pension estimator from the main form
+  if (state.salary && !$('b-salary').value) $('b-salary').value = state.salary;
+  computeBridge();
   // reset to first tab
   document.querySelectorAll('.tab').forEach(x => x.classList.remove('on'));
   document.querySelector('.tab[data-tab="tracks"]').classList.add('on');
@@ -231,6 +234,50 @@ function renderWa(v, b) {
   ];
   $('waBtn').href = `https://wa.me/${WA}?text=${encodeURIComponent(lines.join('\n'))}`;
 }
+
+/* ---------- bridge pension estimate (פנסיית גישור, new-fund method) ----------
+   Per הסכם 3: monthly pension ≈ [ balance advanced to mandatory age
+   + contributions during the bridge, advanced ] / conversion factor. */
+function computeBridge() {
+  const salary  = numv($('b-salary').value);
+  const balance = numv($('b-balance').value);
+  const factor  = numv($('b-factor').value) || 200;
+  const rAnnual = (numv($('b-return').value) || 0) / 100;
+  const cRate   = (numv($('b-contrib').value) || 0) / 100;
+  const years   = (state.retAge && state.age != null) ? Math.max(0, state.retAge - state.age) : 0;
+  const n = Math.round(years * 12);
+
+  $('b-period').textContent = years > 0
+    ? `תקופת גישור מוערכת: ${years} שנים (${n} חודשים) — מגיל ${state.age} עד גיל פרישת חובה ${state.retAge}.`
+    : 'הזינו גיל בטופס הראשי כדי לחשב את תקופת הגישור.';
+
+  if (!balance || !factor || n <= 0) {
+    $('bridgeResult').innerHTML = `<div class="note" style="margin:0">הזינו <b>צבירה</b> ו<b>מקדם המרה</b> (וגיל בטופס) לקבלת אומדן.</div>`;
+    return;
+  }
+
+  const rm = Math.pow(1 + rAnnual, 1/12) - 1;
+  const fvBalance = balance * Math.pow(1 + rAnnual, years);
+  const monthlyContrib = cRate * (salary || 0);
+  const fvContrib = rm > 0 ? monthlyContrib * ((Math.pow(1 + rm, n) - 1) / rm) : monthlyContrib * n;
+  const bridge = (fvBalance + fvContrib) / factor;
+
+  $('bridgeResult').innerHTML = `
+    <div class="track" style="margin-top:1rem">
+      <div class="track-body" style="padding-top:1.1rem">
+        <div class="figure green"><span class="fnum">${shekel(bridge)}</span><span class="flabel">אומדן פנסיית גישור חודשית</span></div>
+        <div class="crit info"><span class="cm">${DOT}</span><span>יתרה צבורה מקודמת: <b>${shekel(fvBalance)}</b></span></div>
+        <div class="crit info"><span class="cm">${DOT}</span><span>תגמולים עתידיים מקודמים: <b>${shekel(fvContrib)}</b></span></div>
+        <div class="crit info"><span class="cm">${DOT}</span><span>סה״כ מחולק במקדם ${factor}: <b>(${shekel(fvBalance)} + ${shekel(fvContrib)}) ÷ ${factor}</b></span></div>
+        <div class="note">התשלום משולם מדי חודש לאורך תקופת הגישור (כ‑${n} חודשים) ומתעדכן לפי המדד. הנוסחה לפי שיטת ההסכם למבוטח בפנסיה צוברת חדשה — <b>אומדן בלבד</b>.</div>
+      </div>
+    </div>`;
+}
+
+['b-salary','b-balance','b-factor','b-return','b-contrib'].forEach(id => {
+  const el = $(id);
+  if (el) el.addEventListener('input', computeBridge);
+});
 
 /* ---------- PWA service worker ---------- */
 if ('serviceWorker' in navigator) {

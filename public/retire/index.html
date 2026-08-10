@@ -113,6 +113,24 @@
           <div class="cmp"><table id="cmpTable"></table></div>
           <p class="disclaimer" style="margin-top:1rem">שווי חבילת הפרישה מרצון (פנסיית גישור + מענק) נקבע בסימולציה אישית מטעם ההנהלה, עד תקרה של ₪4M.</p>
         </div>
+        <!-- tab: bridge pension -->
+        <div class="res-tab" id="tab-bridge">
+          <div class="card-head" style="margin:.2rem 0 .9rem"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span> אומדן פנסיית גישור</div>
+          <div class="card">
+            <p style="font-size:.86rem;color:var(--gray);margin-bottom:.9rem">הערכה חודשית לפי שיטת ההסכם עבור מבוטח ב<b>פנסיה צוברת חדשה</b>. מלאו את הנתונים מהדוח הפנסיוני שלכם.</p>
+            <div class="field"><label>שכר קובע חודשי (₪)</label><input id="b-salary" type="number" inputmode="numeric" min="0" placeholder="14,000" /></div>
+            <div class="field"><label>צבירה נוכחית בקרן (₪)</label><input id="b-balance" type="number" inputmode="numeric" min="0" placeholder="800,000" /></div>
+            <div class="grid2">
+              <div class="field"><label>מקדם המרה</label><input id="b-factor" type="number" inputmode="decimal" min="1" value="200" /></div>
+              <div class="field"><label>תשואה שנתית מונחת (%)</label><input id="b-return" type="number" inputmode="decimal" step="0.1" value="3" /></div>
+            </div>
+            <div class="field"><label>אחוז הפקדה חודשי לתגמולים (%)</label><input id="b-contrib" type="number" inputmode="decimal" step="0.1" value="14" /></div>
+            <p class="form-hint" id="b-period" style="margin-top:.4rem"></p>
+          </div>
+          <div id="bridgeResult"></div>
+          <p class="disclaimer" style="margin-top:.4rem">אומדן גס בלבד לצורך המחשה. הסכום המחייב תלוי במקדם ההמרה האישי שבקרן שלך, בתשואה המונחת שקובעת רשות שוק ההון, ובסימולציה האישית מטעם ההנהלה. עבור מבוטח בקרן ותיקה החישוב שונה.</p>
+        </div>
+
         <!-- tab: steps -->
         <div class="res-tab" id="tab-steps">
           <div class="card-head" style="margin:.2rem 0 .9rem"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></span> הצעדים הבאים</div>
@@ -131,8 +149,9 @@
 
       <!-- BOTTOM TABS -->
       <nav class="tabbar" id="tabbar">
-        <button class="tab on" data-tab="tracks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20" opacity="0"/><path d="M20 6L9 17l-5-5"/></svg>המסלולים שלי</button>
+        <button class="tab on" data-tab="tracks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>מסלולים</button>
         <button class="tab" data-tab="compare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>השוואה</button>
+        <button class="tab" data-tab="bridge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>גישור</button>
         <button class="tab" data-tab="steps"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>צעדים</button>
       </nav>
     </section>
