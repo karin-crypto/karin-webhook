@@ -241,11 +241,22 @@ const METRICS = [
   { key: 'quota',       label: 'מכסת פורשים (מענק)',         cur: '45 עובדים' },
   { key: 'prem_min',    label: 'מינ׳ פרמיה למשמרת',          cur: '12 שעות' },
   { key: 'prem_max',    label: 'מקס׳ פרמיה למשמרת',          cur: '25 שעות' },
-  { key: 'job_sec',     label: 'ביטחון תעסוקתי דור ב׳ לא מייסד עד', cur: '1.1.2037' },
+  { key: 'prem_mech',   label: 'מנגנון הגנת פרמיה',          cur: 'רצפה 12 ש׳ / תקרה 25 ש׳' },
+  { key: 'job_sec',     label: 'ביטחון תעסוקתי דור ב׳ לא מייסד', cur: 'עד 1.1.2037' },
 ];
 
-let prevAgreements = []; // [{ name, values: {key: val} }]
+/* previous agreements — pre-filled from the historical documents (2015–2020).
+   Columns remain editable so Karin can adjust or add more. */
 let prevSeq = 0;
+let prevAgreements = [
+  { _id: ++prevSeq, name: 'רפורמה 2020', values: {
+      prem_mech: '70% (21–25)·65% (26)·60% (27) מ‑12.5 ש׳',
+      job_sec:   '10 ש׳ מתחילת התחרות',
+  } },
+  { _id: ++prevSeq, name: 'עקרונות תעסוקה 15–18', values: {
+      job_sec: 'עקרונות ביטחון תעסוקתי',
+  } },
+];
 
 function renderCmp() {
   const t = document.getElementById('cmpTable');

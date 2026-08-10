@@ -1,0 +1,84 @@
+/* =========================================================
+   דף סיכום הסכם נמל חיפה 2026 – עיצוב גיליון להדפסה
+   ========================================================= */
+.sum-page {
+  max-width: 900px;
+  margin: 1.5rem auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+/* header band */
+.sum-head {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy3) 100%);
+  color: #fff; padding: 1.7rem 2rem 1.5rem; position: relative;
+}
+.sum-head::after { content: ""; position: absolute; inset: auto 0 0 0; height: 4px; background: var(--gold-grad); }
+.sum-head-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+.sum-logo { display: flex; align-items: center; gap: .6rem; }
+.sum-logo-mark { width: 40px; height: 40px; border-radius: 11px; background: var(--gold-grad); color: var(--navy); display: grid; place-items: center; }
+.sum-logo-mark svg { width: 24px; height: 24px; }
+.sum-logo strong { display: block; font-size: 1.08rem; font-weight: 800; }
+.sum-logo span { font-size: .74rem; color: var(--gold3); }
+.sum-tag { font-size: .78rem; color: #c5d0e4; text-align: left; }
+.sum-title { margin-top: 1.2rem; }
+.sum-title h1 { font-size: 1.5rem; font-weight: 800; }
+.sum-title p { font-size: .88rem; color: #c5d0e4; margin-top: .25rem; }
+
+/* body grid */
+.sum-body { padding: 1.6rem 2rem; }
+.sum-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; }
+@media (max-width: 720px) { .sum-grid { grid-template-columns: 1fr; } }
+
+.sum-sec {
+  border: 1px solid var(--border); border-radius: 14px; padding: 1.1rem 1.15rem;
+  break-inside: avoid; page-break-inside: avoid;
+}
+.sum-sec-head { display: flex; align-items: center; gap: .6rem; margin-bottom: .8rem; }
+.sum-sec-ico { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-size: 1.05rem; flex-shrink: 0; }
+.sum-sec-head h3 { font-size: 1rem; font-weight: 800; color: var(--navy); flex: 1; }
+.sum-sec-head .sum-when { font-size: .7rem; color: var(--gray2); font-weight: 600; }
+
+/* highlight chips */
+.sum-chips { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .7rem; }
+.sum-chip {
+  background: linear-gradient(135deg, #fbf7ec, #fdfbf4); border: 1px solid #ecdcb0;
+  border-radius: 9px; padding: .35rem .6rem; font-size: .8rem;
+}
+.sum-chip b { color: var(--navy); font-weight: 800; }
+.sum-chip.green { background: var(--green-bg); border-color: #bfe6cd; }
+.sum-chip.green b { color: var(--green); }
+
+.sum-list { list-style: none; display: flex; flex-direction: column; gap: .4rem; }
+.sum-list li { display: flex; gap: .5rem; font-size: .84rem; color: var(--text); line-height: 1.45; }
+.sum-list li::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--gold); margin-top: .5rem; flex-shrink: 0; }
+.sum-list li b { color: var(--navy); font-weight: 700; }
+
+/* commitments banner */
+.sum-commit {
+  margin-top: 1.2rem; background: var(--navy); color: #fff; border-radius: 14px; padding: 1.1rem 1.3rem;
+  break-inside: avoid; page-break-inside: avoid;
+}
+.sum-commit h4 { font-size: .95rem; font-weight: 800; margin-bottom: .7rem; color: var(--gold3); }
+.sum-commit-items { display: flex; flex-wrap: wrap; gap: .5rem .7rem; }
+.sum-commit-items span { display: inline-flex; align-items: center; gap: .35rem; font-size: .85rem; font-weight: 600; }
+.sum-commit-items span::before { content: "✓"; color: var(--gold2); font-weight: 800; }
+
+.sum-foot {
+  border-top: 1px solid var(--border); margin-top: 1.4rem; padding: 1.1rem 2rem;
+  display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;
+  font-size: .76rem; color: var(--gray);
+}
+.sum-foot .sum-agent strong { color: var(--navy); font-size: .84rem; }
+.sum-disclaimer { font-size: .68rem; color: var(--gray2); line-height: 1.5; max-width: 460px; }
+
+@media print {
+  @page { margin: 10mm; size: A4; }
+  body { background: #fff; }
+  .no-print { display: none !important; }
+  .tool-main { padding: 0; }
+  .sum-page { box-shadow: none; border-radius: 0; margin: 0; max-width: 100%; }
+  .sum-head, .sum-chip, .sum-chip.green, .sum-commit, .sum-sec-ico { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
