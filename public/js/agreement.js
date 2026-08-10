@@ -58,6 +58,8 @@ function readInputs() {
     salary: num(val('i-salary')),
     premRate: num(val('i-premrate')),
     shifts: num(val('i-shifts')),
+    hourly: num(val('i-hourly')),
+    ot: num(val('i-ot')),
     retroTo: val('i-retro-to'),
   };
 }
@@ -219,13 +221,43 @@ function cardPremium(d) {
       בשביתה/עיצומים ההגנה נשמרת אלא אם חלה ירידה של 50%+ בתפוקה (בהוכחת החברה).</div>` });
 }
 
+/* 5 — שעות נוספות (הסכם ההתייעלות / הסכם 3) */
+function cardOvertime(d) {
+  const icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>';
+  const hourly = d.hourly || (d.salary ? d.salary / 182 : null);
+  let figure, source = '';
+  if (hourly && d.ot) {
+    const first = Math.min(d.ot, 2);
+    const beyond = Math.max(0, d.ot - 2);
+    const pay = hourly * (first * 1.25 + beyond * 1.5);
+    const extra = pay - hourly * d.ot; // the premium portion above 100%
+    figure = `<div class="res-figure"><span class="rf-num">${shekel(pay)}</span><span class="rf-label">תשלום למשמרת עבור ${d.ot} שעות נוספות</span></div>
+      <div class="res-kv-row">
+        <div class="res-kv"><span>מתוכו תוספת (מעל 100%)</span><strong>${shekel(extra)}</strong></div>
+        <div class="res-kv"><span>שכר לשעה בבסיס</span><strong>${shekel(hourly)}</strong></div>
+      </div>`;
+    source = d.hourly ? '' : ' (שכר לשעה חושב מהשכר החודשי ÷ 182)';
+  } else {
+    figure = `<div class="res-kv-row">
+      <div class="res-kv"><span>שעתיים ראשונות</span><strong>125%</strong></div>
+      <div class="res-kv"><span>מהשעה השלישית</span><strong>150%</strong></div>
+    </div>
+    <div class="res-note" style="margin-top:0">הזיני <b>שכר לשעה</b> (או שכר חודשי) ו<b>שעות נוספות</b> לחישוב.</div>`;
+  }
+  return card({ color: '#0f766e', icon, title: 'שעות נוספות', sub: 'הסכם ההתייעלות התפעולי', badge: 'תעריפים', badgeClass: 'ok',
+    body: `${figure}
+      <div class="res-note">תעריפי שעות נוספות: <b>125%</b> לשעתיים הראשונות, <b>150%</b> מהשעה השלישית${source}.<br><br>
+      הסכם ההתייעלות כולל גם תוכנית <b>פול גוררים</b> (פיילוט של 3 חודשים / 300 משמרות) ו<b>עדכון נורמות בפעימות</b> —
+      האחוזים המדויקים כפופים לנוסח הנספח החתום.</div>` });
+}
+
 /* ========================================================
    render
    ======================================================== */
 function render() {
   const d = readInputs();
   document.getElementById('results').innerHTML =
-    cardVoluntary(d) + cardBonus(d) + cardWage(d) + cardPremium(d);
+    cardVoluntary(d) + cardBonus(d) + cardWage(d) + cardPremium(d) + cardOvertime(d);
 }
 
 /* ========================================================
@@ -300,6 +332,8 @@ function loadDemo() {
   document.getElementById('i-salary').value = 14000;
   document.getElementById('i-premrate').value = 70;
   document.getElementById('i-shifts').value = 18;
+  document.getElementById('i-hourly').value = '';
+  document.getElementById('i-ot').value = 2.5;
   render();
   toast('נטענו נתוני דוגמה ✓');
 }
