@@ -111,7 +111,10 @@ function calc() {
   renderSteps(v, b);
   renderWa(v, b);
   // prefill bridge-pension estimator from the main form
-  if (state.salary && !$('b-salary').value) $('b-salary').value = state.salary;
+  if (state.salary) {
+    if (!$('b-salary').value) $('b-salary').value = state.salary;
+    if (!$('v-salary').value) $('v-salary').value = state.salary;
+  }
   computeBridge();
   // reset to first tab
   document.querySelectorAll('.tab').forEach(x => x.classList.remove('on'));
@@ -235,46 +238,83 @@ function renderWa(v, b) {
   $('waBtn').href = `https://wa.me/${WA}?text=${encodeURIComponent(lines.join('\n'))}`;
 }
 
-/* ---------- bridge pension estimate (פנסיית גישור, new-fund method) ----------
-   Per הסכם 3: monthly pension ≈ [ balance advanced to mandatory age
-   + contributions during the bridge, advanced ] / conversion factor. */
-function computeBridge() {
-  const salary  = numv($('b-salary').value);
-  const balance = numv($('b-balance').value);
-  const factor  = numv($('b-factor').value) || 200;
-  const rAnnual = (numv($('b-return').value) || 0) / 100;
-  const cRate   = (numv($('b-contrib').value) || 0) / 100;
-  const years   = (state.retAge && state.age != null) ? Math.max(0, state.retAge - state.age) : 0;
-  const n = Math.round(years * 12);
+/* ---------- bridge pension estimate (פנסיית גישור) ----------
+   Per הסכם 3. Parameters calibrated against the agreement's worked example
+   (balance 100k, salary 1k, 57→67, return 3.74%, 0.9×20.5% contributions,
+   factor 200 → ₪855). Two fund types: new accumulating & veteran. */
+let fundType = 'new';
 
+function bridgeYears() {
+  return (state.retAge && state.age != null) ? Math.max(0, state.retAge - state.age) : 0;
+}
+
+function computeBridge() {
+  const years = bridgeYears(), n = Math.round(years * 12);
   $('b-period').textContent = years > 0
     ? `תקופת גישור מוערכת: ${years} שנים (${n} חודשים) — מגיל ${state.age} עד גיל פרישת חובה ${state.retAge}.`
     : 'הזינו גיל בטופס הראשי כדי לחשב את תקופת הגישור.';
-
-  if (!balance || !factor || n <= 0) {
-    $('bridgeResult').innerHTML = `<div class="note" style="margin:0">הזינו <b>צבירה</b> ו<b>מקדם המרה</b> (וגיל בטופס) לקבלת אומדן.</div>`;
-    return;
-  }
-
-  const rm = Math.pow(1 + rAnnual, 1/12) - 1;
-  const fvBalance = balance * Math.pow(1 + rAnnual, years);
-  const monthlyContrib = cRate * (salary || 0);
-  const fvContrib = rm > 0 ? monthlyContrib * ((Math.pow(1 + rm, n) - 1) / rm) : monthlyContrib * n;
-  const bridge = (fvBalance + fvContrib) / factor;
-
-  $('bridgeResult').innerHTML = `
-    <div class="track" style="margin-top:1rem">
-      <div class="track-body" style="padding-top:1.1rem">
-        <div class="figure green"><span class="fnum">${shekel(bridge)}</span><span class="flabel">אומדן פנסיית גישור חודשית</span></div>
-        <div class="crit info"><span class="cm">${DOT}</span><span>יתרה צבורה מקודמת: <b>${shekel(fvBalance)}</b></span></div>
-        <div class="crit info"><span class="cm">${DOT}</span><span>תגמולים עתידיים מקודמים: <b>${shekel(fvContrib)}</b></span></div>
-        <div class="crit info"><span class="cm">${DOT}</span><span>סה״כ מחולק במקדם ${factor}: <b>(${shekel(fvBalance)} + ${shekel(fvContrib)}) ÷ ${factor}</b></span></div>
-        <div class="note">התשלום משולם מדי חודש לאורך תקופת הגישור (כ‑${n} חודשים) ומתעדכן לפי המדד. הנוסחה לפי שיטת ההסכם למבוטח בפנסיה צוברת חדשה — <b>אומדן בלבד</b>.</div>
-      </div>
-    </div>`;
+  if (fundType === 'vet') computeVet();
+  else computeNew(years, n);
 }
 
-['b-salary','b-balance','b-factor','b-return','b-contrib'].forEach(id => {
+/* new accumulating fund: [ balance advanced + contributions advanced ] / factor */
+function computeNew(years, n) {
+  const salary = numv($('b-salary').value), balance = numv($('b-balance').value);
+  const factor = numv($('b-factor').value) || 200;
+  const r = (numv($('b-return').value) || 0) / 100;
+  const rate = (numv($('b-rate').value) || 0) / 100;
+  if (!balance || !factor || n <= 0) { $('bridgeResult').innerHTML = emptyNote(); return; }
+  const rm = Math.pow(1 + r, 1/12) - 1;
+  const fvBalance = balance * Math.pow(1 + r, years);
+  const monthly = 0.9 * rate * (salary || 0); // 0.9 coefficient per the agreement
+  const fvContrib = rm > 0 ? monthly * ((Math.pow(1 + rm, n) - 1) / rm) : monthly * n;
+  const bridge = (fvBalance + fvContrib) / factor;
+  $('bridgeResult').innerHTML = bridgeCard(bridge, [
+    ['יתרה צבורה מקודמת', shekel(fvBalance)],
+    ['תגמולים עתידיים מקודמים', shekel(fvContrib)],
+    [`סה״כ ÷ מקדם ${factor}`, `(${shekel(fvBalance)} + ${shekel(fvContrib)}) ÷ ${factor}`],
+  ], `למבוטח ב<b>פנסיה צוברת חדשה</b>. משולם מדי חודש לאורך כ‑${n} חודשי הגישור ומתעדכן לפי המדד. <b>אומדן בלבד.</b>`);
+}
+
+/* veteran fund: accrual% (2%/yr, cap 70%) × pensionable salary × (1 + 10% increase) */
+function computeVet() {
+  const salary = numv($('v-salary').value), vyears = numv($('v-years').value);
+  const perYear = (numv($('v-accrual').value) || 2) / 100;
+  const inc = (numv($('v-increase').value) || 0) / 100;
+  if (!salary || !vyears) { $('bridgeResult').innerHTML = emptyNote('הזינו <b>משכורת קובעת</b> ו<b>שנות חברות</b> בקרן.'); return; }
+  const accrual = Math.min(0.70, perYear * vyears);
+  const base = accrual * salary;
+  const bridge = base * (1 + inc);
+  $('bridgeResult').innerHTML = bridgeCard(bridge, [
+    ['שיעור צבירה', (accrual * 100).toFixed(0) + '%' + (accrual >= 0.70 ? ' (תקרה)' : '')],
+    ['פנסיה בסיסית', shekel(base)],
+    [`בתוספת הגדלה ${(inc * 100).toFixed(0)}%`, `${shekel(base)} × ${(1 + inc).toFixed(2)}`],
+  ], `למבוטח ב<b>קרן ותיקה</b>. בנוסף, החברה מפקידה 13.5% מהמשכורת הקובעת ומנוכה 7% מהעובד. <b>אומדן בלבד</b> — הפנסיה המחייבת נמסרת ע״י הקרן.`);
+}
+
+function emptyNote(msg) {
+  return `<div class="note" style="margin:0">${msg || 'הזינו <b>צבירה</b> ו<b>מקדם המרה</b> (וגיל בטופס) לקבלת אומדן.'}</div>`;
+}
+function bridgeCard(amount, rows, note) {
+  return `<div class="track" style="margin-top:1rem"><div class="track-body" style="padding-top:1.1rem">
+    <div class="figure green"><span class="fnum">${shekel(amount)}</span><span class="flabel">אומדן פנסיית גישור חודשית</span></div>
+    ${rows.map(r => `<div class="crit info"><span class="cm">${DOT}</span><span>${r[0]}: <b>${r[1]}</b></span></div>`).join('')}
+    <div class="note">${note}</div></div></div>`;
+}
+
+/* fund-type toggle */
+document.querySelectorAll('#fundToggle .ft-opt').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#fundToggle .ft-opt').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    fundType = btn.dataset.fund;
+    $('bridge-new').classList.toggle('hidden', fundType !== 'new');
+    $('bridge-vet').classList.toggle('hidden', fundType !== 'vet');
+    computeBridge();
+  });
+});
+
+['b-salary','b-balance','b-factor','b-return','b-rate','v-salary','v-years','v-accrual','v-increase'].forEach(id => {
   const el = $(id);
   if (el) el.addEventListener('input', computeBridge);
 });
