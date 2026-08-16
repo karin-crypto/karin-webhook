@@ -1,0 +1,109 @@
+/* =========================================================
+   מחשבון הסכם נמל חיפה 2026 – עיצוב
+   ========================================================= */
+.agr-layout { display: grid; grid-template-columns: minmax(320px, 380px) 1fr; gap: 1.6rem; align-items: start; }
+@media (max-width: 960px) { .agr-layout { grid-template-columns: 1fr; } }
+
+.agr-inputs { position: sticky; top: 90px; }
+@media (max-width: 960px) { .agr-inputs { position: static; } }
+.agr-opt { font-size: .75rem; font-weight: 500; color: var(--gray2); }
+
+.agr-results { display: flex; flex-direction: column; gap: 1.2rem; }
+
+/* result card */
+.res-card {
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm); overflow: hidden;
+}
+.res-head {
+  display: flex; align-items: center; gap: .75rem; padding: 1.1rem 1.3rem;
+  border-bottom: 1px solid var(--off2);
+}
+.res-icon { width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; flex-shrink: 0; }
+.res-icon svg { width: 22px; height: 22px; }
+.res-head h3 { font-size: 1.05rem; font-weight: 800; color: var(--navy); flex: 1; }
+.res-head .res-sub { font-size: .78rem; color: var(--gray); font-weight: 500; }
+
+/* status badge */
+.res-badge { font-size: .78rem; font-weight: 800; padding: .3rem .8rem; border-radius: 99px; white-space: nowrap; }
+.res-badge.ok    { background: var(--green-bg); color: var(--green); }
+.res-badge.maybe { background: #fef3d6; color: #b45309; }
+.res-badge.no    { background: var(--red-bg);  color: var(--red); }
+
+.res-body { padding: 1.1rem 1.3rem; }
+
+/* big number highlight */
+.res-figure {
+  display: flex; align-items: baseline; gap: .5rem; flex-wrap: wrap;
+  background: linear-gradient(135deg, #fbf7ec, #fdfbf4);
+  border: 1px solid #ecdcb0; border-radius: 12px; padding: .85rem 1rem; margin-bottom: 1rem;
+}
+.res-figure .rf-num { font-size: 1.7rem; font-weight: 800; color: var(--navy); line-height: 1; }
+.res-figure .rf-label { font-size: .82rem; color: var(--gray); }
+.res-figure.green { background: var(--green-bg); border-color: #bfe6cd; }
+.res-figure.green .rf-num { color: var(--green); }
+
+/* criteria checklist */
+.res-crit { display: flex; flex-direction: column; gap: .5rem; margin-top: .3rem; }
+.crit {
+  display: flex; align-items: flex-start; gap: .6rem; font-size: .9rem;
+}
+.crit-mark { width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; margin-top: 1px; }
+.crit-mark svg { width: 13px; height: 13px; stroke-width: 3; }
+.crit.pass .crit-mark { background: var(--green-bg); color: var(--green); }
+.crit.fail .crit-mark { background: var(--red-bg); color: var(--red); }
+.crit.info .crit-mark { background: var(--off2); color: var(--gray); }
+.crit-txt { color: var(--text); }
+.crit-txt b { color: var(--navy); }
+.crit.fail .crit-txt { color: var(--gray); }
+
+.res-note {
+  margin-top: 1rem; font-size: .82rem; color: var(--gray); line-height: 1.55;
+  background: var(--off); border-radius: 10px; padding: .7rem .85rem;
+}
+.res-note b { color: var(--navy); }
+
+.res-kv-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: .7rem; margin: .3rem 0 1rem; }
+.res-kv { border: 1px solid var(--border); border-radius: 10px; padding: .65rem .8rem; }
+.res-kv span { display: block; font-size: .74rem; color: var(--gray); }
+.res-kv strong { font-size: 1.02rem; color: var(--navy); font-weight: 800; }
+@media (max-width: 460px) { .res-kv-row { grid-template-columns: 1fr; } }
+
+/* comparison table */
+.agr-cmp-hint { font-size: .86rem; color: var(--gray); margin-bottom: 1rem; }
+.agr-cmp-table { width: 100%; border-collapse: collapse; min-width: 520px; }
+.agr-cmp-table th, .agr-cmp-table td { padding: .7rem .9rem; text-align: right; border-bottom: 1px solid var(--border); font-size: .9rem; }
+.agr-cmp-table thead th { background: var(--navy); color: #fff; font-weight: 700; }
+.agr-cmp-table thead th:first-child { background: var(--navy3); }
+.agr-cmp-table .cmp-metric { font-weight: 700; color: var(--navy); background: var(--off); width: 210px; }
+.agr-cmp-table .cmp-metric small { display: block; font-weight: 500; color: var(--gray2); font-size: .73rem; }
+.agr-cmp-table .cmp-cur { background: #fbf7ec; font-weight: 700; color: var(--navy); }
+.agr-cmp-table td input {
+  width: 100%; border: 1.5px solid var(--border); border-radius: 8px; padding: .45rem .55rem; font-size: .88rem; background: #fff;
+}
+.agr-cmp-table td input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,168,76,.14); }
+.agr-cmp-remove { background: rgba(255,255,255,.14); border: none; color: #fff; border-radius: 6px; width: 24px; height: 24px; cursor: pointer; }
+.agr-cmp-remove:hover { background: var(--red); }
+.agr-cmp-colhead { display: flex; align-items: center; gap: .5rem; }
+.agr-cmp-colhead input { flex: 1; background: rgba(255,255,255,.12); border: 1.5px solid rgba(255,255,255,.2); color: #fff; border-radius: 7px; padding: .35rem .5rem; font-weight: 700; }
+.agr-cmp-colhead input::placeholder { color: #b7c2d6; }
+
+.agr-disclaimer {
+  margin-top: 1.6rem; font-size: .78rem; color: var(--gray2); line-height: 1.6;
+  border-top: 1px solid var(--border); padding-top: 1rem;
+}
+
+/* embedded inside the client portal (iframe) — drop own header/chrome */
+.embed .tool-header { display: none !important; }
+.embed .tool-main { padding: .25rem 0 1.5rem; }
+.embed .container { padding: 0; }
+.embed .agr-inputs { top: .5rem; }
+.embed body, .embed { background: transparent; }
+
+@media print {
+  .no-print { display: none !important; }
+  .agr-layout { display: block; }
+  .agr-results { gap: 1rem; }
+  .res-card { box-shadow: none; page-break-inside: avoid; }
+  .res-badge, .res-figure, .crit-mark { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

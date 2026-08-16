@@ -1,0 +1,19 @@
+{
+  "name": "סימולטור פרישה — נמל חיפה",
+  "short_name": "סימולטור פרישה",
+  "description": "בדיקת זכאות למסלולי פרישה ומענקים לפי הסכם נמל חיפה 2026",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a1628",
+  "theme_color": "#0a1628",
+  "dir": "rtl",
+  "lang": "he",
+  "categories": ["finance", "productivity"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

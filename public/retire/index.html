@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1" />
+  <title>סימולטור פרישה — עובדי נמל חיפה</title>
+  <meta name="theme-color" content="#0a1628" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="סימולטור פרישה" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="app.css" />
+</head>
+<body>
+  <div class="app">
+
+    <!-- APP BAR -->
+    <div class="appbar" id="appbar">
+      <button class="appbar-back hidden" id="backBtn" aria-label="חזרה">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <div class="appbar-mark">
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M24 6L38 14V24C38 32 31 39.5 24 42C17 39.5 10 32 10 24V14L24 6Z" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 24L22 28L30 20" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="appbar-title">
+        <h1>סימולטור פרישה</h1>
+        <p>נמל חיפה · הסכם 2026</p>
+      </div>
+    </div>
+
+    <!-- ============ WELCOME ============ -->
+    <section class="screen active" id="screen-welcome">
+      <div class="welcome">
+        <div class="welcome-badge">
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M24 6L38 14V24C38 32 31 39.5 24 42C17 39.5 10 32 10 24V14L24 6Z" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 24L22 28L30 20" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h2>מגיע לך לדעת</h2>
+        <p class="sub">בדקו את הזכאות שלכם למסלולי הפרישה והמענקים לפי הסכם נמל חיפה — פברואר 2026. חינם, אנונימי, ותוך דקה.</p>
+
+        <div class="welcome-feats">
+          <div class="welcome-feat"><span class="wf-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg></span> פרישה מרצון — עד ₪4M לעובד</div>
+          <div class="welcome-feat"><span class="wf-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg></span> מענק חד־פעמי — ₪2M ברוטו</div>
+          <div class="welcome-feat"><span class="wf-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></span> בדיקת זכאות מיידית לפי דור, גיל וותק</div>
+        </div>
+
+        <button class="btn btn-gold" onclick="goForm()">
+          בואו נתחיל
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        </button>
+        <p class="disclaimer" style="color:#9fb0c9;max-width:300px">הכלי מיועד להערכה ראשונית בלבד ואינו מהווה ייעוץ או התחייבות. הסימולציה האישית המחייבת מונפקת על ידי ההנהלה.</p>
+      </div>
+    </section>
+
+    <!-- ============ FORM ============ -->
+    <section class="screen" id="screen-form">
+      <div class="screen-scroll">
+        <div class="card">
+          <div class="card-head"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0114 0v1"/></svg></span> הפרטים שלי</div>
+
+          <div class="field">
+            <label>דור</label>
+            <div class="seg" id="segGen">
+              <button class="seg-opt on" data-val="א"><span class="dot"></span> דור א׳</button>
+              <button class="seg-opt" data-val="ב-מייסד"><span class="dot"></span> דור ב׳ — מייסד</button>
+              <button class="seg-opt" data-val="ב-לא-מייסד"><span class="dot"></span> דור ב׳ — לא מייסד</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>מגזר</label>
+            <select id="i-sector">
+              <option value="תפעול">תפעול</option>
+              <option value="אחר">אחר / מנהלה</option>
+            </select>
+          </div>
+
+          <div class="grid2">
+            <div class="field"><label>גיל</label><input id="i-age" type="number" inputmode="numeric" min="18" max="80" placeholder="52" /></div>
+            <div class="field"><label>ותק בנמל</label><input id="i-vetek" type="number" inputmode="numeric" min="0" max="55" placeholder="24" /></div>
+          </div>
+          <div class="field"><label>גיל פרישת חובה</label><input id="i-retage" type="number" inputmode="numeric" min="60" max="75" value="67" /></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></span> שכר <span class="optional-tag">(לא חובה)</span></div>
+          <p class="form-hint">מסייע להעריך את שווי המענק נטו ואת ההשוואה.</p>
+          <div class="field"><label>שכר בסיס חודשי ברוטו (₪)</label><input id="i-salary" type="number" inputmode="numeric" min="0" placeholder="14,000" /></div>
+        </div>
+      </div>
+      <div class="sticky-cta">
+        <button class="btn btn-gold" onclick="calc()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+          בדיקת זכאות
+        </button>
+      </div>
+    </section>
+
+    <!-- ============ RESULTS ============ -->
+    <section class="screen" id="screen-results">
+      <div class="screen-scroll" style="padding-bottom:1rem">
+        <!-- tab: tracks -->
+        <div class="res-tab active" id="tab-tracks">
+          <div class="result-hero" id="resultHero"></div>
+          <div id="tracksWrap"></div>
+        </div>
+        <!-- tab: comparison -->
+        <div class="res-tab" id="tab-compare">
+          <div class="card-head" style="margin:.2rem 0 .9rem"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span> השוואת המסלולים</div>
+          <div class="cmp"><table id="cmpTable"></table></div>
+          <p class="disclaimer" style="margin-top:1rem">שווי חבילת הפרישה מרצון (פנסיית גישור + מענק) נקבע בסימולציה אישית מטעם ההנהלה, עד תקרה של ₪4M.</p>
+        </div>
+        <!-- tab: bridge pension -->
+        <div class="res-tab" id="tab-bridge">
+          <div class="card-head" style="margin:.2rem 0 .9rem"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span> אומדן פנסיית גישור</div>
+          <div class="card">
+            <div class="field">
+              <label>סוג הקרן</label>
+              <div class="fund-toggle" id="fundToggle">
+                <button class="ft-opt on" data-fund="new">פנסיה צוברת חדשה</button>
+                <button class="ft-opt" data-fund="vet">קרן ותיקה</button>
+              </div>
+            </div>
+
+            <!-- new accumulating fund -->
+            <div id="bridge-new">
+              <div class="field"><label>שכר קובע להפקדות (₪)</label><input id="b-salary" type="number" inputmode="numeric" min="0" placeholder="14,000" /></div>
+              <div class="field"><label>צבירה נוכחית בקרן (₪)</label><input id="b-balance" type="number" inputmode="numeric" min="0" placeholder="800,000" /></div>
+              <div class="grid2">
+                <div class="field"><label>מקדם המרה</label><input id="b-factor" type="number" inputmode="decimal" min="1" value="200" /></div>
+                <div class="field"><label>תשואה מונחת נטו (%)</label><input id="b-return" type="number" inputmode="decimal" step="0.01" value="3.74" /></div>
+              </div>
+              <div class="field"><label>שיעור הפקדה כולל (%)</label><input id="b-rate" type="number" inputmode="decimal" step="0.1" value="20.5" /></div>
+              <p class="form-hint">ברירות המחדל מכוילות לפי ההסכם (תשואה 3.74%, הפקדה 20.5% במקדם 0.9, מקדם המרה 200 + הגדלה עד ~2.5%).</p>
+            </div>
+
+            <!-- veteran fund -->
+            <div id="bridge-vet" class="hidden">
+              <div class="field"><label>משכורת קובעת (₪)</label><input id="v-salary" type="number" inputmode="numeric" min="0" placeholder="10,000" /></div>
+              <div class="grid2">
+                <div class="field"><label>שנות חברות בקרן</label><input id="v-years" type="number" inputmode="numeric" min="0" max="45" placeholder="30" /></div>
+                <div class="field"><label>צבירה לשנה (%)</label><input id="v-accrual" type="number" inputmode="decimal" step="0.1" value="2" /></div>
+              </div>
+              <div class="field"><label>הגדלה לפי ההסכם (%)</label><input id="v-increase" type="number" inputmode="decimal" step="0.5" value="10" /></div>
+              <p class="form-hint">פנסיית קרן ותיקה = שיעור צבירה (2% לשנה, עד 70%) × משכורת קובעת, בתוספת הגדלה של 10% לפי ההסכם.</p>
+            </div>
+
+            <p class="form-hint" id="b-period" style="margin-top:.5rem"></p>
+          </div>
+          <div id="bridgeResult"></div>
+          <p class="disclaimer" style="margin-top:.4rem">אומדן להמחשה בלבד. הסכום המחייב תלוי במקדם ההמרה האישי שבקרן שלך, בהנחות שקובעת רשות שוק ההון, ובסימולציה האישית מטעם ההנהלה.</p>
+        </div>
+
+        <!-- tab: steps -->
+        <div class="res-tab" id="tab-steps">
+          <div class="card-head" style="margin:.2rem 0 .9rem"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></span> הצעדים הבאים</div>
+          <div class="steplist" id="stepsWrap"></div>
+          <div style="margin-top:1.2rem" class="card">
+            <div class="card-head"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span> יש שאלות? דברו עם קרן</div>
+            <p style="font-size:.88rem;color:var(--gray);margin-bottom:.9rem">קרן קרן — סוכנת ביטוח פנסיוני. ליווי אישי בתהליך הפרישה, בדיקת כדאיות והגשת הבקשה.</p>
+            <a class="btn btn-wa" id="waBtn" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zm5.8 14.01c-.24.68-1.42 1.31-1.96 1.35-.5.04-.5.4-3.15-.66-2.65-1.06-4.3-3.77-4.43-3.95-.13-.18-1.05-1.4-1.05-2.67s.66-1.89.9-2.15c.24-.26.52-.32.7-.32.17 0 .35 0 .5.01.16.01.38-.06.59.45.24.58.82 2 .89 2.14.07.14.12.31.02.5-.09.18-.14.29-.28.45-.14.16-.29.34-.42.48-.14.14-.28.29-.12.57.16.28.71 1.17 1.53 1.9 1.05.94 1.94 1.23 2.22 1.37.28.14.44.12.6-.07.18-.21.7-.8.88-1.08.18-.28.36-.23.61-.14.24.09 1.55.73 1.82.86.27.14.44.2.5.31.07.11.07.63-.17 1.31z"/></svg>
+              וואטסאפ — 050-242-3356
+            </a>
+          </div>
+          <p class="disclaimer">הכלי מסכם את עיקרי ההסכם להערכה ראשונית בלבד ואינו ייעוץ פנסיוני/משפטי או התחייבות של החברה או הוועד.</p>
+        </div>
+      </div>
+
+      <!-- BOTTOM TABS -->
+      <nav class="tabbar" id="tabbar">
+        <button class="tab on" data-tab="tracks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>מסלולים</button>
+        <button class="tab" data-tab="compare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>השוואה</button>
+        <button class="tab" data-tab="bridge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>גישור</button>
+        <button class="tab" data-tab="steps"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>צעדים</button>
+      </nav>
+    </section>
+
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

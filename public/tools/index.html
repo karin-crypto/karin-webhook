@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ארגז כלים לסוכנת | קרן קרן פיננסים</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/tools.css" />
+  <style>
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.4rem;
+      margin-top: 2rem;
+    }
+    .tool-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.8rem;
+      box-shadow: var(--shadow-sm);
+      transition: var(--trans);
+      display: flex; flex-direction: column;
+    }
+    .tool-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); border-color: var(--gold); }
+    .tool-card-icon {
+      width: 54px; height: 54px; border-radius: 14px;
+      display: grid; place-items: center; margin-bottom: 1.1rem;
+      background: var(--off2); color: var(--navy);
+    }
+    .tool-card-icon svg { width: 28px; height: 28px; }
+    .tool-card--report .tool-card-icon { background: linear-gradient(135deg,#1e40af22,#1e40af11); color: #1e40af; }
+    .tool-card--compare .tool-card-icon { background: linear-gradient(135deg,#b4530922,#b4530911); color: #b45309; }
+    .tool-card--wa .tool-card-icon { background: #25d3661f; color: var(--wa-dark); }
+    .tool-card--agr .tool-card-icon { background: linear-gradient(135deg,#6d28d922,#6d28d911); color: #6d28d9; }
+    .tool-card--sum .tool-card-icon { background: linear-gradient(135deg,#0891b222,#0891b211); color: #0891b2; }
+    .tool-card--app { position: relative; }
+    .tool-card--app .tool-card-icon { background: linear-gradient(135deg,var(--navy),var(--navy3)); color: var(--gold3); }
+    .app-pill { position:absolute; top:1.2rem; left:1.2rem; background:var(--gold-grad); color:var(--navy); font-size:.68rem; font-weight:800; padding:.2rem .6rem; border-radius:99px; }
+    .tool-card h3 { font-size: 1.2rem; font-weight: 800; color: var(--navy); margin-bottom: .4rem; }
+    .tool-card p { color: var(--gray); font-size: .93rem; flex: 1; }
+    .tool-card .go { margin-top: 1.2rem; color: var(--gold); font-weight: 700; font-size: .92rem; }
+    .hero-badge {
+      display:inline-block; background: var(--off2); color: var(--navy);
+      font-size:.78rem; font-weight:700; padding:.3rem .8rem; border-radius:99px; margin-bottom:.8rem;
+    }
+  </style>
+</head>
+<body>
+  <header class="tool-header">
+    <div class="tool-header-inner">
+      <div class="tool-brand">
+        <div class="tool-brand-mark">
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M24 6L38 14V24C38 32 31 39.5 24 42C17 39.5 10 32 10 24V14L24 6Z" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M18 24L22 28L30 20" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <h1>ארגז כלים לסוכנת</h1>
+          <p>קרן קרן | פיננסים</p>
+        </div>
+      </div>
+      <div class="tool-header-actions">
+        <a href="../index.html" class="btn btn-ghost btn-sm">← לאתר</a>
+        <a href="../portal.html" class="btn btn-ghost btn-sm">פורטל לקוחות</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="tool-main">
+    <div class="container">
+      <span class="hero-badge">✦ כלי עבודה פנימיים</span>
+      <div class="page-intro">
+        <h2>שלושה כלים חכמים לעבודה היומיומית</h2>
+        <p>הפקת דוחות מעוצבים ללקוחות, השוואה בין מסלולים ומוצרים, ותבניות הודעות וואטסאפ מוכנות לשליחה — הכל במקום אחד.</p>
+      </div>
+
+      <div class="tools-grid">
+        <a href="report.html" class="tool-card tool-card--report">
+          <div class="tool-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          </div>
+          <h3>מחולל דוחות</h3>
+          <p>בנייה מהירה של דוח מצב פיננסי מעוצב ללקוח — פוליסות, צבירות, תשואות ודמי ניהול — מוכן להדפסה או ל‑PDF במיתוג הסוכנות.</p>
+          <span class="go">פתיחת הכלי ←</span>
+        </a>
+
+        <a href="compare.html" class="tool-card tool-card--compare">
+          <div class="tool-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          </div>
+          <h3>כלי השוואה</h3>
+          <p>השוואה זו לצד זו בין מסלולים, קרנות או מוצרים — עם סימון אוטומטי של הבחירה המשתלמת ביותר בכל שורה: דמי ניהול, תשואה וצבירה.</p>
+          <span class="go">פתיחת הכלי ←</span>
+        </a>
+
+        <a href="whatsapp.html" class="tool-card tool-card--wa">
+          <div class="tool-card-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zm5.8 14.01c-.24.68-1.42 1.31-1.96 1.35-.5.04-.5.4-3.15-.66-2.65-1.06-4.3-3.77-4.43-3.95-.13-.18-1.05-1.4-1.05-2.67s.66-1.89.9-2.15c.24-.26.52-.32.7-.32.17 0 .35 0 .5.01.16.01.38-.06.59.45.24.58.82 2 .89 2.14.07.14.12.31.02.5-.09.18-.14.29-.28.45-.14.16-.29.36-.42.48-.14.14-.28.29-.12.57.16.28.71 1.17 1.53 1.9 1.05.94 1.94 1.23 2.22 1.37.28.14.44.12.6-.07.16-.18.69-.8.87-1.08.18-.28.36-.23.61-.14.24.09 1.55.73 1.82.86.27.14.44.2.5.31.07.11.07.63-.17 1.31z"/></svg>
+          </div>
+          <h3>תבניות וואטסאפ</h3>
+          <p>ספריית הודעות מוכנות בעברית לכל מצב — קבלת פנים, תזכורות, בקשת מסמכים, עדכון פוליסה ועוד. ממלאים פרטים, מעתיקים או פותחים ישר בוואטסאפ.</p>
+          <span class="go">פתיחת הכלי ←</span>
+        </a>
+
+        <a href="agreement.html" class="tool-card tool-card--agr">
+          <div class="tool-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="13" y2="15"/></svg>
+          </div>
+          <h3>מחשבון הסכם — נמל חיפה 2026</h3>
+          <p>סימולטור זכאות למסלולי הפרישה, המענק החד־פעמי (₪2M), תוספת השכר והגנת הפרמיה — לפי הסכם פברואר 2026. העובד מזין גיל, ותק ודור ומקבל בדיקת זכאות מלאה והשוואה להסכמים קודמים.</p>
+          <span class="go">פתיחת הכלי ←</span>
+        </a>
+
+        <a href="agreement-summary.html" class="tool-card tool-card--sum">
+          <div class="tool-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <h3>דף סיכום הסכם</h3>
+          <p>גיליון מעוצב בעמוד אחד עם כל עיקרי הסכם פברואר 2026 — פרישה, מענקים, שכר, פרמיה וזכויות. מוכן להדפסה/PDF ולחלוקה לעובדים.</p>
+          <span class="go">פתיחת הכלי ←</span>
+        </a>
+
+        <a href="../retire/" class="tool-card tool-card--app">
+          <span class="app-pill">📱 אפליקציה</span>
+          <div class="tool-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="3"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
+          </div>
+          <h3>סימולטור פרישה לעובדים</h3>
+          <p>אפליקציה להתקנה למסך הבית — עובד/ת מזין דור, גיל וותק ומקבל בדיקת זכאות מיידית לפרישה מרצון ולמענק ₪2M, השוואת מסלולים וצעדים הבאים. מושלמת לשיתוף בוואטסאפ.</p>
+          <span class="go">פתיחת האפליקציה ←</span>
+        </a>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

@@ -549,3 +549,23 @@
   .dashboard-cards { grid-template-columns: 1fr 1fr; }
   .docs-grid { grid-template-columns: 1fr; }
 }
+
+/* ========================
+   EMBEDDED AGREEMENT CALCULATOR
+   ======================== */
+.calc-embed-wrap {
+  background: #f6f8fc;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: .5rem;
+  overflow: hidden;
+}
+#agrFrame {
+  width: 100%;
+  border: none;
+  min-height: 620px;
+  display: block;
+  border-radius: 12px;
+  background: transparent;
+  transition: height .15s ease;
+}

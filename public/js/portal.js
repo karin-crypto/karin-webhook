@@ -352,6 +352,17 @@ if (portalMsgForm) {
 }
 
 /* ========================
+   EMBEDDED CALCULATOR – auto-resize the iframe to its content
+   ======================== */
+window.addEventListener('message', e => {
+  const d = e.data;
+  if (d && d.type === 'agr-embed-height' && typeof d.height === 'number') {
+    const frame = document.getElementById('agrFrame');
+    if (frame) frame.style.height = Math.max(400, d.height + 24) + 'px';
+  }
+});
+
+/* ========================
    TOAST
    ======================== */
 function showToast(msg) {

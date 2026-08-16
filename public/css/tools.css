@@ -1,0 +1,180 @@
+/* =========================================================
+   כלים לסוכנת – עיצוב משותף (Karin Keren agent toolkit)
+   Shared styling for the internal agent tools:
+   report generator · comparison tool · WhatsApp templates
+   ========================================================= */
+:root {
+  --navy:   #0a1628;
+  --navy2:  #0f2040;
+  --navy3:  #162d52;
+  --gold:   #c9a84c;
+  --gold2:  #e2b84a;
+  --gold3:  #f0d270;
+  --gold-grad: linear-gradient(135deg, #c9a84c 0%, #e8c96a 100%);
+  --white:  #ffffff;
+  --off:    #f6f8fc;
+  --off2:   #edf0f7;
+  --gray:   #556075;
+  --gray2:  #8a96a8;
+  --text:   #1a2336;
+  --border: #dce3ef;
+  --green:  #0d9e45;
+  --green-bg: #e7f7ee;
+  --red:    #dc2626;
+  --red-bg: #fdecec;
+  --wa:     #25d366;
+  --wa-dark:#128c7e;
+  --radius: 14px;
+  --radius-lg: 22px;
+  --shadow-sm: 0 2px 8px rgba(10,22,40,.06);
+  --shadow:    0 4px 24px rgba(10,22,40,.10);
+  --shadow-lg: 0 8px 48px rgba(10,22,40,.16);
+  --trans: .22s cubic-bezier(.4,0,.2,1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Heebo', sans-serif;
+  color: var(--text);
+  background: var(--off);
+  direction: rtl;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { text-decoration: none; color: inherit; }
+button { font-family: 'Heebo', sans-serif; cursor: pointer; }
+input, select, textarea { font-family: 'Heebo', sans-serif; }
+
+/* ---------- App shell ---------- */
+.tool-header {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy3) 100%);
+  color: var(--white);
+  padding: 1.1rem 0;
+  box-shadow: var(--shadow);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.tool-header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.tool-brand { display: flex; align-items: center; gap: .7rem; }
+.tool-brand-mark {
+  width: 40px; height: 40px;
+  display: grid; place-items: center;
+  border-radius: 11px;
+  background: var(--gold-grad);
+  color: var(--navy);
+  flex-shrink: 0;
+}
+.tool-brand-mark svg { width: 24px; height: 24px; }
+.tool-brand h1 { font-size: 1.12rem; font-weight: 800; letter-spacing: .01em; line-height: 1.2; }
+.tool-brand p { font-size: .78rem; color: var(--gold3); font-weight: 500; }
+.tool-header-actions { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+
+.container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+.tool-main { padding: 2rem 0 4rem; }
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: .5rem;
+  padding: .72rem 1.35rem;
+  border-radius: 10px;
+  font-size: .95rem; font-weight: 700;
+  border: 2px solid transparent;
+  transition: var(--trans);
+  white-space: nowrap;
+}
+.btn svg { width: 18px; height: 18px; }
+.btn-primary { background: var(--gold-grad); color: var(--navy); box-shadow: 0 4px 16px rgba(201,168,76,.32); }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(201,168,76,.42); }
+.btn-navy { background: var(--navy); color: var(--white); }
+.btn-navy:hover { background: var(--navy3); transform: translateY(-2px); }
+.btn-ghost { background: transparent; color: var(--white); border-color: rgba(255,255,255,.35); }
+.btn-ghost:hover { background: rgba(255,255,255,.12); }
+.btn-outline { background: var(--white); color: var(--navy); border-color: var(--border); }
+.btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+.btn-wa { background: var(--wa); color: #fff; }
+.btn-wa:hover { background: var(--wa-dark); transform: translateY(-2px); }
+.btn-sm { padding: .5rem .9rem; font-size: .84rem; border-radius: 9px; }
+.btn-danger-ghost { background: transparent; color: var(--red); border: none; padding: .4rem; }
+.btn-danger-ghost:hover { color: #b91c1c; }
+.btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+
+/* ---------- Page intro ---------- */
+.page-intro { margin-bottom: 1.6rem; }
+.page-intro h2 { font-size: 1.7rem; font-weight: 800; color: var(--navy); }
+.page-intro p { color: var(--gray); margin-top: .3rem; max-width: 640px; }
+
+/* ---------- Cards / panels ---------- */
+.panel {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 1.5rem;
+}
+.panel + .panel { margin-top: 1.5rem; }
+.panel-title {
+  font-size: 1.05rem; font-weight: 800; color: var(--navy);
+  display: flex; align-items: center; gap: .55rem;
+  margin-bottom: 1.1rem;
+}
+.panel-title .num {
+  width: 26px; height: 26px; border-radius: 8px;
+  background: var(--off2); color: var(--navy);
+  display: grid; place-items: center;
+  font-size: .85rem; font-weight: 800;
+}
+
+/* ---------- Forms ---------- */
+.field { margin-bottom: 1rem; }
+.field label { display: block; font-size: .85rem; font-weight: 600; color: var(--gray); margin-bottom: .35rem; }
+.field input, .field select, .field textarea {
+  width: 100%;
+  padding: .7rem .85rem;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: .95rem;
+  color: var(--text);
+  background: var(--white);
+  transition: var(--trans);
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,168,76,.15);
+}
+.field textarea { resize: vertical; min-height: 90px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1rem; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 1rem; }
+@media (max-width: 720px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+/* ---------- Toast ---------- */
+.toast {
+  position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(120%);
+  background: var(--navy); color: #fff;
+  padding: .8rem 1.4rem; border-radius: 12px;
+  font-weight: 600; font-size: .92rem;
+  box-shadow: var(--shadow-lg);
+  transition: transform .3s cubic-bezier(.4,0,.2,1);
+  z-index: 200; max-width: 90vw;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ---------- Empty state ---------- */
+.empty {
+  text-align: center; color: var(--gray2);
+  padding: 2.5rem 1rem;
+}
+.empty svg { width: 46px; height: 46px; opacity: .4; margin-bottom: .6rem; }
+
+.hidden { display: none !important; }
