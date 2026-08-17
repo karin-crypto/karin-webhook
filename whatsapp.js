@@ -22,7 +22,7 @@
  */
 
 const crypto = require("crypto");
-const { generateReply } = require("./agent");
+const { generateReply, autoReplyEnabled } = require("./agent");
 
 const {
   WHATSAPP_VERIFY_TOKEN,
@@ -114,6 +114,9 @@ function registerWhatsApp(app, store) {
       const from = msg.from; // customer's phone number
       const text = msg.text?.body;
       if (!from || !text) return;
+
+      // Automatic replies are disabled — receive the message but don't respond.
+      if (!autoReplyEnabled) return;
 
       const reply = await generateReply(store, `wa_${from}`, text);
       await sendWhatsAppText(from, reply);

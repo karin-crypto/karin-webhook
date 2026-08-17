@@ -4,7 +4,7 @@ const fs      = require('fs');
 const crypto  = require('crypto');
 
 const { createStore }   = require('./store');
-const { generateReply, MIA_MODEL, claudeEnabled } = require('./agent');
+const { generateReply, MIA_MODEL, claudeEnabled, autoReplyEnabled } = require('./agent');
 const { registerWhatsApp, whatsappConfigured }    = require('./whatsapp');
 
 const app  = express();
@@ -344,6 +344,11 @@ app.post('/webhook', async (req, res) => {
       (req.body && req.body.sessionId) ||
       `sess_${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
 
+    // Automatic replies are disabled — acknowledge without generating a reply.
+    if (!autoReplyEnabled) {
+      return res.json({ reply: null, sessionId, autoReplyDisabled: true });
+    }
+
     const reply = await generateReply(miaStore, sessionId, message);
     res.json({ reply, sessionId });
   } catch (err) {
@@ -356,7 +361,7 @@ registerWhatsApp(app, miaStore);
 
 app.get('/health', (req, res) => res.json({
   status: 'ok',
-  mia: { claudeEnabled, model: MIA_MODEL, store: miaStore.kind, whatsapp: whatsappConfigured },
+  mia: { claudeEnabled, autoReply: autoReplyEnabled, model: MIA_MODEL, store: miaStore.kind, whatsapp: whatsappConfigured },
 }));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
@@ -373,8 +378,10 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
   if (!process.env.ROETO_API_URL) console.warn('⚠  ROETO_API_URL not set – Roeto integration disabled (dev/demo mode)');
   if (!twilioClient)              console.warn('⚠  Twilio not configured – OTP codes printed to console');
+  if (!autoReplyEnabled) console.warn('⚠  Mia auto-reply DISABLED – inbound messages received but not answered (set MIA_AUTO_REPLY=true to enable)');
   console.log(
     `Mia: Claude ${claudeEnabled ? 'enabled' : 'disabled (rule-based fallback)'} | ` +
+    `auto-reply: ${autoReplyEnabled ? 'on' : 'off'} | ` +
     `model: ${MIA_MODEL} | store: ${miaStore.kind} | ` +
     `whatsapp: ${whatsappConfigured ? 'configured' : 'not configured'}`
   );

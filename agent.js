@@ -19,6 +19,14 @@ const {
   MIA_BUSINESS = "החברה",
 } = process.env;
 
+// Master kill-switch for Mia's automatic replies across every channel
+// (generic webhook, WhatsApp, …). Disabled by default — Mia will NOT send
+// automatic replies unless this is explicitly turned on. Re-enable with
+// MIA_AUTO_REPLY=true (also accepts 1 / on / yes).
+const autoReplyEnabled = /^(1|true|on|yes)$/i.test(
+  String(process.env.MIA_AUTO_REPLY || "").trim()
+);
+
 const SYSTEM_PROMPT = `את מיה, נציגת שירות לקוחות וירטואלית של ${MIA_BUSINESS}.
 
 אופי ותפקיד:
@@ -101,4 +109,4 @@ async function generateReply(store, sessionId, message) {
   return reply;
 }
 
-module.exports = { generateReply, MIA_MODEL, claudeEnabled: Boolean(client) };
+module.exports = { generateReply, MIA_MODEL, claudeEnabled: Boolean(client), autoReplyEnabled };
