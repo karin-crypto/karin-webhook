@@ -369,6 +369,21 @@ setInterval(() => {
   for (const [k, v] of sessionStore) if (now > v.expires) sessionStore.delete(k);
 }, 5 * 60 * 1000);
 
+/* ========================
+   PRUNE OLD CONVERSATIONS (keeps Mia's store from filling up)
+   Runs on startup (reclaims existing backlog) and once a day thereafter.
+   ======================== */
+async function pruneMiaStore() {
+  try {
+    const removed = await miaStore.cleanup();
+    if (removed) console.log(`Mia store cleanup: pruned ${removed} old message(s)`);
+  } catch (err) {
+    console.error('Mia store cleanup failed:', err.message);
+  }
+}
+pruneMiaStore();
+setInterval(pruneMiaStore, 24 * 60 * 60 * 1000);
+
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
   if (!process.env.ROETO_API_URL) console.warn('⚠  ROETO_API_URL not set – Roeto integration disabled (dev/demo mode)');
