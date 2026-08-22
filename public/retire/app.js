@@ -10,11 +10,18 @@ const A = {
   RET_AGE: 48, RET_VETEK: 10, RET_HORIZON: 3,
   BONUS_VETEK: 15, BONUS_HORIZON: 10,
 };
+/* sane input bounds — reject absurd values (e.g. age 999) instead of silently rendering them */
+const BOUNDS = {
+  age: { min: 18, max: 100, label: 'גיל' },
+  vetek: { min: 0, max: 60, label: 'ותק' },
+  retage: { min: 55, max: 80, label: 'גיל פרישת חובה' },
+};
 
 const state = { gen: 'א', sector: 'תפעול', age: null, vetek: null, retAge: 67, salary: null };
 
 const $ = id => document.getElementById(id);
 const shekel = n => '₪' + Number(Math.round(n)).toLocaleString('he-IL');
+const shekelM = n => '₪' + (n / 1_000_000).toLocaleString('he-IL', { maximumFractionDigits: 1 }) + 'M';
 const numv = v => { const n = parseFloat(String(v).replace(/[^\d.-]/g, '')); return isNaN(n) ? null : n; };
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
@@ -73,13 +80,67 @@ function readForm() {
   state.yearsLeft = state.age != null ? Math.max(0, state.retAge - state.age) : null;
 }
 
+/* ---------- inline form validation (replaces alert()) ---------- */
+function clearFieldErrors() {
+  ['age', 'vetek', 'retage'].forEach(k => {
+    $('fld-' + k).classList.remove('has-error');
+    $('err-' + k).textContent = '';
+  });
+}
+function setFieldError(key, msg) {
+  $('fld-' + key).classList.add('has-error');
+  $('err-' + key).textContent = msg;
+}
+function validateForm() {
+  clearFieldErrors();
+  let firstInvalid = null;
+  const age = numv($('i-age').value);
+  const vetek = numv($('i-vetek').value);
+  const retage = numv($('i-retage').value);
+
+  if (age == null) { setFieldError('age', 'שדה חובה'); firstInvalid = firstInvalid || 'i-age'; }
+  else if (age < BOUNDS.age.min || age > BOUNDS.age.max) { setFieldError('age', `גיל בין ${BOUNDS.age.min} ל-${BOUNDS.age.max}`); firstInvalid = firstInvalid || 'i-age'; }
+
+  if (vetek == null) { setFieldError('vetek', 'שדה חובה'); firstInvalid = firstInvalid || 'i-vetek'; }
+  else if (vetek < BOUNDS.vetek.min || vetek > BOUNDS.vetek.max) { setFieldError('vetek', `ותק בין ${BOUNDS.vetek.min} ל-${BOUNDS.vetek.max}`); firstInvalid = firstInvalid || 'i-vetek'; }
+
+  if (retage != null && (retage < BOUNDS.retage.min || retage > BOUNDS.retage.max)) {
+    setFieldError('retage', `גיל פרישה בין ${BOUNDS.retage.min} ל-${BOUNDS.retage.max}`);
+    firstInvalid = firstInvalid || 'i-retage';
+  }
+
+  if (firstInvalid) {
+    const el = $(firstInvalid);
+    el.focus();
+    el.closest('.field').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return false;
+  }
+  return true;
+}
+/* clear a field's error as soon as the user edits it */
+['i-age', 'i-vetek', 'i-retage'].forEach(id => {
+  const el = $(id);
+  if (el) el.addEventListener('input', () => {
+    const key = id.replace('i-', '');
+    $('fld-' + key).classList.remove('has-error');
+    $('err-' + key).textContent = '';
+  });
+});
+/* Enter key on any main-form field submits, like a native form would */
+['i-age', 'i-vetek', 'i-retage', 'i-salary'].forEach(id => {
+  const el = $(id);
+  if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); calc(); } });
+});
+
 function voluntary() {
   const baseGen = state.gen === 'א' || state.gen === 'ב-מייסד';
   const cV = state.vetek >= A.RET_VETEK, cA = state.age >= A.RET_AGE, cH = state.yearsLeft >= A.RET_HORIZON;
+  /* every tier is conditional on cH (≥3 years left to mandatory retirement) per the
+     agreement's explicit wording — matching age/vetek alone is not sufficient. */
   let tier = null;
-  if (state.gen === 'א' && state.age >= 50 && state.vetek >= 25) tier = 'דור א׳ · גיל 50 · ותק 25';
-  else if (state.gen === 'א' && state.age >= 48 && state.vetek >= 20) tier = 'דור א׳ · גיל 48 · ותק 20';
-  else if (state.gen === 'ב-מייסד' && state.age >= 48 && state.vetek >= 20) tier = 'דור ב׳ מייסד · גיל 48 · ותק 20';
+  if (state.gen === 'א' && state.age >= 50 && state.vetek >= 25 && cH) tier = 'דור א׳ · גיל 50 · ותק 25';
+  else if (state.gen === 'א' && state.age >= 48 && state.vetek >= 20 && cH) tier = 'דור א׳ · גיל 48 · ותק 20';
+  else if (state.gen === 'ב-מייסד' && state.age >= 48 && state.vetek >= 20 && cH) tier = 'דור ב׳ מייסד · גיל 48 · ותק 20';
   let status = 'no';
   if (!baseGen) status = 'no';
   else if (tier) status = 'ok';
@@ -99,11 +160,8 @@ function bonus() {
 
 /* ---------- calculate + render ---------- */
 function calc() {
+  if (!validateForm()) return;
   readForm();
-  if (state.age == null || state.vetek == null) {
-    alert('כדי לבדוק זכאות יש להזין גיל וותק.');
-    return;
-  }
   const v = voluntary(), b = bonus();
   renderHero(v, b);
   renderTracks(v, b);
@@ -152,9 +210,9 @@ function renderTracks(v, b) {
     vBody = `
       <div class="figure"><span class="fnum">${shekel(A.MAX_RETIRE)}</span><span class="flabel">תקרת עלות פרישה לעובד</span></div>
       ${crit(v.baseGen?'pass':'fail', `דור זכאי (${genLabel})`)}
-      ${crit(v.cV?'pass':'fail', `ותק ≥ 10 <b>(${state.vetek})</b>`)}
-      ${crit(v.cA?'pass':'fail', `גיל ≥ 48 <b>(${state.age})</b>`)}
-      ${crit(v.cH?'pass':'fail', `≥ 3 שנים לפרישת חובה <b>(${state.yearsLeft})</b>`)}
+      ${crit(v.cV?'pass':'fail', `ותק ≥ ${A.RET_VETEK} <b>(${state.vetek})</b>`)}
+      ${crit(v.cA?'pass':'fail', `גיל ≥ ${A.RET_AGE} <b>(${state.age})</b>`)}
+      ${crit(v.cH?'pass':'fail', `≥ ${A.RET_HORIZON} שנים לפרישת חובה <b>(${state.yearsLeft})</b>`)}
       <div class="note">${head}<br><br>כולל <b>פנסיית גישור</b>, <b>מענק פרישה</b> והמשך כיסוי פנסיוני עד גיל פרישת חובה. לזכאים תונפק סימולציה אישית, ואחריה 21 יום להחליט.</div>`;
   }
 
@@ -164,8 +222,13 @@ function renderTracks(v, b) {
     bFigure = `<div class="figure green"><span class="fnum">${shekel(A.BONUS)}</span><span class="flabel">מענק ברוטו לעובד</span></div>`;
     bNote = 'עומד/ת בכל תנאי הסף למענק החד־פעמי.';
   } else if (b.status === 'maybe') {
-    bFigure = `<div class="figure"><span class="fnum">${shekel(b.amount)}</span><span class="flabel">הערכת מענק יחסי — להמחשה בלבד</span></div>`;
-    bNote = 'נותרו פחות מ‑10 שנים לפרישת חובה — ניתן להגיש <b>בקשה חריגה</b>; ההנהלה תשקול מענק יחסי (החישוב הוא הערכה גסה בלבד).';
+    if (Math.round(b.amount) <= 0) {
+      bFigure = `<div class="figure"><span class="fnum" style="font-size:1.05rem">קרוב/ה מדי לפרישת חובה</span></div>`;
+      bNote = `נותרו ${state.yearsLeft} שנים בלבד לפרישת חובה — לפי חישוב יחסי פשוט לא נותר סכום משמעותי, אך ניתן עדיין להגיש <b>בקשה חריגה</b> וההנהלה תשקול מענק לפי שיקול דעתה.`;
+    } else {
+      bFigure = `<div class="figure"><span class="fnum">${shekel(b.amount)}</span><span class="flabel">הערכת מענק יחסי — להמחשה בלבד</span></div>`;
+      bNote = `נותרו פחות מ‑${A.BONUS_HORIZON} שנים לפרישת חובה — ניתן להגיש <b>בקשה חריגה</b>; ההנהלה תשקול מענק יחסי (החישוב הוא הערכה גסה בלבד).`;
+    }
   } else {
     bFigure = `<div class="figure"><span class="fnum">${shekel(A.BONUS)}</span><span class="flabel">מענק ברוטו (לזכאים)</span></div>`;
     bNote = 'לא מתקיימים כל תנאי הסף למענק החד־פעמי.';
@@ -173,9 +236,9 @@ function renderTracks(v, b) {
   const bBody = `${bFigure}
     ${crit(b.cG?'pass':'fail', 'דור ב׳ (מייסד או לא מייסד)')}
     ${crit(b.cS?'pass':'fail', 'מגזר תפעול')}
-    ${crit(b.cV?'pass':'fail', `ותק ≥ 15 <b>(${state.vetek})</b>`)}
-    ${crit(b.cH?'pass':(b.core?'info':'fail'), `≥ 10 שנים לפרישת חובה <b>(${state.yearsLeft})</b>${!b.cH&&b.core?' — ניתן כחריג':''}`)}
-    <div class="note">${bNote}<br><br><b>מסגרת:</b> תקציב ₪90M (2027) · מכסה עד 45 עובדי דור ב׳ מתפעול · פרישה עד 30.4.2027 (הארכה עד סוף 2028).</div>`;
+    ${crit(b.cV?'pass':'fail', `ותק ≥ ${A.BONUS_VETEK} <b>(${state.vetek})</b>`)}
+    ${crit(b.cH?'pass':(b.core?'info':'fail'), `≥ ${A.BONUS_HORIZON} שנים לפרישת חובה <b>(${state.yearsLeft})</b>${!b.cH&&b.core?' — ניתן כחריג':''}`)}
+    <div class="note">${bNote}<br><br><b>מסגרת:</b> תקציב ${shekelM(A.BUDGET)} (2027) · מכסה עד ${A.QUOTA} עובדי דור ב׳ מתפעול · פרישה עד 30.4.2027 (הארכה עד סוף 2028).</div>`;
 
   $('tracksWrap').innerHTML = `
     <div class="track">
@@ -199,10 +262,10 @@ function renderTracks(v, b) {
 function renderCompare(v, b) {
   const rows = [
     ['זכאות (עבורך)', `<span class="badge ${v.status}">${stLabel(v.status)}</span>`, `<span class="badge ${b.status}">${stLabel(b.status)}</span>`],
-    ['סכום', 'תקרה ₪4M', '₪2M ברוטו'],
+    ['סכום', `תקרה ${shekelM(A.MAX_RETIRE)}`, `${shekelM(A.BONUS)} ברוטו`],
     ['דורות', 'א׳ · ב׳ מייסד', 'ב׳ מייסד + לא מייסד'],
     ['מגזר', 'כל המגזרים', 'תפעול בלבד'],
-    ['ותק נדרש', '10 שנים', '15 שנים'],
+    ['ותק נדרש', `${A.RET_VETEK} שנים`, `${A.BONUS_VETEK} שנים`],
     ['מה מקבלים', 'פנסיית גישור + מענק + כיסוי', 'מענק חד־פעמי'],
     ['מועד פרישה', 'תוך שנה / עד סוף 2027', 'עד 30.4.2027'],
   ];

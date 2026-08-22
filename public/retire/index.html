@@ -79,10 +79,10 @@
           </div>
 
           <div class="grid2">
-            <div class="field"><label>גיל</label><input id="i-age" type="number" inputmode="numeric" min="18" max="80" placeholder="52" /></div>
-            <div class="field"><label>ותק בנמל</label><input id="i-vetek" type="number" inputmode="numeric" min="0" max="55" placeholder="24" /></div>
+            <div class="field" id="fld-age"><label>גיל</label><input id="i-age" type="number" inputmode="numeric" min="18" max="80" placeholder="52" /><div class="field-err" id="err-age"></div></div>
+            <div class="field" id="fld-vetek"><label>ותק בנמל</label><input id="i-vetek" type="number" inputmode="numeric" min="0" max="55" placeholder="24" /><div class="field-err" id="err-vetek"></div></div>
           </div>
-          <div class="field"><label>גיל פרישת חובה</label><input id="i-retage" type="number" inputmode="numeric" min="60" max="75" value="67" /></div>
+          <div class="field" id="fld-retage"><label>גיל פרישת חובה</label><input id="i-retage" type="number" inputmode="numeric" min="60" max="75" value="67" /><div class="field-err" id="err-retage"></div></div>
         </div>
 
         <div class="card">
@@ -104,8 +104,8 @@
       <div class="screen-scroll" style="padding-bottom:1rem">
         <!-- tab: tracks -->
         <div class="res-tab active" id="tab-tracks">
-          <div class="result-hero" id="resultHero"></div>
-          <div id="tracksWrap"></div>
+          <div class="result-hero" id="resultHero" aria-live="polite"></div>
+          <div id="tracksWrap" aria-live="polite"></div>
         </div>
         <!-- tab: comparison -->
         <div class="res-tab" id="tab-compare">
@@ -150,7 +150,7 @@
 
             <p class="form-hint" id="b-period" style="margin-top:.5rem"></p>
           </div>
-          <div id="bridgeResult"></div>
+          <div id="bridgeResult" aria-live="polite"></div>
           <p class="disclaimer" style="margin-top:.4rem">אומדן להמחשה בלבד. הסכום המחייב תלוי במקדם ההמרה האישי שבקרן שלך, בהנחות שקובעת רשות שוק ההון, ובסימולציה האישית מטעם ההנהלה.</p>
         </div>
 
