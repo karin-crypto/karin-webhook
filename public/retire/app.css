@@ -85,6 +85,10 @@ input,select{font-family:inherit;}
 .field label{display:block;font-size:.84rem;font-weight:600;color:var(--gray);margin-bottom:.35rem;}
 .field input,.field select{width:100%;padding:.85rem;border:1.5px solid var(--border);border-radius:12px;font-size:1rem;background:#fff;color:var(--text);}
 .field input:focus,.field select:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,.15);}
+.field.has-error input{border-color:var(--red);}
+.field.has-error input:focus{box-shadow:0 0 0 3px rgba(220,38,38,.14);}
+.field-err{color:var(--red);font-size:.8rem;font-weight:600;margin-top:.35rem;display:none;}
+.field-err:not(:empty){display:block;}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;}
 
 /* segmented control for דור */
