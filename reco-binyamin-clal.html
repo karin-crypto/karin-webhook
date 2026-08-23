@@ -159,6 +159,22 @@ figcaption .tag.pos{color:var(--green)} figcaption .tag.neg{color:var(--red)}
 .shots.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 @media(max-width:640px){.shots.three{grid-template-columns:1fr}}
 @media print{.shots.three figure img{max-height:360px;width:auto !important;max-width:100%;margin:0 auto}}
+.rec-bar.gold{background:var(--goldgrad)}
+.rec-bar.gold h2{color:var(--navy)}
+.rec-bar.gold .rec-num{background:var(--navy);color:var(--gold2)}
+.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:2px 0 18px}
+@media(max-width:600px){.kpi{grid-template-columns:1fr}}
+.kpi .t{background:var(--navy);color:#fff;border-radius:13px;padding:15px;text-align:center;position:relative;overflow:hidden}
+.kpi .t::before{content:"";position:absolute;top:0;right:0;left:0;height:3px;background:var(--goldgrad)}
+.kpi .t .v{font-size:1.7rem;font-weight:800;color:var(--gold2);font-variant-numeric:tabular-nums;line-height:1.05}
+.kpi .t .l{font-size:.74rem;color:#c3cde0;margin-top:6px;font-weight:600}
+.benefits{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+@media(max-width:600px){.benefits{grid-template-columns:1fr}}
+.ben{display:flex;gap:11px;align-items:flex-start;background:var(--white);border:1px solid var(--border);border-radius:12px;padding:12px 13px;box-shadow:var(--shadow-sm)}
+.ben .ic{width:25px;height:25px;border-radius:50%;background:var(--goldgrad);color:var(--navy);font-weight:900;display:flex;align-items:center;justify-content:center;flex:none;font-size:.82rem;box-shadow:0 2px 8px rgba(201,168,76,.35)}
+.ben .tx{font-size:.82rem;color:var(--gray);line-height:1.5}
+.ben .tx b{color:var(--navy);font-weight:800;display:block;margin-bottom:1px;font-size:.9rem}
+.ben .tx .hl{color:var(--green);font-weight:800;font-variant-numeric:tabular-nums}
 </style>
 <div class="wrap">
 
@@ -260,6 +276,23 @@ figcaption .tag.pos{color:var(--green)} figcaption .tag.neg{color:var(--red)}
         <li><b>נשאר 100% מניות.</b> הפיזור אינו מקטין את פוטנציאל הצמיחה — כל שלושת המסלולים מנייתיים במלואם, מתאים לאופק ארוך (גיל 40, פרישה בגיל 67).</li>
         <li><span class="q">שקיפות:</span> במסלול עוקב מדדים גמיש טרם צבורה היסטוריית 5 שנים לכלל.</li>
       </ul>
+    </div>
+  </div>
+</section>
+
+<section class="rec">
+  <div class="rec-bar gold"><span class="rec-num">3</span><h2>היתרונות המרכזיים של הפיזור</h2></div>
+  <div class="rec-body">
+    <div class="kpi">
+      <div class="t"><div class="v">100%</div><div class="l">חשיפה למניות<br>פוטנציאל צמיחה מלא</div></div>
+      <div class="t"><div class="v">×3</div><div class="l">מנועי מניות שונים<br>לפיזור הסיכון</div></div>
+      <div class="t"><div class="v">₪0</div><div class="l">עלות מס · שמירת ותק<br>וסעיף 14</div></div>
+    </div>
+    <div class="benefits">
+      <div class="ben"><span class="ic">&#10003;</span><div class="tx"><b>פיזור אסטרטגי</b>3 מנועי מניות — אקטיבי, מדד ארה״ב ומדדים גלובליים — מגיבים אחרת לשוק ולמטבע, וביחד מקטינים תלות במסלול בודד.</div></div>
+      <div class="ben"><span class="ic">&#10003;</span><div class="tx"><b>ניהול אקטיבי מוביל</b>במסלול שבו איכות המנהל קובעת, כלל מציגה <span class="hl">20.42% / 57.55% / 70.94%</span> — מעל ממוצע הקבוצה.</div></div>
+      <div class="ben"><span class="ic">&#10003;</span><div class="tx"><b>עלות נמוכה במסלולים העוקבים</b>ב־S&amp;P 500 ובמדדים הגלובליים התשואות דומות בין כל החברות — מקבלים את המדד בעלות נמוכה.</div></div>
+      <div class="ben"><span class="ic">&#10003;</span><div class="tx"><b>ללא מס וגמישות מלאה</b>הניוד והפיצול אינם אירוע מס, שומרים על ותק וסעיף 14, וניתן לעדכן את החלוקה בכל עת ללא עלות.</div></div>
     </div>
   </div>
 </section>

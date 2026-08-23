@@ -157,6 +157,22 @@ figcaption .tag.pos{color:var(--green)} figcaption .tag.neg{color:var(--red)}
 .shots.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 @media(max-width:640px){.shots.three{grid-template-columns:1fr}}
 @media print{.shots.three figure img{max-height:360px;width:auto !important;max-width:100%;margin:0 auto}}
+.rec-bar.gold{background:var(--goldgrad)}
+.rec-bar.gold h2{color:var(--navy)}
+.rec-bar.gold .rec-num{background:var(--navy);color:var(--gold2)}
+.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:2px 0 18px}
+@media(max-width:600px){.kpi{grid-template-columns:1fr}}
+.kpi .t{background:var(--navy);color:#fff;border-radius:13px;padding:15px;text-align:center;position:relative;overflow:hidden}
+.kpi .t::before{content:"";position:absolute;top:0;right:0;left:0;height:3px;background:var(--goldgrad)}
+.kpi .t .v{font-size:1.7rem;font-weight:800;color:var(--gold2);font-variant-numeric:tabular-nums;line-height:1.05}
+.kpi .t .l{font-size:.74rem;color:#c3cde0;margin-top:6px;font-weight:600}
+.benefits{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+@media(max-width:600px){.benefits{grid-template-columns:1fr}}
+.ben{display:flex;gap:11px;align-items:flex-start;background:var(--white);border:1px solid var(--border);border-radius:12px;padding:12px 13px;box-shadow:var(--shadow-sm)}
+.ben .ic{width:25px;height:25px;border-radius:50%;background:var(--goldgrad);color:var(--navy);font-weight:900;display:flex;align-items:center;justify-content:center;flex:none;font-size:.82rem;box-shadow:0 2px 8px rgba(201,168,76,.35)}
+.ben .tx{font-size:.82rem;color:var(--gray);line-height:1.5}
+.ben .tx b{color:var(--navy);font-weight:800;display:block;margin-bottom:1px;font-size:.9rem}
+.ben .tx .hl{color:var(--green);font-weight:800;font-variant-numeric:tabular-nums}
 </style>
 <div class="wrap">
 
@@ -267,6 +283,25 @@ figcaption .tag.pos{color:var(--green)} figcaption .tag.neg{color:var(--red)}
         <li><b>פער תשואה עקבי בכל הטווחים.</b> כלל מציגה <b class="tabnum">22.27% / 62.45% / 70.16%</b> לעומת <b class="tabnum">15.04% / 55.12% / 51.75%</b> באלטשולר — אלטשולר מדורגת אחרונה בקטגוריה.</li>
         <li><b>ניוד ללא פגיעה בזכויות.</b> ניוד בין קרנות השתלמות שומר על ותק הנזילות ועל מעמד המס.</li>
       </ul>
+    </div>
+  </div>
+</section>
+
+<section class="rec">
+  <div class="rec-bar gold"><span class="rec-num">3</span><h2>היתרונות המרכזיים של השינויים</h2></div>
+  <div class="rec-body">
+    <div class="kpi">
+      <div class="t"><div class="v">+18.4</div><div class="l">נק׳ אחוז תשואה עודפת<br>בהשתלמות (5 שנים)</div></div>
+      <div class="t"><div class="v">×3</div><div class="l">מסלולי מניות לפיזור<br>הסיכון בפנסיה</div></div>
+      <div class="t"><div class="v">₪0</div><div class="l">עלות מס על הניוד<br>ושמירת ותק מלאה</div></div>
+    </div>
+    <div class="benefits">
+      <div class="ben"><span class="ic">&#10003;</span><div class="tx"><b>תשואה עודפת ברורה בהשתלמות</b>מעבר לכלל מציג פער עקבי בכל הטווחים — עד <span class="hl">+18.4 נק׳ אחוז</span> ב־5 שנים.</div></div>
+      <div class="ben"><span class="ic">&#10003;</span><div class="tx"><b>פיזור אסטרטגי בפנסיה</b>3 מנועי מניות (אקטיבי + S&amp;P 500 + מדדים גלובליים) מקטינים תלות במנהל, בשוק ובמטבע בודד.</div></div>
+      <div class="ben"><span class="ic">&#10003;</span><div class="tx"><b>ניהול אקטיבי מוביל</b>במסלול שבו איכות המנהל קובעת, כלל מובילה על פני מנורה בשנה וב־3 שנים.</div></div>
+      <div class="ben"><span class="ic">&#10003;</span><div class="tx"><b>100% פוטנציאל צמיחה</b>כל המסלולים מנייתיים במלואם — מתאים לאופק ארוך (גיל 40, פרישה 67).</div></div>
+      <div class="ben"><span class="ic">&#10003;</span><div class="tx"><b>ללא אירוע מס ושמירת זכויות</b>הניודים שומרים על ותק, רצף זכויות וסעיף 14 — ואינם אירוע מס.</div></div>
+      <div class="ben"><span class="ic">&#10003;</span><div class="tx"><b>גמישות מלאה</b>ניתן לעדכן את חלוקת המסלולים בכל עת, ללא עלות ובלי לפגוע בוותק.</div></div>
     </div>
   </div>
 </section>
