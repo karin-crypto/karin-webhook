@@ -101,15 +101,28 @@
     .sec-head h2{font-size:clamp(1.6rem,3.2vw,2.4rem);font-weight:900;margin-top:.4rem;line-height:1.2;text-wrap:balance}
     .sec-head p{color:var(--muted);margin-top:.7rem;font-size:1.05rem}
 
+    /* ---------- returns index strip ---------- */
+    .idx{background:var(--surface);border-bottom:1px solid var(--line)}
+    .idx .wrap{padding:1.6rem 1.4rem}
+    .idx-head{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
+    .idx-head h3{font-size:1.15rem;font-weight:800}
+    .idx-head span{color:var(--muted);font-size:.85rem}
+    .idx-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
+    .idx-card{background:var(--surface2);border:1px solid var(--line);border-radius:13px;padding:1rem 1.15rem}
+    .idx-card .lbl{color:var(--muted);font-weight:700;font-size:.85rem}
+    .idx-card .val{font-size:1.7rem;font-weight:900;color:var(--green);margin-top:.2rem;font-variant-numeric:tabular-nums}
+    .idx-card .sub{color:var(--muted);font-size:.78rem}
+    @media(max-width:820px){.idx-grid{grid-template-columns:repeat(2,1fr)}}
+
     /* ---------- category cards ---------- */
-    .cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.2rem}
+    .cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem}
     .cat{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:1.6rem;box-shadow:var(--shadow-sm);transition:var(--trans);display:block}
     .cat:hover{transform:translateY(-6px);box-shadow:var(--shadow);border-color:var(--brand)}
     .cat .ci{width:52px;height:52px;border-radius:13px;display:grid;place-items:center;color:#fff;margin-bottom:1rem}
     .cat h3{font-size:1.15rem;font-weight:800}
     .cat p{color:var(--muted);font-size:.92rem;margin-top:.35rem}
     .cat .more{color:var(--brand);font-weight:700;font-size:.9rem;margin-top:.9rem;display:inline-flex;gap:.3rem}
-    @media(max-width:900px){.cat-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:820px){.cat-grid{grid-template-columns:repeat(2,1fr)}}
     @media(max-width:520px){.cat-grid{grid-template-columns:1fr}}
 
     /* ---------- ranking table ---------- */
@@ -121,7 +134,7 @@
     .panel.active{display:block}
     .table-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden}
     .table-scroll{overflow-x:auto}
-    table.rt{width:100%;border-collapse:collapse;min-width:640px}
+    table.rt{width:100%;border-collapse:collapse;min-width:780px}
     table.rt thead th{background:var(--surface2);color:var(--muted);font-weight:700;font-size:.85rem;text-align:right;padding:1rem 1.1rem;border-bottom:1px solid var(--line);white-space:nowrap}
     table.rt tbody td{padding:.95rem 1.1rem;border-bottom:1px solid var(--line);font-size:.97rem}
     table.rt tbody tr:last-child td{border-bottom:0}
@@ -135,6 +148,8 @@
     .badge{display:inline-block;background:var(--surface2);border:1px solid var(--line);color:var(--muted);font-size:.78rem;font-weight:700;padding:.15rem .6rem;border-radius:7px}
     .pos{color:var(--green);font-weight:800}
     .fee{color:var(--ink);font-weight:700}
+    .sharpe{color:var(--brand-dark);font-weight:800}
+    .stars{color:var(--amber);letter-spacing:1px;white-space:nowrap;font-size:.9rem}
     .table-foot{padding:.9rem 1.1rem;background:var(--surface2);color:var(--muted);font-size:.8rem;border-top:1px solid var(--line)}
 
     /* ---------- guides ---------- */
@@ -284,13 +299,29 @@
     </div>
   </div>
 
+  <!-- RETURNS INDEX -->
+  <section class="idx">
+    <div class="wrap">
+      <div class="idx-head">
+        <h3>📈 מדד התשואות – ממוצע ענפי</h3>
+        <span>תשואה נומינלית ממוצעת, מסלול כללי · נתוני המחשה</span>
+      </div>
+      <div class="idx-grid">
+        <div class="idx-card"><div class="lbl">קרן השתלמות</div><div class="val">+15.6%</div><div class="sub">ממוצע 12 חודשים</div></div>
+        <div class="idx-card"><div class="lbl">קופת גמל</div><div class="val">+15.1%</div><div class="sub">ממוצע 12 חודשים</div></div>
+        <div class="idx-card"><div class="lbl">קרן פנסיה</div><div class="val">+14.3%</div><div class="sub">ממוצע 12 חודשים</div></div>
+        <div class="idx-card"><div class="lbl">פוליסת חיסכון</div><div class="val">+13.8%</div><div class="sub">ממוצע 12 חודשים</div></div>
+      </div>
+    </div>
+  </section>
+
   <!-- CATEGORIES -->
   <section class="block" id="categories">
     <div class="wrap">
       <div class="sec-head">
         <span class="sec-tag">מוצרים פיננסיים</span>
-        <h2>איזה חיסכון מתאים לך?</h2>
-        <p>ארבעה אפיקי החיסכון המרכזיים – כל אחד עם הטבות המס והיתרונות שלו. בחרי אפיק כדי לראות את דירוג התשואות.</p>
+        <h2>מה תרצי להשוות?</h2>
+        <p>כל אפיקי החיסכון לטווח בינוני וארוך במקום אחד – השוואת תשואות, דמי ניהול ומדד סיכון. בחרי אפיק כדי לראות את הדירוג.</p>
       </div>
       <div class="cat-grid">
         <a href="hishtalmut.html" class="cat reveal">
@@ -317,6 +348,18 @@
           <p>פוליסת חיסכון עם כיסויים ביטוחיים אישיים.</p>
           <span class="more">לדירוג התשואות ←</span>
         </a>
+        <a href="#rankings" class="cat reveal">
+          <div class="ci" style="background:#7c3aed"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="6"/><rect x="12" y="7" width="3" height="10"/><rect x="17" y="4" width="3" height="13"/></svg></div>
+          <h3>גמל להשקעה</h3>
+          <p>חיסכון נזיל בכל עת עם ניהול השקעות מקצועי והטבות מס במשיכת קצבה.</p>
+          <span class="more">לדירוג התשואות ←</span>
+        </a>
+        <a href="#contact" class="cat reveal">
+          <div class="ci" style="background:#db2777"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.5-9.5-9C1 9 2.5 5.5 6 5.5c2 0 3.2 1.2 4 2.5.8-1.3 2-2.5 4-2.5 3.5 0 5 3.5 3.5 6.5C19 16.5 12 21 12 21z"/></svg></div>
+          <h3>חיסכון לכל ילד</h3>
+          <p>בחירת מסלול ההשקעה המשתלם עבור החיסכון הממשלתי של הילדים.</p>
+          <span class="more">לייעוץ אישי ←</span>
+        </a>
       </div>
     </div>
   </section>
@@ -327,7 +370,7 @@
       <div class="sec-head">
         <span class="sec-tag">דירוג תשואות</span>
         <h2>המסלולים המובילים לפי תשואה</h2>
-        <p>נתוני תשואה נומינליים להמחשה, מדורגים מהגבוה לנמוך. בחרי אפיק להשוואה.</p>
+        <p>השוואה מלאה: תשואה, דמי ניהול, מדד שארפ (תשואה מול סיכון) ודירוג שירות של משרד האוצר. מדורג מהגבוה לנמוך.</p>
       </div>
 
       <div class="tabs">
@@ -342,20 +385,20 @@
         <div class="table-card">
           <div class="table-scroll">
             <table class="rt tnum">
-              <thead><tr><th>#</th><th>חברה</th><th>מסלול</th><th>תשואה שנה</th><th>ממוצע 5 שנים</th><th>דמי ניהול</th></tr></thead>
+              <thead><tr><th>#</th><th>חברה</th><th>מסלול</th><th>תשואה שנה</th><th>ממוצע 5 שנים</th><th>מדד שארפ</th><th>דמי ניהול</th><th>שירות</th></tr></thead>
               <tbody>
-                <tr><td><span class="rank-num">1</span></td><td><span class="co"><span class="cdot" style="background:#b45309"></span>אלטשולר שחם</span></td><td><span class="badge">מניות</span></td><td class="pos">29.2%</td><td class="pos">15.8%</td><td class="fee">0.6%</td></tr>
-                <tr><td><span class="rank-num">2</span></td><td><span class="co"><span class="cdot" style="background:#ea580c"></span>הפניקס</span></td><td><span class="badge">מניות</span></td><td class="pos">26.4%</td><td class="pos">14.3%</td><td class="fee">0.5%</td></tr>
-                <tr><td><span class="rank-num">3</span></td><td><span class="co"><span class="cdot" style="background:#16a34a"></span>הראל</span></td><td><span class="badge">מניות</span></td><td class="pos">25.5%</td><td class="pos">13.8%</td><td class="fee">0.5%</td></tr>
-                <tr><td><span class="rank-num">4</span></td><td><span class="co"><span class="cdot" style="background:#1e40af"></span>מנורה מבטחים</span></td><td><span class="badge">מניות</span></td><td class="pos">24.7%</td><td class="pos">13.4%</td><td class="fee">0.5%</td></tr>
-                <tr><td><span class="rank-num">5</span></td><td><span class="co"><span class="cdot" style="background:#b45309"></span>אלטשולר שחם</span></td><td><span class="badge">כללי</span></td><td class="pos">18.1%</td><td class="pos">11.9%</td><td class="fee">0.6%</td></tr>
-                <tr><td><span class="rank-num">6</span></td><td><span class="co"><span class="cdot" style="background:#ea580c"></span>הפניקס</span></td><td><span class="badge">כללי</span></td><td class="pos">15.8%</td><td class="pos">10.4%</td><td class="fee">0.5%</td></tr>
-                <tr><td><span class="rank-num">7</span></td><td><span class="co"><span class="cdot" style="background:#16a34a"></span>הראל</span></td><td><span class="badge">כללי</span></td><td class="pos">15.3%</td><td class="pos">10.1%</td><td class="fee">0.5%</td></tr>
-                <tr><td><span class="rank-num">8</span></td><td><span class="co"><span class="cdot" style="background:#1e40af"></span>מנורה מבטחים</span></td><td><span class="badge">כללי</span></td><td class="pos">15.0%</td><td class="pos">9.7%</td><td class="fee">0.5%</td></tr>
+                <tr><td><span class="rank-num">1</span></td><td><span class="co"><span class="cdot" style="background:#b45309"></span>אלטשולר שחם</span></td><td><span class="badge">מניות</span></td><td class="pos">29.2%</td><td class="pos">15.8%</td><td class="sharpe">1.42</td><td class="fee">0.6%</td><td class="stars">★★★★☆</td></tr>
+                <tr><td><span class="rank-num">2</span></td><td><span class="co"><span class="cdot" style="background:#ea580c"></span>הפניקס</span></td><td><span class="badge">מניות</span></td><td class="pos">26.4%</td><td class="pos">14.3%</td><td class="sharpe">1.31</td><td class="fee">0.5%</td><td class="stars">★★★★★</td></tr>
+                <tr><td><span class="rank-num">3</span></td><td><span class="co"><span class="cdot" style="background:#16a34a"></span>הראל</span></td><td><span class="badge">מניות</span></td><td class="pos">25.5%</td><td class="pos">13.8%</td><td class="sharpe">1.28</td><td class="fee">0.5%</td><td class="stars">★★★★☆</td></tr>
+                <tr><td><span class="rank-num">4</span></td><td><span class="co"><span class="cdot" style="background:#1e40af"></span>מנורה מבטחים</span></td><td><span class="badge">מניות</span></td><td class="pos">24.7%</td><td class="pos">13.4%</td><td class="sharpe">1.24</td><td class="fee">0.5%</td><td class="stars">★★★★★</td></tr>
+                <tr><td><span class="rank-num">5</span></td><td><span class="co"><span class="cdot" style="background:#b45309"></span>אלטשולר שחם</span></td><td><span class="badge">כללי</span></td><td class="pos">18.1%</td><td class="pos">11.9%</td><td class="sharpe">1.05</td><td class="fee">0.6%</td><td class="stars">★★★★☆</td></tr>
+                <tr><td><span class="rank-num">6</span></td><td><span class="co"><span class="cdot" style="background:#ea580c"></span>הפניקס</span></td><td><span class="badge">כללי</span></td><td class="pos">15.8%</td><td class="pos">10.4%</td><td class="sharpe">0.98</td><td class="fee">0.5%</td><td class="stars">★★★★★</td></tr>
+                <tr><td><span class="rank-num">7</span></td><td><span class="co"><span class="cdot" style="background:#16a34a"></span>הראל</span></td><td><span class="badge">כללי</span></td><td class="pos">15.3%</td><td class="pos">10.1%</td><td class="sharpe">0.95</td><td class="fee">0.5%</td><td class="stars">★★★★☆</td></tr>
+                <tr><td><span class="rank-num">8</span></td><td><span class="co"><span class="cdot" style="background:#1e40af"></span>מנורה מבטחים</span></td><td><span class="badge">כללי</span></td><td class="pos">15.0%</td><td class="pos">9.7%</td><td class="sharpe">0.92</td><td class="fee">0.5%</td><td class="stars">★★★★★</td></tr>
               </tbody>
             </table>
           </div>
-          <div class="table-foot">* נתוני תשואה להמחשה בלבד, לפני ניכוי דמי ניהול. מקור: רשות שוק ההון. אין באמור המלצה או ייעוץ.</div>
+          <div class="table-foot">* נתוני תשואה, מדד שארפ ודירוג שירות – להמחשה בלבד. מקורות: רשות שוק ההון ומשרד האוצר. אין באמור המלצה או ייעוץ.</div>
         </div>
       </div>
 
@@ -364,19 +407,19 @@
         <div class="table-card">
           <div class="table-scroll">
             <table class="rt tnum">
-              <thead><tr><th>#</th><th>חברה</th><th>מסלול</th><th>תשואה שנה</th><th>ממוצע 5 שנים</th><th>דמי ניהול</th></tr></thead>
+              <thead><tr><th>#</th><th>חברה</th><th>מסלול</th><th>תשואה שנה</th><th>ממוצע 5 שנים</th><th>מדד שארפ</th><th>דמי ניהול</th><th>שירות</th></tr></thead>
               <tbody>
-                <tr><td><span class="rank-num">1</span></td><td><span class="co"><span class="cdot" style="background:#b45309"></span>אלטשולר שחם</span></td><td><span class="badge">מניות</span></td><td class="pos">27.6%</td><td class="pos">15.1%</td><td class="fee">0.5%</td></tr>
-                <tr><td><span class="rank-num">2</span></td><td><span class="co"><span class="cdot" style="background:#ea580c"></span>הפניקס</span></td><td><span class="badge">מניות</span></td><td class="pos">25.8%</td><td class="pos">13.9%</td><td class="fee">0.4%</td></tr>
-                <tr><td><span class="rank-num">3</span></td><td><span class="co"><span class="cdot" style="background:#16a34a"></span>הראל</span></td><td><span class="badge">מניות</span></td><td class="pos">24.9%</td><td class="pos">13.5%</td><td class="fee">0.4%</td></tr>
-                <tr><td><span class="rank-num">4</span></td><td><span class="co"><span class="cdot" style="background:#1e40af"></span>מנורה מבטחים</span></td><td><span class="badge">מניות</span></td><td class="pos">24.3%</td><td class="pos">13.2%</td><td class="fee">0.4%</td></tr>
-                <tr><td><span class="rank-num">5</span></td><td><span class="co"><span class="cdot" style="background:#b45309"></span>אלטשולר שחם</span></td><td><span class="badge">כללי</span></td><td class="pos">17.3%</td><td class="pos">11.4%</td><td class="fee">0.5%</td></tr>
-                <tr><td><span class="rank-num">6</span></td><td><span class="co"><span class="cdot" style="background:#ea580c"></span>הפניקס</span></td><td><span class="badge">כללי</span></td><td class="pos">15.5%</td><td class="pos">10.2%</td><td class="fee">0.4%</td></tr>
-                <tr><td><span class="rank-num">7</span></td><td><span class="co"><span class="cdot" style="background:#16a34a"></span>הראל</span></td><td><span class="badge">כללי</span></td><td class="pos">15.1%</td><td class="pos">9.9%</td><td class="fee">0.4%</td></tr>
+                <tr><td><span class="rank-num">1</span></td><td><span class="co"><span class="cdot" style="background:#b45309"></span>אלטשולר שחם</span></td><td><span class="badge">מניות</span></td><td class="pos">27.6%</td><td class="pos">15.1%</td><td class="sharpe">1.38</td><td class="fee">0.5%</td><td class="stars">★★★★☆</td></tr>
+                <tr><td><span class="rank-num">2</span></td><td><span class="co"><span class="cdot" style="background:#ea580c"></span>הפניקס</span></td><td><span class="badge">מניות</span></td><td class="pos">25.8%</td><td class="pos">13.9%</td><td class="sharpe">1.29</td><td class="fee">0.4%</td><td class="stars">★★★★★</td></tr>
+                <tr><td><span class="rank-num">3</span></td><td><span class="co"><span class="cdot" style="background:#16a34a"></span>הראל</span></td><td><span class="badge">מניות</span></td><td class="pos">24.9%</td><td class="pos">13.5%</td><td class="sharpe">1.25</td><td class="fee">0.4%</td><td class="stars">★★★★☆</td></tr>
+                <tr><td><span class="rank-num">4</span></td><td><span class="co"><span class="cdot" style="background:#1e40af"></span>מנורה מבטחים</span></td><td><span class="badge">מניות</span></td><td class="pos">24.3%</td><td class="pos">13.2%</td><td class="sharpe">1.22</td><td class="fee">0.4%</td><td class="stars">★★★★★</td></tr>
+                <tr><td><span class="rank-num">5</span></td><td><span class="co"><span class="cdot" style="background:#b45309"></span>אלטשולר שחם</span></td><td><span class="badge">כללי</span></td><td class="pos">17.3%</td><td class="pos">11.4%</td><td class="sharpe">1.02</td><td class="fee">0.5%</td><td class="stars">★★★★☆</td></tr>
+                <tr><td><span class="rank-num">6</span></td><td><span class="co"><span class="cdot" style="background:#ea580c"></span>הפניקס</span></td><td><span class="badge">כללי</span></td><td class="pos">15.5%</td><td class="pos">10.2%</td><td class="sharpe">0.97</td><td class="fee">0.4%</td><td class="stars">★★★★★</td></tr>
+                <tr><td><span class="rank-num">7</span></td><td><span class="co"><span class="cdot" style="background:#16a34a"></span>הראל</span></td><td><span class="badge">כללי</span></td><td class="pos">15.1%</td><td class="pos">9.9%</td><td class="sharpe">0.94</td><td class="fee">0.4%</td><td class="stars">★★★★☆</td></tr>
               </tbody>
             </table>
           </div>
-          <div class="table-foot">* נתוני תשואה להמחשה בלבד, לפני ניכוי דמי ניהול. מקור: רשות שוק ההון. אין באמור המלצה או ייעוץ.</div>
+          <div class="table-foot">* נתוני תשואה, מדד שארפ ודירוג שירות – להמחשה בלבד. מקורות: רשות שוק ההון ומשרד האוצר. אין באמור המלצה או ייעוץ.</div>
         </div>
       </div>
 
@@ -385,19 +428,19 @@
         <div class="table-card">
           <div class="table-scroll">
             <table class="rt tnum">
-              <thead><tr><th>#</th><th>חברה</th><th>מסלול</th><th>תשואה שנה</th><th>ממוצע 5 שנים</th><th>דמי ניהול</th></tr></thead>
+              <thead><tr><th>#</th><th>חברה</th><th>מסלול</th><th>תשואה שנה</th><th>ממוצע 5 שנים</th><th>מדד שארפ</th><th>דמי ניהול</th><th>שירות</th></tr></thead>
               <tbody>
-                <tr><td><span class="rank-num">1</span></td><td><span class="co"><span class="cdot" style="background:#6d28d9"></span>אנליסט</span></td><td><span class="badge">מניות</span></td><td class="pos">25.3%</td><td class="pos">13.6%</td><td class="fee">0.5%/6%</td></tr>
-                <tr><td><span class="rank-num">2</span></td><td><span class="co"><span class="cdot" style="background:#ea580c"></span>הפניקס</span></td><td><span class="badge">מניות</span></td><td class="pos">23.4%</td><td class="pos">12.5%</td><td class="fee">0.5%/6%</td></tr>
-                <tr><td><span class="rank-num">3</span></td><td><span class="co"><span class="cdot" style="background:#16a34a"></span>הראל</span></td><td><span class="badge">מניות</span></td><td class="pos">22.8%</td><td class="pos">12.1%</td><td class="fee">0.5%/6%</td></tr>
-                <tr><td><span class="rank-num">4</span></td><td><span class="co"><span class="cdot" style="background:#1e40af"></span>מנורה מבטחים</span></td><td><span class="badge">מניות</span></td><td class="pos">22.1%</td><td class="pos">11.8%</td><td class="fee">0.5%/6%</td></tr>
-                <tr><td><span class="rank-num">5</span></td><td><span class="co"><span class="cdot" style="background:#6d28d9"></span>אנליסט</span></td><td><span class="badge">כללי</span></td><td class="pos">16.2%</td><td class="pos">10.5%</td><td class="fee">0.5%/6%</td></tr>
-                <tr><td><span class="rank-num">6</span></td><td><span class="co"><span class="cdot" style="background:#ea580c"></span>הפניקס</span></td><td><span class="badge">כללי</span></td><td class="pos">15.1%</td><td class="pos">9.8%</td><td class="fee">0.5%/6%</td></tr>
-                <tr><td><span class="rank-num">7</span></td><td><span class="co"><span class="cdot" style="background:#16a34a"></span>הראל</span></td><td><span class="badge">כללי</span></td><td class="pos">14.7%</td><td class="pos">9.4%</td><td class="fee">0.5%/6%</td></tr>
+                <tr><td><span class="rank-num">1</span></td><td><span class="co"><span class="cdot" style="background:#6d28d9"></span>אנליסט</span></td><td><span class="badge">מניות</span></td><td class="pos">25.3%</td><td class="pos">13.6%</td><td class="sharpe">1.27</td><td class="fee">0.5%/6%</td><td class="stars">★★★★☆</td></tr>
+                <tr><td><span class="rank-num">2</span></td><td><span class="co"><span class="cdot" style="background:#ea580c"></span>הפניקס</span></td><td><span class="badge">מניות</span></td><td class="pos">23.4%</td><td class="pos">12.5%</td><td class="sharpe">1.20</td><td class="fee">0.5%/6%</td><td class="stars">★★★★★</td></tr>
+                <tr><td><span class="rank-num">3</span></td><td><span class="co"><span class="cdot" style="background:#16a34a"></span>הראל</span></td><td><span class="badge">מניות</span></td><td class="pos">22.8%</td><td class="pos">12.1%</td><td class="sharpe">1.17</td><td class="fee">0.5%/6%</td><td class="stars">★★★★☆</td></tr>
+                <tr><td><span class="rank-num">4</span></td><td><span class="co"><span class="cdot" style="background:#1e40af"></span>מנורה מבטחים</span></td><td><span class="badge">מניות</span></td><td class="pos">22.1%</td><td class="pos">11.8%</td><td class="sharpe">1.14</td><td class="fee">0.5%/6%</td><td class="stars">★★★★★</td></tr>
+                <tr><td><span class="rank-num">5</span></td><td><span class="co"><span class="cdot" style="background:#6d28d9"></span>אנליסט</span></td><td><span class="badge">כללי</span></td><td class="pos">16.2%</td><td class="pos">10.5%</td><td class="sharpe">0.99</td><td class="fee">0.5%/6%</td><td class="stars">★★★★☆</td></tr>
+                <tr><td><span class="rank-num">6</span></td><td><span class="co"><span class="cdot" style="background:#ea580c"></span>הפניקס</span></td><td><span class="badge">כללי</span></td><td class="pos">15.1%</td><td class="pos">9.8%</td><td class="sharpe">0.93</td><td class="fee">0.5%/6%</td><td class="stars">★★★★★</td></tr>
+                <tr><td><span class="rank-num">7</span></td><td><span class="co"><span class="cdot" style="background:#16a34a"></span>הראל</span></td><td><span class="badge">כללי</span></td><td class="pos">14.7%</td><td class="pos">9.4%</td><td class="sharpe">0.90</td><td class="fee">0.5%/6%</td><td class="stars">★★★★☆</td></tr>
               </tbody>
             </table>
           </div>
-          <div class="table-foot">* נתוני תשואה להמחשה בלבד, לפני ניכוי דמי ניהול. מקור: רשות שוק ההון. אין באמור המלצה או ייעוץ.</div>
+          <div class="table-foot">* נתוני תשואה, מדד שארפ ודירוג שירות – להמחשה בלבד. מקורות: רשות שוק ההון ומשרד האוצר. אין באמור המלצה או ייעוץ.</div>
         </div>
       </div>
 
@@ -406,18 +449,18 @@
         <div class="table-card">
           <div class="table-scroll">
             <table class="rt tnum">
-              <thead><tr><th>#</th><th>חברה</th><th>מסלול</th><th>תשואה שנה</th><th>ממוצע 5 שנים</th><th>דמי ניהול</th></tr></thead>
+              <thead><tr><th>#</th><th>חברה</th><th>מסלול</th><th>תשואה שנה</th><th>ממוצע 5 שנים</th><th>מדד שארפ</th><th>דמי ניהול</th><th>שירות</th></tr></thead>
               <tbody>
-                <tr><td><span class="rank-num">1</span></td><td><span class="co"><span class="cdot" style="background:#ea580c"></span>הפניקס</span></td><td><span class="badge">מניות</span></td><td class="pos">23.1%</td><td class="pos">12.3%</td><td class="fee">1.05%/6%</td></tr>
-                <tr><td><span class="rank-num">2</span></td><td><span class="co"><span class="cdot" style="background:#16a34a"></span>הראל</span></td><td><span class="badge">מניות</span></td><td class="pos">22.5%</td><td class="pos">11.9%</td><td class="fee">1.05%/6%</td></tr>
-                <tr><td><span class="rank-num">3</span></td><td><span class="co"><span class="cdot" style="background:#1e40af"></span>מנורה מבטחים</span></td><td><span class="badge">מניות</span></td><td class="pos">21.8%</td><td class="pos">11.4%</td><td class="fee">1.05%/6%</td></tr>
-                <tr><td><span class="rank-num">4</span></td><td><span class="co"><span class="cdot" style="background:#dc2626"></span>מגדל</span></td><td><span class="badge">מניות</span></td><td class="pos">21.2%</td><td class="pos">10.9%</td><td class="fee">1.05%/6%</td></tr>
-                <tr><td><span class="rank-num">5</span></td><td><span class="co"><span class="cdot" style="background:#ea580c"></span>הפניקס</span></td><td><span class="badge">כללי</span></td><td class="pos">14.8%</td><td class="pos">9.6%</td><td class="fee">1.05%/6%</td></tr>
-                <tr><td><span class="rank-num">6</span></td><td><span class="co"><span class="cdot" style="background:#16a34a"></span>הראל</span></td><td><span class="badge">כללי</span></td><td class="pos">14.4%</td><td class="pos">9.2%</td><td class="fee">1.05%/6%</td></tr>
+                <tr><td><span class="rank-num">1</span></td><td><span class="co"><span class="cdot" style="background:#ea580c"></span>הפניקס</span></td><td><span class="badge">מניות</span></td><td class="pos">23.1%</td><td class="pos">12.3%</td><td class="sharpe">1.19</td><td class="fee">1.05%/6%</td><td class="stars">★★★★★</td></tr>
+                <tr><td><span class="rank-num">2</span></td><td><span class="co"><span class="cdot" style="background:#16a34a"></span>הראל</span></td><td><span class="badge">מניות</span></td><td class="pos">22.5%</td><td class="pos">11.9%</td><td class="sharpe">1.15</td><td class="fee">1.05%/6%</td><td class="stars">★★★★☆</td></tr>
+                <tr><td><span class="rank-num">3</span></td><td><span class="co"><span class="cdot" style="background:#1e40af"></span>מנורה מבטחים</span></td><td><span class="badge">מניות</span></td><td class="pos">21.8%</td><td class="pos">11.4%</td><td class="sharpe">1.12</td><td class="fee">1.05%/6%</td><td class="stars">★★★★★</td></tr>
+                <tr><td><span class="rank-num">4</span></td><td><span class="co"><span class="cdot" style="background:#dc2626"></span>מגדל</span></td><td><span class="badge">מניות</span></td><td class="pos">21.2%</td><td class="pos">10.9%</td><td class="sharpe">1.08</td><td class="fee">1.05%/6%</td><td class="stars">★★★★☆</td></tr>
+                <tr><td><span class="rank-num">5</span></td><td><span class="co"><span class="cdot" style="background:#ea580c"></span>הפניקס</span></td><td><span class="badge">כללי</span></td><td class="pos">14.8%</td><td class="pos">9.6%</td><td class="sharpe">0.92</td><td class="fee">1.05%/6%</td><td class="stars">★★★★★</td></tr>
+                <tr><td><span class="rank-num">6</span></td><td><span class="co"><span class="cdot" style="background:#16a34a"></span>הראל</span></td><td><span class="badge">כללי</span></td><td class="pos">14.4%</td><td class="pos">9.2%</td><td class="sharpe">0.89</td><td class="fee">1.05%/6%</td><td class="stars">★★★★☆</td></tr>
               </tbody>
             </table>
           </div>
-          <div class="table-foot">* נתוני תשואה להמחשה בלבד, לפני ניכוי דמי ניהול. מקור: רשות שוק ההון. אין באמור המלצה או ייעוץ.</div>
+          <div class="table-foot">* נתוני תשואה, מדד שארפ ודירוג שירות – להמחשה בלבד. מקורות: רשות שוק ההון ומשרד האוצר. אין באמור המלצה או ייעוץ.</div>
         </div>
       </div>
     </div>
