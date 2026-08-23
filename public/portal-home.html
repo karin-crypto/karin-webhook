@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>קרן קרן | פורטל החיסכון הפנסיוני – השוואת קרנות, גמל ופנסיה</title>
+  <meta name="description" content="כל המידע על קרנות השתלמות, קופות גמל, קרנות פנסיה וביטוחי מנהלים במקום אחד. השוואת תשואות ודמי ניהול, מחשבונים וליווי אישי מקרן קרן, סוכנת פיננסית מורשית." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      --bg:#eef3f9; --surface:#ffffff; --surface2:#f6f9fd;
+      --ink:#0d2135; --muted:#5b6c82; --line:#e0e8f2;
+      --brand:#0e6dd0; --brand-dark:#0a4f9e; --brand-soft:#e6f0fc;
+      --teal:#12a4bd; --green:#12a150; --amber:#e0a020;
+      --radius:14px; --radius-lg:22px;
+      --shadow-sm:0 1px 3px rgba(13,33,53,.06),0 1px 2px rgba(13,33,53,.04);
+      --shadow:0 6px 24px rgba(13,33,53,.09);
+      --shadow-lg:0 18px 50px rgba(13,33,53,.16);
+      --trans:.22s cubic-bezier(.4,0,.2,1);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--ink);direction:rtl;line-height:1.65;-webkit-font-smoothing:antialiased}
+    a{text-decoration:none;color:inherit}
+    ul{list-style:none}
+    img{max-width:100%;display:block}
+    .wrap{width:100%;max-width:1200px;margin:0 auto;padding:0 1.4rem}
+    .tnum{font-variant-numeric:tabular-nums}
+
+    /* ---------- top bar ---------- */
+    .topbar{background:var(--brand-dark);color:#cfe0f5;font-size:.85rem}
+    .topbar .wrap{display:flex;justify-content:space-between;align-items:center;height:38px;gap:1rem}
+    .topbar a{color:#eaf2fc}
+    .topbar .tb-links{display:flex;gap:1.3rem}
+    @media(max-width:720px){.topbar .tb-links{display:none}}
+
+    /* ---------- nav ---------- */
+    header.nav{position:sticky;top:0;z-index:100;background:var(--surface);border-bottom:1px solid var(--line);box-shadow:var(--shadow-sm)}
+    .nav-inner{display:flex;align-items:center;justify-content:space-between;height:70px;gap:1rem}
+    .brand{display:flex;align-items:center;gap:.6rem;font-weight:900;font-size:1.35rem;color:var(--ink)}
+    .brand .mark{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--brand),var(--teal));display:grid;place-items:center;color:#fff;font-weight:900;font-size:1.1rem;box-shadow:0 4px 12px rgba(14,109,208,.35)}
+    .brand small{display:block;font-size:.62rem;font-weight:600;letter-spacing:.14em;color:var(--brand);margin-top:-3px}
+    .nav-links{display:flex;align-items:center;gap:.3rem}
+    .nav-links a{padding:.5rem .85rem;border-radius:9px;font-weight:600;color:var(--muted);transition:var(--trans)}
+    .nav-links a:hover{background:var(--brand-soft);color:var(--brand-dark)}
+    .nav-cta{background:var(--brand);color:#fff!important;padding:.6rem 1.3rem!important;box-shadow:0 4px 14px rgba(14,109,208,.35)}
+    .nav-cta:hover{background:var(--brand-dark)!important}
+    .burger{display:none;flex-direction:column;gap:5px;background:none;border:0;cursor:pointer;padding:.4rem}
+    .burger span{width:24px;height:2.5px;background:var(--ink);border-radius:2px}
+    @media(max-width:920px){.nav-links{display:none}.burger{display:flex}}
+    .mobile{display:none;flex-direction:column;background:var(--surface);border-bottom:1px solid var(--line)}
+    .mobile.open{display:flex}
+    .mobile a{padding:.9rem 1.4rem;border-top:1px solid var(--line);font-weight:600;color:var(--ink)}
+
+    /* ---------- buttons ---------- */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.85rem 1.7rem;border-radius:11px;font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer;border:2px solid transparent;transition:var(--trans);white-space:nowrap}
+    .btn-primary{background:var(--brand);color:#fff;box-shadow:0 6px 18px rgba(14,109,208,.32)}
+    .btn-primary:hover{background:var(--brand-dark);transform:translateY(-2px)}
+    .btn-outline{background:#fff;color:var(--brand-dark);border-color:var(--line)}
+    .btn-outline:hover{border-color:var(--brand);background:var(--brand-soft)}
+
+    /* ---------- hero ---------- */
+    .hero{background:
+        radial-gradient(1100px 500px at 85% -10%,rgba(18,164,189,.10),transparent 60%),
+        linear-gradient(180deg,#ffffff 0%,var(--bg) 100%);
+      padding:3.5rem 0 3rem;border-bottom:1px solid var(--line)}
+    .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:3rem;align-items:center}
+    .hero-eyebrow{display:inline-flex;align-items:center;gap:.5rem;background:var(--brand-soft);color:var(--brand-dark);font-weight:700;font-size:.85rem;padding:.35rem .9rem;border-radius:999px;margin-bottom:1.1rem}
+    .hero h1{font-size:clamp(1.9rem,4vw,3rem);font-weight:900;line-height:1.15;letter-spacing:-.01em;text-wrap:balance}
+    .hero h1 .hl{color:var(--brand);position:relative;white-space:nowrap}
+    .hero p.lead{color:var(--muted);font-size:1.12rem;margin:1.1rem 0 1.6rem;max-width:44ch}
+    .hero-cta{display:flex;gap:.8rem;flex-wrap:wrap}
+    .hero-search{margin-top:1.6rem;background:#fff;border:1px solid var(--line);border-radius:16px;padding:1rem;box-shadow:var(--shadow)}
+    .hero-search .hs-label{font-size:.8rem;color:var(--muted);font-weight:700;margin-bottom:.6rem}
+    .chips{display:flex;flex-wrap:wrap;gap:.5rem}
+    .chip{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem .9rem;border-radius:999px;background:var(--surface2);border:1px solid var(--line);font-weight:600;font-size:.92rem;color:var(--ink);transition:var(--trans);cursor:pointer}
+    .chip:hover{border-color:var(--brand);color:var(--brand-dark);background:var(--brand-soft)}
+    .chip .dot{width:8px;height:8px;border-radius:50%}
+    .hero-photo{position:relative}
+    .hero-photo .frame{border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-lg);border:6px solid #fff;aspect-ratio:4/5;background:#dbe6f3}
+    .hero-photo .frame img{width:100%;height:100%;object-fit:cover;object-position:top center}
+    .hero-photo .float{position:absolute;background:#fff;border-radius:14px;box-shadow:var(--shadow);padding:.75rem 1rem;display:flex;align-items:center;gap:.7rem;font-weight:700}
+    .hero-photo .float .fi{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;color:#fff}
+    .hero-photo .float small{display:block;font-weight:600;color:var(--muted);font-size:.75rem}
+    .hero-photo .f1{top:14%;right:-18px}
+    .hero-photo .f2{bottom:9%;left:-18px}
+    @media(max-width:880px){.hero-grid{grid-template-columns:1fr}.hero-photo{max-width:360px;margin:0 auto;order:-1}.hero-photo .f1,.hero-photo .f2{display:none}}
+
+    /* ---------- trust strip ---------- */
+    .trust{background:var(--surface);border-bottom:1px solid var(--line)}
+    .trust .wrap{display:flex;align-items:center;gap:2rem;flex-wrap:wrap;justify-content:center;padding:1.1rem 1.4rem}
+    .trust span{color:var(--muted);font-weight:600;font-size:.95rem}
+    .trust b{color:var(--ink)}
+
+    /* ---------- sections ---------- */
+    section.block{padding:4.5rem 0}
+    .sec-head{text-align:center;max-width:720px;margin:0 auto 2.6rem}
+    .sec-tag{color:var(--brand);font-weight:800;letter-spacing:.04em;font-size:.9rem}
+    .sec-head h2{font-size:clamp(1.6rem,3.2vw,2.4rem);font-weight:900;margin-top:.4rem;line-height:1.2;text-wrap:balance}
+    .sec-head p{color:var(--muted);margin-top:.7rem;font-size:1.05rem}
+
+    /* ---------- category cards ---------- */
+    .cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.2rem}
+    .cat{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:1.6rem;box-shadow:var(--shadow-sm);transition:var(--trans);display:block}
+    .cat:hover{transform:translateY(-6px);box-shadow:var(--shadow);border-color:var(--brand)}
+    .cat .ci{width:52px;height:52px;border-radius:13px;display:grid;place-items:center;color:#fff;margin-bottom:1rem}
+    .cat h3{font-size:1.15rem;font-weight:800}
+    .cat p{color:var(--muted);font-size:.92rem;margin-top:.35rem}
+    .cat .more{color:var(--brand);font-weight:700;font-size:.9rem;margin-top:.9rem;display:inline-flex;gap:.3rem}
+    @media(max-width:900px){.cat-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:520px){.cat-grid{grid-template-columns:1fr}}
+
+    /* ---------- ranking table ---------- */
+    .rank{background:var(--surface)}
+    .tabs{display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center;margin-bottom:1.6rem}
+    .tab{padding:.6rem 1.3rem;border-radius:999px;border:1px solid var(--line);background:#fff;font-weight:700;color:var(--muted);cursor:pointer;transition:var(--trans)}
+    .tab.active{background:var(--brand);color:#fff;border-color:var(--brand);box-shadow:0 5px 14px rgba(14,109,208,.3)}
+    .panel{display:none}
+    .panel.active{display:block}
+    .table-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden}
+    .table-scroll{overflow-x:auto}
+    table.rt{width:100%;border-collapse:collapse;min-width:640px}
+    table.rt thead th{background:var(--surface2);color:var(--muted);font-weight:700;font-size:.85rem;text-align:right;padding:1rem 1.1rem;border-bottom:1px solid var(--line);white-space:nowrap}
+    table.rt tbody td{padding:.95rem 1.1rem;border-bottom:1px solid var(--line);font-size:.97rem}
+    table.rt tbody tr:last-child td{border-bottom:0}
+    table.rt tbody tr:hover{background:var(--brand-soft)}
+    .rank-num{width:34px;height:34px;border-radius:9px;background:var(--surface2);color:var(--muted);font-weight:800;display:grid;place-items:center;font-size:.9rem}
+    tr:nth-child(1) .rank-num{background:#fdf0d0;color:#a97b09}
+    tr:nth-child(2) .rank-num{background:#eceff3;color:#5b6c82}
+    tr:nth-child(3) .rank-num{background:#f6e6da;color:#a6642a}
+    .co{display:flex;align-items:center;gap:.65rem;font-weight:700;white-space:nowrap}
+    .co .cdot{width:11px;height:11px;border-radius:50%;flex:none}
+    .badge{display:inline-block;background:var(--surface2);border:1px solid var(--line);color:var(--muted);font-size:.78rem;font-weight:700;padding:.15rem .6rem;border-radius:7px}
+    .pos{color:var(--green);font-weight:800}
+    .fee{color:var(--ink);font-weight:700}
+    .table-foot{padding:.9rem 1.1rem;background:var(--surface2);color:var(--muted);font-size:.8rem;border-top:1px solid var(--line)}
+
+    /* ---------- guides ---------- */
+    .guides-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem}
+    .guide{background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm);transition:var(--trans)}
+    .guide:hover{transform:translateY(-5px);box-shadow:var(--shadow)}
+    .guide .gtop{height:8px;background:linear-gradient(90deg,var(--brand),var(--teal))}
+    .guide .gbody{padding:1.5rem}
+    .guide .gtag{color:var(--brand);font-weight:800;font-size:.8rem}
+    .guide h3{font-size:1.15rem;font-weight:800;margin:.4rem 0 .5rem;line-height:1.3}
+    .guide p{color:var(--muted);font-size:.94rem}
+    .guide .glink{color:var(--brand);font-weight:700;font-size:.9rem;margin-top:.9rem;display:inline-block}
+    @media(max-width:900px){.guides-grid{grid-template-columns:1fr}}
+
+    /* ---------- about strip ---------- */
+    .about{background:linear-gradient(135deg,var(--brand-dark),var(--brand));color:#fff}
+    .about .wrap{display:grid;grid-template-columns:.8fr 1.2fr;gap:2.5rem;align-items:center;padding:3.5rem 1.4rem}
+    .about .aimg{border-radius:var(--radius-lg);overflow:hidden;border:5px solid rgba(255,255,255,.2);box-shadow:var(--shadow-lg);aspect-ratio:1/1;background:#dbe6f3}
+    .about .aimg img{width:100%;height:100%;object-fit:cover;object-position:top center}
+    .about h2{font-size:clamp(1.6rem,3vw,2.3rem);font-weight:900;line-height:1.2}
+    .about p{color:#dbe8fa;margin-top:1rem;font-size:1.05rem}
+    .about .avals{display:flex;gap:1.8rem;margin-top:1.6rem;flex-wrap:wrap}
+    .about .aval b{display:block;font-size:1.9rem;font-weight:900}
+    .about .aval span{color:#c3d6f2;font-size:.9rem}
+    .about .btn-primary{background:#fff;color:var(--brand-dark);margin-top:1.8rem}
+    .about .btn-primary:hover{background:#eaf2fc}
+    @media(max-width:820px){.about .wrap{grid-template-columns:1fr}.about .aimg{max-width:280px}}
+
+    /* ---------- contact ---------- */
+    .contact .wrap{display:grid;grid-template-columns:1fr 1fr;gap:2.5rem;align-items:start}
+    .contact h2{font-size:clamp(1.6rem,3vw,2.2rem);font-weight:900}
+    .contact .lead{color:var(--muted);margin:.7rem 0 1.5rem}
+    .cinfo li{display:flex;align-items:center;gap:.8rem;margin-bottom:1rem;font-weight:600}
+    .cinfo .cic{width:42px;height:42px;border-radius:11px;background:var(--brand-soft);color:var(--brand-dark);display:grid;place-items:center;flex:none}
+    form.cf{background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);padding:1.8rem;box-shadow:var(--shadow)}
+    .frow{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+    .fg{margin-bottom:1rem}
+    .fg label{display:block;font-weight:700;font-size:.9rem;margin-bottom:.4rem}
+    .fg input,.fg select,.fg textarea{width:100%;padding:.8rem .9rem;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:1rem;background:var(--surface2);transition:var(--trans)}
+    .fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px var(--brand-soft)}
+    .fsuccess{display:none;margin-top:1rem;background:#e7f7ee;color:var(--green);border:1px solid #b6e6c9;border-radius:10px;padding:.8rem;text-align:center;font-weight:700}
+    .fsuccess.show{display:block}
+    @media(max-width:820px){.contact .wrap{grid-template-columns:1fr}.frow{grid-template-columns:1fr}}
+
+    /* ---------- footer ---------- */
+    footer.ft{background:var(--ink);color:#aeb9c8;padding:3rem 0 1.5rem}
+    .ft-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:2rem}
+    .ft .brand{color:#fff}
+    .ft .brand small{color:#7fb2ee}
+    .ft p{margin-top:.8rem;font-size:.92rem;max-width:40ch}
+    .ft h4{color:#fff;font-size:.95rem;margin-bottom:.9rem}
+    .ft li{margin-bottom:.55rem}
+    .ft a:hover{color:#fff}
+    .ft-bottom{border-top:1px solid #24384f;margin-top:2rem;padding-top:1.2rem;font-size:.8rem;color:#7b8798;text-align:center}
+    @media(max-width:760px){.ft-grid{grid-template-columns:1fr}}
+
+    /* ---------- whatsapp float ---------- */
+    .wa{position:fixed;bottom:22px;left:22px;width:58px;height:58px;border-radius:50%;background:#25d366;display:grid;place-items:center;box-shadow:0 8px 24px rgba(37,211,102,.45);z-index:200;transition:var(--trans)}
+    .wa:hover{transform:scale(1.08)}
+    .wa svg{width:30px;height:30px;fill:#fff}
+
+    .reveal{opacity:0;transform:translateY(18px);transition:opacity .5s ease,transform .5s ease}
+    .reveal.in{opacity:1;transform:none}
+    @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
+  </style>
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="wrap">
+      <span>📊 מידע פנסיוני מעודכן · השוואת תשואות ודמי ניהול</span>
+      <div class="tb-links">
+        <a href="tel:+972502423356">📞 050-242-3356</a>
+        <a href="mailto:karin@karinkeren.com">✉️ karin@karinkeren.com</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a href="#top" class="brand">
+        <span class="mark">קק</span>
+        <span>קרן קרן<small>פורטל פיננסי</small></span>
+      </a>
+      <nav class="nav-links">
+        <a href="#categories">מוצרים</a>
+        <a href="#rankings">דירוג תשואות</a>
+        <a href="#guides">מדריכים</a>
+        <a href="#about">אודות</a>
+        <a href="hishtalmut.html">קרן השתלמות</a>
+        <a href="#contact" class="nav-cta">ייעוץ חינם</a>
+      </nav>
+      <button class="burger" id="burger" aria-label="תפריט"><span></span><span></span><span></span></button>
+    </div>
+    <div class="mobile" id="mobile">
+      <a href="#categories" onclick="cm()">מוצרים</a>
+      <a href="#rankings" onclick="cm()">דירוג תשואות</a>
+      <a href="#guides" onclick="cm()">מדריכים</a>
+      <a href="#about" onclick="cm()">אודות</a>
+      <a href="hishtalmut.html">קרן השתלמות</a>
+      <a href="#contact" onclick="cm()">ייעוץ חינם</a>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero" id="top">
+    <div class="wrap hero-grid">
+      <div class="hero-text">
+        <span class="hero-eyebrow">✦ סוכנת פיננסית מורשית</span>
+        <h1>כל החיסכון הפנסיוני שלך <span class="hl">במקום אחד</span></h1>
+        <p class="lead">השוואת תשואות ודמי ניהול של קרנות השתלמות, קופות גמל, קרנות פנסיה וביטוחי מנהלים – עם ליווי אישי שמוצא לך את המסלול המשתלם ביותר.</p>
+        <div class="hero-cta">
+          <a href="#contact" class="btn btn-primary">קבעי ייעוץ חינם ←</a>
+          <a href="#rankings" class="btn btn-outline">לצפייה בדירוגים</a>
+        </div>
+        <div class="hero-search">
+          <div class="hs-label">מה מעניין אותך להשוות?</div>
+          <div class="chips">
+            <a class="chip" href="#rankings"><span class="dot" style="background:#0e6dd0"></span>קרן השתלמות</a>
+            <a class="chip" href="#rankings"><span class="dot" style="background:#12a4bd"></span>קופת גמל</a>
+            <a class="chip" href="#rankings"><span class="dot" style="background:#12a150"></span>קרן פנסיה</a>
+            <a class="chip" href="#rankings"><span class="dot" style="background:#e0a020"></span>ביטוח מנהלים</a>
+          </div>
+        </div>
+      </div>
+      <div class="hero-photo">
+        <div class="frame"><img src="images/karin.jpg" alt="קרן קרן – סוכנת פיננסית מורשית" /></div>
+        <div class="float f1"><div class="fi" style="background:var(--green)">%</div><div>0% מס<small>קרן השתלמות</small></div></div>
+        <div class="float f2"><div class="fi" style="background:var(--brand)">15+</div><div>שנות ניסיון<small>בשוק ההון</small></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRUST -->
+  <div class="trust">
+    <div class="wrap">
+      <span>עובדת עם כל השוק:</span>
+      <span><b>מנורה מבטחים</b></span>
+      <span><b>מגדל</b></span>
+      <span><b>הפניקס</b></span>
+      <span><b>כלל</b></span>
+      <span><b>הראל</b></span>
+      <span><b>מיטב</b></span>
+      <span><b>אלטשולר שחם</b></span>
+    </div>
+  </div>
+
+  <!-- CATEGORIES -->
+  <section class="block" id="categories">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="sec-tag">מוצרים פיננסיים</span>
+        <h2>איזה חיסכון מתאים לך?</h2>
+        <p>ארבעה אפיקי החיסכון המרכזיים – כל אחד עם הטבות המס והיתרונות שלו. בחרי אפיק כדי לראות את דירוג התשואות.</p>
+      </div>
+      <div class="cat-grid">
+        <a href="hishtalmut.html" class="cat reveal">
+          <div class="ci" style="background:#0e6dd0"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+          <h3>קרן השתלמות</h3>
+          <p>האפיק היחיד הפטור ממס רווחי הון. נזיל אחרי 6 שנים.</p>
+          <span class="more">למידע והשוואה ←</span>
+        </a>
+        <a href="#rankings" class="cat reveal">
+          <div class="ci" style="background:#12a4bd"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></div>
+          <h3>קופת גמל</h3>
+          <p>חיסכון גמיש לטווח ארוך עם מגוון מסלולי השקעה.</p>
+          <span class="more">לדירוג התשואות ←</span>
+        </a>
+        <a href="#rankings" class="cat reveal">
+          <div class="ci" style="background:#12a150"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M12 3v4"/><path d="M5 8h14l-1.5 11.5a2 2 0 0 1-2 1.5H8.5a2 2 0 0 1-2-1.5L5 8z"/></svg></div>
+          <h3>קרן פנסיה</h3>
+          <p>הבסיס לביטחון בגיל פרישה – קצבה, נכות ושארים.</p>
+          <span class="more">לדירוג התשואות ←</span>
+        </a>
+        <a href="#rankings" class="cat reveal">
+          <div class="ci" style="background:#e0a020"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 4v5c0 4.5-3 8-7 9-4-1-7-4.5-7-9V7l7-4z"/></svg></div>
+          <h3>ביטוח מנהלים</h3>
+          <p>פוליסת חיסכון עם כיסויים ביטוחיים אישיים.</p>
+          <span class="more">לדירוג התשואות ←</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- RANKINGS -->
+  <section class="block rank" id="rankings">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="sec-tag">דירוג תשואות</span>
+        <h2>המסלולים המובילים לפי תשואה</h2>
+        <p>נתוני תשואה נומינליים להמחשה, מדורגים מהגבוה לנמוך. בחרי אפיק להשוואה.</p>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" data-panel="p-hish">קרן השתלמות</button>
+        <button class="tab" data-panel="p-gemel">קופת גמל</button>
+        <button class="tab" data-panel="p-pension">קרן פנסיה</button>
+        <button class="tab" data-panel="p-bit">ביטוח מנהלים</button>
+      </div>
+
+      <!-- השתלמות -->
+      <div class="panel active" id="p-hish">
+        <div class="table-card">
+          <div class="table-scroll">
+            <table class="rt tnum">
+              <thead><tr><th>#</th><th>חברה</th><th>מסלול</th><th>תשואה שנה</th><th>ממוצע 5 שנים</th><th>דמי ניהול</th></tr></thead>
+              <tbody>
+                <tr><td><span class="rank-num">1</span></td><td><span class="co"><span class="cdot" style="background:#b45309"></span>אלטשולר שחם</span></td><td><span class="badge">מניות</span></td><td class="pos">29.2%</td><td class="pos">15.8%</td><td class="fee">0.6%</td></tr>
+                <tr><td><span class="rank-num">2</span></td><td><span class="co"><span class="cdot" style="background:#ea580c"></span>הפניקס</span></td><td><span class="badge">מניות</span></td><td class="pos">26.4%</td><td class="pos">14.3%</td><td class="fee">0.5%</td></tr>
+                <tr><td><span class="rank-num">3</span></td><td><span class="co"><span class="cdot" style="background:#16a34a"></span>הראל</span></td><td><span class="badge">מניות</span></td><td class="pos">25.5%</td><td class="pos">13.8%</td><td class="fee">0.5%</td></tr>
+                <tr><td><span class="rank-num">4</span></td><td><span class="co"><span class="cdot" style="background:#1e40af"></span>מנורה מבטחים</span></td><td><span class="badge">מניות</span></td><td class="pos">24.7%</td><td class="pos">13.4%</td><td class="fee">0.5%</td></tr>
+                <tr><td><span class="rank-num">5</span></td><td><span class="co"><span class="cdot" style="background:#b45309"></span>אלטשולר שחם</span></td><td><span class="badge">כללי</span></td><td class="pos">18.1%</td><td class="pos">11.9%</td><td class="fee">0.6%</td></tr>
+                <tr><td><span class="rank-num">6</span></td><td><span class="co"><span class="cdot" style="background:#ea580c"></span>הפניקס</span></td><td><span class="badge">כללי</span></td><td class="pos">15.8%</td><td class="pos">10.4%</td><td class="fee">0.5%</td></tr>
+                <tr><td><span class="rank-num">7</span></td><td><span class="co"><span class="cdot" style="background:#16a34a"></span>הראל</span></td><td><span class="badge">כללי</span></td><td class="pos">15.3%</td><td class="pos">10.1%</td><td class="fee">0.5%</td></tr>
+                <tr><td><span class="rank-num">8</span></td><td><span class="co"><span class="cdot" style="background:#1e40af"></span>מנורה מבטחים</span></td><td><span class="badge">כללי</span></td><td class="pos">15.0%</td><td class="pos">9.7%</td><td class="fee">0.5%</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-foot">* נתוני תשואה להמחשה בלבד, לפני ניכוי דמי ניהול. מקור: רשות שוק ההון. אין באמור המלצה או ייעוץ.</div>
+        </div>
+      </div>
+
+      <!-- גמל -->
+      <div class="panel" id="p-gemel">
+        <div class="table-card">
+          <div class="table-scroll">
+            <table class="rt tnum">
+              <thead><tr><th>#</th><th>חברה</th><th>מסלול</th><th>תשואה שנה</th><th>ממוצע 5 שנים</th><th>דמי ניהול</th></tr></thead>
+              <tbody>
+                <tr><td><span class="rank-num">1</span></td><td><span class="co"><span class="cdot" style="background:#b45309"></span>אלטשולר שחם</span></td><td><span class="badge">מניות</span></td><td class="pos">27.6%</td><td class="pos">15.1%</td><td class="fee">0.5%</td></tr>
+                <tr><td><span class="rank-num">2</span></td><td><span class="co"><span class="cdot" style="background:#ea580c"></span>הפניקס</span></td><td><span class="badge">מניות</span></td><td class="pos">25.8%</td><td class="pos">13.9%</td><td class="fee">0.4%</td></tr>
+                <tr><td><span class="rank-num">3</span></td><td><span class="co"><span class="cdot" style="background:#16a34a"></span>הראל</span></td><td><span class="badge">מניות</span></td><td class="pos">24.9%</td><td class="pos">13.5%</td><td class="fee">0.4%</td></tr>
+                <tr><td><span class="rank-num">4</span></td><td><span class="co"><span class="cdot" style="background:#1e40af"></span>מנורה מבטחים</span></td><td><span class="badge">מניות</span></td><td class="pos">24.3%</td><td class="pos">13.2%</td><td class="fee">0.4%</td></tr>
+                <tr><td><span class="rank-num">5</span></td><td><span class="co"><span class="cdot" style="background:#b45309"></span>אלטשולר שחם</span></td><td><span class="badge">כללי</span></td><td class="pos">17.3%</td><td class="pos">11.4%</td><td class="fee">0.5%</td></tr>
+                <tr><td><span class="rank-num">6</span></td><td><span class="co"><span class="cdot" style="background:#ea580c"></span>הפניקס</span></td><td><span class="badge">כללי</span></td><td class="pos">15.5%</td><td class="pos">10.2%</td><td class="fee">0.4%</td></tr>
+                <tr><td><span class="rank-num">7</span></td><td><span class="co"><span class="cdot" style="background:#16a34a"></span>הראל</span></td><td><span class="badge">כללי</span></td><td class="pos">15.1%</td><td class="pos">9.9%</td><td class="fee">0.4%</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-foot">* נתוני תשואה להמחשה בלבד, לפני ניכוי דמי ניהול. מקור: רשות שוק ההון. אין באמור המלצה או ייעוץ.</div>
+        </div>
+      </div>
+
+      <!-- פנסיה -->
+      <div class="panel" id="p-pension">
+        <div class="table-card">
+          <div class="table-scroll">
+            <table class="rt tnum">
+              <thead><tr><th>#</th><th>חברה</th><th>מסלול</th><th>תשואה שנה</th><th>ממוצע 5 שנים</th><th>דמי ניהול</th></tr></thead>
+              <tbody>
+                <tr><td><span class="rank-num">1</span></td><td><span class="co"><span class="cdot" style="background:#6d28d9"></span>אנליסט</span></td><td><span class="badge">מניות</span></td><td class="pos">25.3%</td><td class="pos">13.6%</td><td class="fee">0.5%/6%</td></tr>
+                <tr><td><span class="rank-num">2</span></td><td><span class="co"><span class="cdot" style="background:#ea580c"></span>הפניקס</span></td><td><span class="badge">מניות</span></td><td class="pos">23.4%</td><td class="pos">12.5%</td><td class="fee">0.5%/6%</td></tr>
+                <tr><td><span class="rank-num">3</span></td><td><span class="co"><span class="cdot" style="background:#16a34a"></span>הראל</span></td><td><span class="badge">מניות</span></td><td class="pos">22.8%</td><td class="pos">12.1%</td><td class="fee">0.5%/6%</td></tr>
+                <tr><td><span class="rank-num">4</span></td><td><span class="co"><span class="cdot" style="background:#1e40af"></span>מנורה מבטחים</span></td><td><span class="badge">מניות</span></td><td class="pos">22.1%</td><td class="pos">11.8%</td><td class="fee">0.5%/6%</td></tr>
+                <tr><td><span class="rank-num">5</span></td><td><span class="co"><span class="cdot" style="background:#6d28d9"></span>אנליסט</span></td><td><span class="badge">כללי</span></td><td class="pos">16.2%</td><td class="pos">10.5%</td><td class="fee">0.5%/6%</td></tr>
+                <tr><td><span class="rank-num">6</span></td><td><span class="co"><span class="cdot" style="background:#ea580c"></span>הפניקס</span></td><td><span class="badge">כללי</span></td><td class="pos">15.1%</td><td class="pos">9.8%</td><td class="fee">0.5%/6%</td></tr>
+                <tr><td><span class="rank-num">7</span></td><td><span class="co"><span class="cdot" style="background:#16a34a"></span>הראל</span></td><td><span class="badge">כללי</span></td><td class="pos">14.7%</td><td class="pos">9.4%</td><td class="fee">0.5%/6%</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-foot">* נתוני תשואה להמחשה בלבד, לפני ניכוי דמי ניהול. מקור: רשות שוק ההון. אין באמור המלצה או ייעוץ.</div>
+        </div>
+      </div>
+
+      <!-- ביטוח מנהלים -->
+      <div class="panel" id="p-bit">
+        <div class="table-card">
+          <div class="table-scroll">
+            <table class="rt tnum">
+              <thead><tr><th>#</th><th>חברה</th><th>מסלול</th><th>תשואה שנה</th><th>ממוצע 5 שנים</th><th>דמי ניהול</th></tr></thead>
+              <tbody>
+                <tr><td><span class="rank-num">1</span></td><td><span class="co"><span class="cdot" style="background:#ea580c"></span>הפניקס</span></td><td><span class="badge">מניות</span></td><td class="pos">23.1%</td><td class="pos">12.3%</td><td class="fee">1.05%/6%</td></tr>
+                <tr><td><span class="rank-num">2</span></td><td><span class="co"><span class="cdot" style="background:#16a34a"></span>הראל</span></td><td><span class="badge">מניות</span></td><td class="pos">22.5%</td><td class="pos">11.9%</td><td class="fee">1.05%/6%</td></tr>
+                <tr><td><span class="rank-num">3</span></td><td><span class="co"><span class="cdot" style="background:#1e40af"></span>מנורה מבטחים</span></td><td><span class="badge">מניות</span></td><td class="pos">21.8%</td><td class="pos">11.4%</td><td class="fee">1.05%/6%</td></tr>
+                <tr><td><span class="rank-num">4</span></td><td><span class="co"><span class="cdot" style="background:#dc2626"></span>מגדל</span></td><td><span class="badge">מניות</span></td><td class="pos">21.2%</td><td class="pos">10.9%</td><td class="fee">1.05%/6%</td></tr>
+                <tr><td><span class="rank-num">5</span></td><td><span class="co"><span class="cdot" style="background:#ea580c"></span>הפניקס</span></td><td><span class="badge">כללי</span></td><td class="pos">14.8%</td><td class="pos">9.6%</td><td class="fee">1.05%/6%</td></tr>
+                <tr><td><span class="rank-num">6</span></td><td><span class="co"><span class="cdot" style="background:#16a34a"></span>הראל</span></td><td><span class="badge">כללי</span></td><td class="pos">14.4%</td><td class="pos">9.2%</td><td class="fee">1.05%/6%</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-foot">* נתוני תשואה להמחשה בלבד, לפני ניכוי דמי ניהול. מקור: רשות שוק ההון. אין באמור המלצה או ייעוץ.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GUIDES -->
+  <section class="block" id="guides">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="sec-tag">מדריכים</span>
+        <h2>מדריכים שיעזרו לך להחליט</h2>
+        <p>הסברים פשוטים בגובה העיניים על עולם החיסכון הפנסיוני</p>
+      </div>
+      <div class="guides-grid">
+        <a href="hishtalmut.html" class="guide reveal">
+          <div class="gtop"></div>
+          <div class="gbody">
+            <span class="gtag">קרן השתלמות</span>
+            <h3>למה קרן השתלמות היא ההטבה המשתלמת ביותר?</h3>
+            <p>האפיק היחיד הפטור ממס רווחי הון – מי זכאי, כמה מפקידים ומתי מושכים.</p>
+            <span class="glink">לקריאה ←</span>
+          </div>
+        </a>
+        <a href="#rankings" class="guide reveal">
+          <div class="gtop"></div>
+          <div class="gbody">
+            <span class="gtag">דמי ניהול</span>
+            <h3>איך אחוז אחד בדמי ניהול שווה עשרות אלפי ₪</h3>
+            <p>ההשפעה הדרמטית של דמי ניהול על החיסכון לאורך שנים – וכיצד להפחית אותם.</p>
+            <span class="glink">לקריאה ←</span>
+          </div>
+        </a>
+        <a href="#contact" class="guide reveal">
+          <div class="gtop"></div>
+          <div class="gbody">
+            <span class="gtag">ניוד קרנות</span>
+            <h3>מתי כדאי לנייד קרן לחברה אחרת?</h3>
+            <p>ניוד אינו אירוע מס והוותק נשמר – מתי זה משתלם וכיצד עושים זאת נכון.</p>
+            <span class="glink">לקריאה ←</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="about" id="about">
+    <div class="wrap">
+      <div class="aimg"><img src="images/karin.jpg" alt="קרן קרן – סוכנת פיננסית מורשית" /></div>
+      <div>
+        <h2>קרן קרן – הסוכנת הפיננסית שלך</h2>
+        <p>עם ניסיון של למעלה מ-15 שנה בשוק ההון ובענף הביטוח, אני מלווה אנשים ומשפחות בבניית עתיד כלכלי יציב. אני עובדת עם כל בתי ההשקעות וחברות הביטוח – ולכן חופשייה למצוא את הפתרון הטוב ביותר <b style="color:#fff">עבורך</b>, בשקיפות מלאה וללא עמלות נסתרות.</p>
+        <div class="avals">
+          <div class="aval"><b>15+</b><span>שנות ניסיון</span></div>
+          <div class="aval"><b>500+</b><span>לקוחות מרוצים</span></div>
+          <div class="aval"><b>100%</b><span>מחויבות אישית</span></div>
+        </div>
+        <a href="#contact" class="btn btn-primary">קבעי פגישת היכרות ←</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="block contact" id="contact">
+    <div class="wrap">
+      <div>
+        <span class="sec-tag">צרי קשר</span>
+        <h2>נדבר על העתיד הפיננסי שלך</h2>
+        <p class="lead">השאירי פרטים ואחזור אלייך תוך 24 שעות לקביעת פגישת ייעוץ ראשונה – חינם וללא התחייבות.</p>
+        <ul class="cinfo">
+          <li><span class="cic">📞</span><a href="tel:+972502423356">050-242-3356</a></li>
+          <li><span class="cic">✉️</span><a href="mailto:karin@karinkeren.com">karin@karinkeren.com</a></li>
+          <li><span class="cic">💬</span><a href="https://wa.me/972502423356" target="_blank" rel="noopener">וואטסאפ</a></li>
+          <li><span class="cic">📍</span><span>ישראל · פנים אל פנים וזום</span></li>
+        </ul>
+      </div>
+      <form class="cf" id="cform">
+        <div class="frow">
+          <div class="fg"><label for="name">שם מלא *</label><input id="name" required placeholder="שמך המלא" /></div>
+          <div class="fg"><label for="phone">טלפון *</label><input id="phone" required placeholder="מספר טלפון" /></div>
+        </div>
+        <div class="fg"><label for="email">אימייל</label><input id="email" type="email" placeholder="כתובת אימייל" /></div>
+        <div class="fg"><label for="topic">נושא</label>
+          <select id="topic">
+            <option value="">בחרי נושא...</option>
+            <option>קרן השתלמות</option>
+            <option>קופת גמל</option>
+            <option>קרן פנסיה</option>
+            <option>ביטוח מנהלים</option>
+            <option>אחר</option>
+          </select>
+        </div>
+        <div class="fg"><label for="message">הודעה</label><textarea id="message" rows="4" placeholder="ספרי לי קצת על מה שחשוב לך..."></textarea></div>
+        <button type="submit" class="btn btn-primary" style="width:100%">שליחה ←</button>
+        <div class="fsuccess" id="fsuccess">✓ תודה! אחזור אלייך בהקדם.</div>
+      </form>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="ft">
+    <div class="wrap">
+      <div class="ft-grid">
+        <div>
+          <a href="#top" class="brand"><span class="mark">קק</span><span>קרן קרן<small>פורטל פיננסי</small></span></a>
+          <p>סוכנת פיננסית מורשית – ייעוץ מקצועי, אישי ואמין בקרנות השתלמות, גמל, פנסיה וביטוח.</p>
+        </div>
+        <div>
+          <h4>מוצרים</h4>
+          <ul>
+            <li><a href="hishtalmut.html">קרן השתלמות</a></li>
+            <li><a href="#rankings">קופת גמל</a></li>
+            <li><a href="#rankings">קרן פנסיה</a></li>
+            <li><a href="#rankings">ביטוח מנהלים</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>יצירת קשר</h4>
+          <ul>
+            <li><a href="tel:+972502423356">📞 050-242-3356</a></li>
+            <li><a href="mailto:karin@karinkeren.com">✉️ karin@karinkeren.com</a></li>
+            <li><a href="https://wa.me/972502423356" target="_blank" rel="noopener">💬 וואטסאפ</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="ft-bottom">© 2025 קרן קרן · סוכנת פיננסית מורשית · המידע באתר אינו מהווה ייעוץ פנסיוני, ייעוץ מס או המלצה. אנא התייעצי עם בעל רישיון לפני קבלת החלטה.</div>
+    </div>
+  </footer>
+
+  <a class="wa" href="https://wa.me/972502423356" target="_blank" rel="noopener" aria-label="וואטסאפ">
+    <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+  </a>
+
+  <script>
+    // mobile menu
+    const mob = document.getElementById('mobile');
+    document.getElementById('burger').addEventListener('click', () => mob.classList.toggle('open'));
+    function cm(){ mob.classList.remove('open'); }
+
+    // tabs
+    document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      t.classList.add('active');
+      document.getElementById(t.dataset.panel).classList.add('active');
+    }));
+
+    // contact -> whatsapp
+    const cf = document.getElementById('cform'), fs = document.getElementById('fsuccess');
+    cf.addEventListener('submit', async e => {
+      e.preventDefault();
+      const btn = cf.querySelector('button[type="submit"]');
+      btn.disabled = true; btn.textContent = 'שולח...';
+      const g = id => document.getElementById(id).value;
+      const name=g('name'), phone=g('phone'), email=g('email'), topic=g('topic'), message=g('message');
+      const txt = encodeURIComponent(`שלום קרן!\nפנייה חדשה מהאתר:\nשם: ${name}\nטלפון: ${phone}\n`+(email?`אימייל: ${email}\n`:'')+(topic?`נושא: ${topic}\n`:'')+(message?`הודעה: ${message}`:''));
+      let url = `https://wa.me/972502423356?text=${txt}`;
+      try { const r = await fetch('/api/contact',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,phone,email,topic,message})}); const j = await r.json(); if(j.ok) url=j.waUrl; } catch{}
+      fs.classList.add('show'); cf.reset(); btn.disabled=false; btn.textContent='שליחה ←';
+      setTimeout(()=>window.open(url,'_blank'),600);
+    });
+
+    // reveal on scroll
+    const io = new IntersectionObserver(es => es.forEach(en => { if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); } }), {threshold:.12});
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+  </script>
+</body>
+</html>
