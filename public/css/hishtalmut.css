@@ -1,0 +1,237 @@
+/* =========================================================
+   קרן השתלמות — page-specific styles
+   Builds on css/style.css (shared tokens & components)
+   ========================================================= */
+
+/* ---- Generic section rhythm ---- */
+.section { padding: 5.5rem 0; }
+.section-alt { background: var(--off); }
+.section-header { text-align: center; max-width: 760px; margin: 0 auto 3rem; }
+.section-header .section-tag {
+  display: inline-block;
+  color: var(--gold);
+  font-weight: 800;
+  letter-spacing: .04em;
+  font-size: .95rem;
+  margin-bottom: .75rem;
+}
+.section-header h2 {
+  font-size: clamp(1.7rem, 3.4vw, 2.6rem);
+  line-height: 1.2;
+  color: var(--navy);
+  font-weight: 800;
+}
+.section-header p { color: var(--gray); margin-top: .9rem; font-size: 1.08rem; }
+
+/* ---- Hero tweaks (reuses .hero from style.css) ---- */
+.hero-tag .pill {
+  background: rgba(201,168,76,.18);
+  border: 1px solid rgba(201,168,76,.4);
+  padding: .1rem .6rem;
+  border-radius: 999px;
+  font-size: .8rem;
+  margin-inline-start: .4rem;
+}
+
+/* ---- Intro / prose ---- */
+.intro-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3.5rem;
+  align-items: center;
+}
+.intro-prose h2 {
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  color: var(--navy);
+  font-weight: 800;
+  margin-bottom: 1.2rem;
+  line-height: 1.25;
+}
+.intro-prose p { color: var(--gray); margin-bottom: 1rem; font-size: 1.05rem; }
+.intro-prose strong { color: var(--navy); }
+.intro-highlights {
+  display: grid;
+  gap: 1rem;
+  background: var(--navy);
+  border-radius: var(--radius-lg);
+  padding: 2.2rem;
+  box-shadow: var(--shadow-lg);
+}
+.intro-highlights .ih {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  color: var(--white);
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255,255,255,.12);
+}
+.intro-highlights .ih:last-child { border-bottom: 0; padding-bottom: 0; }
+.intro-highlights .ih-num { color: var(--gold3); font-weight: 800; font-size: 1.6rem; line-height: 1; }
+.intro-highlights .ih strong { display: block; margin-bottom: .2rem; font-size: 1.05rem; }
+.intro-highlights .ih span { color: var(--gray2); font-size: .95rem; }
+
+/* ---- Benefit cards ---- */
+.benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+.benefit-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem 1.75rem;
+  box-shadow: var(--shadow-sm);
+  transition: var(--trans);
+}
+.benefit-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow);
+  border-color: rgba(201,168,76,.5);
+}
+.benefit-icon {
+  width: 56px; height: 56px;
+  border-radius: 14px;
+  display: grid; place-items: center;
+  background: var(--gold-grad);
+  color: var(--navy);
+  margin-bottom: 1.2rem;
+}
+.benefit-icon svg { width: 30px; height: 30px; }
+.benefit-card h3 { color: var(--navy); font-size: 1.2rem; font-weight: 800; margin-bottom: .5rem; }
+.benefit-card p { color: var(--gray); font-size: .98rem; }
+
+/* ---- Eligibility (שכירים / עצמאים) ---- */
+.elig-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+.elig-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 2.25rem;
+  box-shadow: var(--shadow-sm);
+}
+.elig-card.dark { background: var(--navy); color: var(--white); border-color: var(--navy3); }
+.elig-head { display: flex; align-items: center; gap: .8rem; margin-bottom: 1.4rem; }
+.elig-head .emoji { font-size: 1.9rem; }
+.elig-head h3 { font-size: 1.4rem; font-weight: 800; }
+.elig-card.dark h3 { color: var(--white); }
+.elig-card:not(.dark) h3 { color: var(--navy); }
+.elig-list { display: grid; gap: .9rem; }
+.elig-list li { display: flex; gap: .7rem; align-items: flex-start; font-size: 1rem; }
+.elig-list .chk { color: var(--gold); font-weight: 800; flex: none; }
+.elig-card:not(.dark) .elig-list li { color: var(--gray); }
+.elig-card.dark .elig-list li { color: #d6ddea; }
+.elig-card .elig-list strong { color: inherit; }
+.elig-card:not(.dark) .elig-list strong { color: var(--navy); }
+.elig-card.dark .elig-list strong { color: var(--gold3); }
+
+/* ---- Tax callout ---- */
+.tax-callout {
+  background: var(--gold-grad);
+  border-radius: var(--radius-lg);
+  padding: 2.75rem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1.75rem;
+  align-items: center;
+  box-shadow: var(--shadow-gold);
+}
+.tax-callout .tc-badge {
+  background: var(--navy);
+  color: var(--gold3);
+  font-weight: 800;
+  font-size: 2rem;
+  width: 90px; height: 90px;
+  border-radius: 20px;
+  display: grid; place-items: center;
+  flex: none;
+}
+.tax-callout h3 { color: var(--navy); font-size: 1.5rem; font-weight: 800; margin-bottom: .4rem; }
+.tax-callout p { color: #3a2f10; font-size: 1.05rem; }
+
+/* ---- Table (reuses .fin-table etc.) ---- */
+.table-note { color: var(--gray2); font-size: .85rem; margin-top: 1rem; text-align: center; }
+
+/* ---- Calculator (simple) ---- */
+.calc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 2.25rem;
+  box-shadow: var(--shadow);
+}
+.calc-field { margin-bottom: 1.4rem; }
+.calc-field > label { display: block; font-weight: 700; color: var(--navy); margin-bottom: .5rem; font-size: .98rem; }
+.calc-input-wrap { display: flex; align-items: center; gap: 1rem; }
+.calc-input-wrap input[type="range"] { flex: 1; accent-color: var(--gold); }
+.calc-input-wrap output {
+  min-width: 84px; text-align: center;
+  background: var(--off); border: 1px solid var(--border);
+  border-radius: 8px; padding: .35rem .5rem; font-weight: 700; color: var(--navy);
+}
+.calc-result {
+  background: var(--navy);
+  color: var(--white);
+  border-radius: var(--radius);
+  padding: 2rem;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.result-label { color: var(--gray2); font-size: .95rem; }
+.result-amount { display: block; font-size: 2.6rem; font-weight: 900; color: var(--gold3); margin: .3rem 0 1.4rem; }
+.result-row { display: flex; justify-content: space-between; padding: .7rem 0; border-bottom: 1px solid rgba(255,255,255,.1); }
+.result-row:last-of-type { border-bottom: 0; }
+.result-row span { color: var(--gray2); }
+.result-row strong { color: var(--white); }
+
+/* ---- FAQ ---- */
+.faq-list { max-width: 820px; margin: 0 auto; display: grid; gap: 1rem; }
+.faq-item {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.faq-q {
+  width: 100%;
+  text-align: right;
+  background: none; border: 0; cursor: pointer;
+  padding: 1.3rem 1.6rem;
+  font-family: 'Heebo', sans-serif;
+  font-size: 1.08rem; font-weight: 700; color: var(--navy);
+  display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+}
+.faq-q .faq-toggle { color: var(--gold); font-size: 1.5rem; flex: none; transition: transform var(--trans); }
+.faq-item.open .faq-q .faq-toggle { transform: rotate(45deg); }
+.faq-a { max-height: 0; overflow: hidden; transition: max-height .35s ease; }
+.faq-a-inner { padding: 0 1.6rem 1.4rem; color: var(--gray); font-size: 1rem; }
+
+/* ---- CTA banner ---- */
+.cta-banner {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy3) 100%);
+  padding: 4rem 0;
+}
+.cta-banner-inner {
+  display: flex; align-items: center; justify-content: space-between; gap: 2rem; flex-wrap: wrap;
+}
+.cta-banner h2 { color: var(--white); font-size: clamp(1.5rem, 3vw, 2.2rem); font-weight: 800; }
+.cta-banner p { color: var(--gold3); margin-top: .5rem; }
+
+/* ---- Responsive ---- */
+@media (max-width: 900px) {
+  .intro-grid, .calc-grid, .tax-callout { grid-template-columns: 1fr; }
+  .benefits-grid { grid-template-columns: 1fr 1fr; }
+  .elig-grid { grid-template-columns: 1fr; }
+  .tax-callout { text-align: center; justify-items: center; }
+}
+@media (max-width: 560px) {
+  .benefits-grid { grid-template-columns: 1fr; }
+  .section { padding: 4rem 0; }
+}
