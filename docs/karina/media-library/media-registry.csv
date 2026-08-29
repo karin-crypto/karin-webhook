@@ -1,0 +1,44 @@
+asset_id,category,usage,type,source,target_filename,format,orientation_size,rights_credit,status,location_or_notes
+KRN-HERO-001,Hero,Hero image — KARINA floating in the sea (live site),image,Existing-Site,karina_hero_floating-sea.jpg,JPG,~1:1 / portrait,Karin Keren,HAVE,LIVE URL https://media.base44.com/images/public/whatsapp/69c1a894bc89d9ff0d3d5d28/your_agent/69c1a894bc89d9ff0d3d5d29/cae9d816c_whatsapp_image_27343962475227459.jpg (alt: KARINA Maritime Rescue Dummy floating in the sea)
+KRN-HERO-002,Hero,Hero background film (MOB drill),video,TBD,karina_hero_mob-drill_16x9.mp4,MP4+WebM,1920x1080 (+9x16),Karin Keren,NEEDED,No video on live site — to produce
+KRN-HERO-003,Hero,Hero poster still,image,TBD,karina_hero_poster_16x9.jpg,JPG/WebP,1920x1080,Karin Keren,NEEDED,Landscape hero for international site
+KRN-GAL-001,Gallery,KARINA studio shots — multiple angles,image,TBD,karina_gallery_studio_###.jpg,JPG/WebP,2000x2000,Karin Keren,NEEDED,Single product (life-size female form)
+KRN-GAL-002,Gallery,KARINA 360 sequence,image,TBD,karina_gallery_360_###.jpg,JPG/WebP,2000x2000,Karin Keren,NEEDED,24-36 frames
+KRN-GAL-003,Gallery,In-context stills (deck / water),image,TBD,karina_gallery_incontext_###.jpg,JPG/WebP,2400x1600,Karin Keren,NEEDED,
+KRN-GAL-004,Gallery,Detail / macro (fabric / form),image,TBD,karina_gallery_detail_###.jpg,JPG/WebP,2400x1600,Karin Keren,NEEDED,
+KRN-TECH-001,Technology,Technical diagram (live site),image,Existing-Site,karina_tech_diagram.jpg,JPG,landscape,Karin Keren,HAVE,LIVE URL https://media.base44.com/images/public/whatsapp/69c1a894bc89d9ff0d3d5d28/your_agent/69c1a894bc89d9ff0d3d5d29/5a5e53dc1_whatsapp_image_1017938654516597.jpg (alt: KARINA Technical Diagram)
+KRN-TECH-002,Technology,Anatomy / buoyancy cutaway (head floats / body submerges),image,TBD,karina_tech_buoyancy-cutaway.svg,SVG or PNG 2400x1600,vector,Karin Keren,NEEDED,Interactive hotspots
+KRN-TECH-003,Technology,Materials & construction macro,image,TBD,karina_tech_materials_###.jpg,JPG/WebP,2400x1600,Karin Keren,NEEDED,Waterproof fabric / internal filling / calibrated weights
+KRN-TECH-004,Technology,Integrated tow strap / retrieval detail,image,TBD,karina_tech_towstrap_###.jpg,JPG/WebP,2400x1600,Karin Keren,NEEDED,Waist + thigh straps
+KRN-TECH-005,Technology,Tech explainer video,video,TBD,karina_tech_explainer.mp4,MP4+WebM,1920x1080,Karin Keren,NEEDED,
+KRN-TRN-001,Training,Drill protocol video,video,TBD,karina_training_protocol_###.mp4,MP4+WebM,1920x1080,Karin Keren,NEEDED,
+KRN-TRN-002,Training,Crew running MOB drills (stills),image,TBD,karina_training_crew_###.jpg,JPG/WebP,2400x1600,Karin Keren,NEEDED,
+KRN-TRN-003,Training,Drill checklist thumbnail,image,TBD,karina_training_checklist_thumb.png,PNG,1200x1200,Karin Keren,NEEDED,
+KRN-RES-001,Rescue,In-water demo film (recovery / tow),video,TBD,karina_rescue_demo.mp4,MP4+WebM,1920x1080,Karin Keren,NEEDED,Buoyancy + realistic tow
+KRN-RES-002,Rescue,Recovery / tow sequence stills,image,TBD,karina_rescue_recovery_###.jpg,JPG/WebP,2400x1600,Karin Keren,NEEDED,
+KRN-RES-003,Rescue,Open-water / rough-sea stills,image,TBD,karina_rescue_openwater_###.jpg,JPG/WebP,2400x1600,Karin Keren,NEEDED,Ocean / port / lake / pool
+KRN-RES-004,Rescue,Night / hi-vis footage,video,TBD,karina_rescue_night.mp4,MP4+WebM,1920x1080,Karin Keren,NEEDED,
+KRN-MON-001,Monaco,Monaco Yacht Show event photography (Sept 2026),image,TBD,karina_monaco_event_###.jpg,JPG/WebP,2400x1600,Karin Keren,NEEDED,International debut
+KRN-MON-002,Monaco,Superyacht context imagery,image,TBD,karina_monaco_superyacht_###.jpg,JPG/WebP,2400x1600,Karin Keren,NEEDED,
+KRN-MON-003,Monaco,Monaco debut highlight film,video,TBD,karina_monaco_highlights.mp4,MP4+WebM,1920x1080,Karin Keren,NEEDED,
+KRN-FND-001,Founder,Karin Keren portrait,image,Existing-Site,karin.jpg,JPG,portrait,Karin Keren,HAVE,public/images/karin.jpg in repo (not moved). VERIFY it is the intended founder photo; live site currently uses an emoji avatar (no photo)
+KRN-FND-002,Founder,Karin Keren with the product / on the water,image,TBD,karina_founder_action_###.jpg,JPG/WebP,2400x1600,Karin Keren,NEEDED,Entrepreneur / Skipper / Inventor
+KRN-FND-003,Founder,Founder story / brand film,video,TBD,karina_founder_story.mp4,MP4+WebM,1920x1080,Karin Keren,NEEDED,Mission / vision
+KRN-CVN-001,Concept Vision,Concept render — product vision,image,FLOW,karina_concept_vision_flow_###.jpg,JPG/WebP,1920x1080,Karin Keren,TO-CONFIRM,Confirm if FLOW renders exist
+KRN-CVN-002,Concept Vision,Concept ideation render,image,ChatGPT,karina_concept_ideation_gpt_###.png,PNG,1536x1024,Karin Keren,TO-CONFIRM,Confirm if ChatGPT images exist
+KRN-CVN-003,Concept Vision,Concept vision film,video,TBD,karina_concept_vision.mp4,MP4+WebM,1920x1080,Karin Keren,NEEDED,
+KRN-MKT-001,Marketing,Market / segment visuals (8 audiences),image,TBD,karina_mkt_segment_###.jpg,JPG/WebP,2000x1333,Karin Keren,NEEDED,Naval/CoastGuard/Sailing schools/Superyacht/Police&Rescue/Lifeguard/Offshore/Academies/Cruise
+KRN-MKT-002,Marketing,Testimonial clips,video,TBD,karina_mkt_testimonial_###.mp4,MP4+WebM,1920x1080,Karin Keren,NEEDED,
+KRN-MKT-003,Marketing,OG / social share images,image,TBD,karina_mkt_og_###.jpg,JPG,1200x630,Karin Keren,NEEDED,Per key page
+KRN-MKT-004,Marketing,Ad creatives / banners,image,TBD,karina_mkt_ad_###.jpg,JPG/WebP,1080x1080 / 1080x1350 / 1080x1920,Karin Keren,NEEDED,
+KRN-MKT-005,Marketing,Brochure / spec-sheet visuals,image,TBD,karina_mkt_brochure_###.jpg,JPG/PDF,2480x3508 (A4 300dpi),Karin Keren,NEEDED,
+KRN-LOGO-001,Logo,Primary wordmark (KARINA),logo,TBD,karina_logo_primary.svg,SVG,vector,Karin Keren,NEEDED,Live site uses text wordmark (Cormorant Garamond, gold #c9a84c) — no logo file exists
+KRN-LOGO-002,Logo,Logo light (on navy),logo,TBD,karina_logo_light.svg,SVG,vector,Karin Keren,NEEDED,
+KRN-LOGO-003,Logo,Logo dark (on light),logo,TBD,karina_logo_dark.svg,SVG,vector,Karin Keren,NEEDED,
+KRN-LOGO-004,Logo,Symbol / mark (e.g. anchor motif),logo,TBD,karina_symbol.svg,SVG,vector,Karin Keren,NEEDED,
+KRN-LOGO-005,Logo,Favicon,logo,TBD,karina_favicon.ico,ICO+PNG,512 master,Karin Keren,NEEDED,
+KRN-LOGO-006,Logo,App / touch icons,logo,TBD,karina_appicon_###.png,PNG,180/192/512,Karin Keren,NEEDED,
+KRN-ICON-001,Icon,Feature icons (MOB behavior / weight / tow / open-water / realism / durable),icon,TBD,karina_icon_feature_###.svg,SVG,48px grid,Karin Keren,NEEDED,Live site uses emoji — replace with real icon set
+KRN-ICON-002,Icon,Segment / audience icons,icon,TBD,karina_icon_segment_###.svg,SVG,48px grid,Karin Keren,NEEDED,8 audiences
+KRN-ICON-003,Icon,UI icons (nav / search / arrows / social),icon,TBD,karina_icon_ui_###.svg,SVG,24px grid,Karin Keren,NEEDED,RTL-safe variants
+KRN-ICON-004,Icon,Spec / stat icons,icon,TBD,karina_icon_spec_###.svg,SVG,32px grid,Karin Keren,NEEDED,Height/weight/buoyancy/etc
