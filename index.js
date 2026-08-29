@@ -1,11 +1,12 @@
 const express = require('express');
 const path    = require('path');
-const fs      = require('fs');
 const crypto  = require('crypto');
 
 const { createStore }   = require('./store');
 const { generateReply, MIA_MODEL, claudeEnabled } = require('./agent');
 const { registerWhatsApp, whatsappConfigured }    = require('./whatsapp');
+const { saveInquiry, listInquiries }              = require('./inquiries');
+const { calendarConfigured }                      = require('./calendar');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -20,19 +21,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 /* ========================
    DATA PERSISTENCE
-   ======================== */
-const INQUIRIES_FILE = path.join(__dirname, 'data', 'inquiries.json');
-function ensureDataDir() {
-  const dir = path.join(__dirname, 'data');
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  if (!fs.existsSync(INQUIRIES_FILE)) fs.writeFileSync(INQUIRIES_FILE, '[]');
-}
-function saveInquiry(inquiry) {
-  ensureDataDir();
-  const list = JSON.parse(fs.readFileSync(INQUIRIES_FILE, 'utf8'));
-  list.unshift({ ...inquiry, id: Date.now(), date: new Date().toISOString() });
-  fs.writeFileSync(INQUIRIES_FILE, JSON.stringify(list, null, 2));
-}
+   ========================
+   Inquiries (website form + Mia's save_inquiry tool) share one store —
+   see inquiries.js. */
 
 /* ========================
    TWILIO SMS
@@ -308,7 +299,7 @@ app.post('/api/contact', (req, res) => {
   const { name, phone, email, topic, message } = req.body;
   if (!name || !phone) return res.status(400).json({ ok: false, error: 'שם וטלפון הם שדות חובה' });
 
-  saveInquiry({ name, phone, email, topic, message });
+  saveInquiry({ name, phone, email, topic, message, source: 'website' });
 
   const topicLabels = {
     pension: 'קרן פנסיה', gemel: 'קופת גמל',
@@ -326,8 +317,7 @@ app.post('/api/contact', (req, res) => {
 });
 
 app.get('/api/inquiries', (req, res) => {
-  ensureDataDir();
-  res.json(JSON.parse(fs.readFileSync(INQUIRIES_FILE, 'utf8')));
+  res.json(listInquiries());
 });
 
 /* ========================
@@ -356,7 +346,7 @@ registerWhatsApp(app, miaStore);
 
 app.get('/health', (req, res) => res.json({
   status: 'ok',
-  mia: { claudeEnabled, model: MIA_MODEL, store: miaStore.kind, whatsapp: whatsappConfigured },
+  mia: { claudeEnabled, model: MIA_MODEL, store: miaStore.kind, whatsapp: whatsappConfigured, calendar: calendarConfigured },
 }));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
