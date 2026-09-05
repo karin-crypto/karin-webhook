@@ -84,6 +84,20 @@ phone number so each contact keeps its own conversation context.
 > During local development, expose your server with a tunnel (e.g. `ngrok http 3000`)
 > and use the HTTPS URL it gives you as the callback URL.
 
+### הודעות קוליות (Voice notes)
+
+Claude has no audio input, so voice notes are transcribed first (`transcribe.js`,
+OpenAI audio transcription) and the Hebrew text is handed to Mia. Set
+`OPENAI_API_KEY` to enable it. The transcription is always requested with
+`language=he` and a domain-vocabulary prompt — both matter: without them Hebrew
+audio comes back as disconnected fragments.
+
+Flow for each voice note: download from the Graph API → transcribe → send the
+customer `🎤 שמעתי: «…»` so they can see exactly what was understood → Mia
+replies. If transcription is disabled, fails, or returns nothing, the customer
+gets a clear Hebrew message asking them to type instead of silence. Every
+transcript and failure is logged with the message ID.
+
 ## הגדרות (Configuration)
 
 | Env var                    | Default            | Description                                                    |
@@ -99,6 +113,10 @@ phone number so each contact keeps its own conversation context.
 | `WHATSAPP_PHONE_NUMBER_ID` | _(none)_           | The sending phone number's ID.                                 |
 | `WHATSAPP_APP_SECRET`      | _(none)_           | Optional — enables `X-Hub-Signature-256` verification.         |
 | `WHATSAPP_API_VERSION`     | `v21.0`            | Graph API version.                                             |
+| `OPENAI_API_KEY`           | _(none)_           | Enables voice-note transcription.                              |
+| `TRANSCRIBE_MODEL`         | `gpt-4o-transcribe`| Transcription model (`whisper-1` also works).                  |
+| `TRANSCRIBE_LANGUAGE`      | `he`               | Language hint for transcription.                               |
+| `TRANSCRIBE_PROMPT`        | _(built-in)_       | Vocabulary hint (names/terms) to steer transcription spelling. |
 
 ## אחסון שיחות (Conversation storage)
 

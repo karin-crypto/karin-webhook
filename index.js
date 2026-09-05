@@ -6,6 +6,7 @@ const crypto  = require('crypto');
 const { createStore }   = require('./store');
 const { generateReply, MIA_MODEL, claudeEnabled } = require('./agent');
 const { registerWhatsApp, whatsappConfigured }    = require('./whatsapp');
+const { transcriptionEnabled, TRANSCRIBE_MODEL }  = require('./transcribe');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -356,7 +357,13 @@ registerWhatsApp(app, miaStore);
 
 app.get('/health', (req, res) => res.json({
   status: 'ok',
-  mia: { claudeEnabled, model: MIA_MODEL, store: miaStore.kind, whatsapp: whatsappConfigured },
+  mia: {
+    claudeEnabled,
+    model: MIA_MODEL,
+    store: miaStore.kind,
+    whatsapp: whatsappConfigured,
+    transcription: transcriptionEnabled,
+  },
 }));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
@@ -376,7 +383,8 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(
     `Mia: Claude ${claudeEnabled ? 'enabled' : 'disabled (rule-based fallback)'} | ` +
     `model: ${MIA_MODEL} | store: ${miaStore.kind} | ` +
-    `whatsapp: ${whatsappConfigured ? 'configured' : 'not configured'}`
+    `whatsapp: ${whatsappConfigured ? 'configured' : 'not configured'} | ` +
+    `voice: ${transcriptionEnabled ? `enabled (${TRANSCRIBE_MODEL})` : 'disabled (OPENAI_API_KEY not set)'}`
   );
 });
 
