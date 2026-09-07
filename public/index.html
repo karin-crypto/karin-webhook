@@ -134,15 +134,30 @@
     .panel.active{display:block}
     .table-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden}
     .table-scroll{overflow-x:auto}
+    /* controls bar */
+    .rt-controls{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
+    .trackfilter{display:inline-flex;background:var(--surface2);border:1px solid var(--line);border-radius:999px;padding:.25rem;gap:.25rem}
+    .trackfilter button{border:0;background:none;font-family:inherit;font-weight:700;font-size:.88rem;color:var(--muted);padding:.4rem 1rem;border-radius:999px;cursor:pointer;transition:var(--trans)}
+    .trackfilter button.active{background:var(--brand);color:#fff;box-shadow:0 3px 10px rgba(14,109,208,.25)}
+    .search-mini{position:relative}
+    .search-mini input{width:230px;max-width:100%;padding:.55rem .9rem;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:.95rem;background:#fff;transition:var(--trans)}
+    .search-mini input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+
     table.rt{width:100%;border-collapse:collapse;min-width:780px}
     table.rt thead th{background:var(--surface2);color:var(--muted);font-weight:700;font-size:.85rem;text-align:right;padding:1rem 1.1rem;border-bottom:1px solid var(--line);white-space:nowrap}
+    table.rt thead th.sortable{cursor:pointer;user-select:none;transition:var(--trans)}
+    table.rt thead th.sortable:hover{color:var(--brand-dark);background:var(--brand-soft)}
+    table.rt thead th .sort-ic{opacity:.5;font-size:.8rem;margin-inline-start:.2rem}
+    table.rt thead th.sorted .sort-ic{opacity:1;color:var(--brand)}
     table.rt tbody td{padding:.95rem 1.1rem;border-bottom:1px solid var(--line);font-size:.97rem}
     table.rt tbody tr:last-child td{border-bottom:0}
     table.rt tbody tr:hover{background:var(--brand-soft)}
+    table.rt tbody tr.hidden{display:none}
+    .no-results{padding:1.6rem 1.1rem;text-align:center;color:var(--muted);font-weight:600}
     .rank-num{width:34px;height:34px;border-radius:9px;background:var(--surface2);color:var(--muted);font-weight:800;display:grid;place-items:center;font-size:.9rem}
-    tr:nth-child(1) .rank-num{background:#fdf0d0;color:#a97b09}
-    tr:nth-child(2) .rank-num{background:#eceff3;color:#5b6c82}
-    tr:nth-child(3) .rank-num{background:#f6e6da;color:#a6642a}
+    .rank-num.m1{background:#fdf0d0;color:#a97b09}
+    .rank-num.m2{background:#eceff3;color:#5b6c82}
+    .rank-num.m3{background:#f6e6da;color:#a6642a}
     .co{display:flex;align-items:center;gap:.65rem;font-weight:700;white-space:nowrap}
     .co .cdot{width:11px;height:11px;border-radius:50%;flex:none}
     .badge{display:inline-block;background:var(--surface2);border:1px solid var(--line);color:var(--muted);font-size:.78rem;font-weight:700;padding:.15rem .6rem;border-radius:7px}
@@ -383,9 +398,17 @@
       <!-- השתלמות -->
       <div class="panel active" id="p-hish">
         <div class="table-card">
+          <div class="rt-controls">
+            <div class="trackfilter">
+              <button class="active" data-track="">כל המסלולים</button>
+              <button data-track="כללי">כללי</button>
+              <button data-track="מניות">מניות</button>
+            </div>
+            <div class="search-mini"><input type="search" placeholder="🔍 חיפוש חברה..." aria-label="חיפוש חברה" /></div>
+          </div>
           <div class="table-scroll">
             <table class="rt tnum">
-              <thead><tr><th>#</th><th>חברה</th><th>מסלול</th><th>תשואה שנה</th><th>תשואה 3 שנים</th><th>תשואה 5 שנים</th><th>מדד שארפ</th><th>שירות</th></tr></thead>
+              <thead><tr><th>#</th><th>חברה</th><th>מסלול</th><th class="sortable" data-col="3">תשואה שנה <span class="sort-ic">⇅</span></th><th class="sortable" data-col="4">תשואה 3 שנים <span class="sort-ic">⇅</span></th><th class="sortable" data-col="5">תשואה 5 שנים <span class="sort-ic">⇅</span></th><th class="sortable" data-col="6">מדד שארפ <span class="sort-ic">⇅</span></th><th>שירות</th></tr></thead>
               <tbody>
                 <tr><td><span class="rank-num">1</span></td><td><span class="co"><span class="cdot" style="background:#b45309"></span>אלטשולר שחם</span></td><td><span class="badge">מניות</span></td><td class="pos">29.2%</td><td class="pos">16.5%</td><td class="pos">15.8%</td><td class="sharpe">1.42</td><td class="stars">★★★★☆</td></tr>
                 <tr><td><span class="rank-num">2</span></td><td><span class="co"><span class="cdot" style="background:#ea580c"></span>הפניקס</span></td><td><span class="badge">מניות</span></td><td class="pos">26.4%</td><td class="pos">15.0%</td><td class="pos">14.3%</td><td class="sharpe">1.31</td><td class="stars">★★★★★</td></tr>
@@ -400,16 +423,24 @@
               </tbody>
             </table>
           </div>
-          <div class="table-foot">* נתוני תשואה, מדד שארפ ודירוג שירות – להמחשה בלבד. מקורות: רשות שוק ההון ומשרד האוצר. אין באמור המלצה או ייעוץ.</div>
+          <div class="table-foot">💡 ניתן למיין לפי כל עמודה ולסנן לפי מסלול או חברה. &nbsp;·&nbsp; נתוני תשואה, מדד שארפ ודירוג שירות מוצגים להמחשה בלבד; מקורות: רשות שוק ההון ומשרד האוצר. תשואות עבר אינן מעידות על תשואות עתיד. האמור אינו ייעוץ, שיווק פנסיוני או המלצה, ואינו תחליף לייעוץ אישי המתחשב בנתוניך.</div>
         </div>
       </div>
 
       <!-- גמל -->
       <div class="panel" id="p-gemel">
         <div class="table-card">
+          <div class="rt-controls">
+            <div class="trackfilter">
+              <button class="active" data-track="">כל המסלולים</button>
+              <button data-track="כללי">כללי</button>
+              <button data-track="מניות">מניות</button>
+            </div>
+            <div class="search-mini"><input type="search" placeholder="🔍 חיפוש חברה..." aria-label="חיפוש חברה" /></div>
+          </div>
           <div class="table-scroll">
             <table class="rt tnum">
-              <thead><tr><th>#</th><th>חברה</th><th>מסלול</th><th>תשואה שנה</th><th>תשואה 3 שנים</th><th>תשואה 5 שנים</th><th>מדד שארפ</th><th>שירות</th></tr></thead>
+              <thead><tr><th>#</th><th>חברה</th><th>מסלול</th><th class="sortable" data-col="3">תשואה שנה <span class="sort-ic">⇅</span></th><th class="sortable" data-col="4">תשואה 3 שנים <span class="sort-ic">⇅</span></th><th class="sortable" data-col="5">תשואה 5 שנים <span class="sort-ic">⇅</span></th><th class="sortable" data-col="6">מדד שארפ <span class="sort-ic">⇅</span></th><th>שירות</th></tr></thead>
               <tbody>
                 <tr><td><span class="rank-num">1</span></td><td><span class="co"><span class="cdot" style="background:#b45309"></span>אלטשולר שחם</span></td><td><span class="badge">מניות</span></td><td class="pos">27.6%</td><td class="pos">15.8%</td><td class="pos">15.1%</td><td class="sharpe">1.38</td><td class="stars">★★★★☆</td></tr>
                 <tr><td><span class="rank-num">2</span></td><td><span class="co"><span class="cdot" style="background:#ea580c"></span>הפניקס</span></td><td><span class="badge">מניות</span></td><td class="pos">25.8%</td><td class="pos">14.5%</td><td class="pos">13.9%</td><td class="sharpe">1.29</td><td class="stars">★★★★★</td></tr>
@@ -424,16 +455,24 @@
               </tbody>
             </table>
           </div>
-          <div class="table-foot">* נתוני תשואה, מדד שארפ ודירוג שירות – להמחשה בלבד. מקורות: רשות שוק ההון ומשרד האוצר. אין באמור המלצה או ייעוץ.</div>
+          <div class="table-foot">💡 ניתן למיין לפי כל עמודה ולסנן לפי מסלול או חברה. &nbsp;·&nbsp; נתוני תשואה, מדד שארפ ודירוג שירות מוצגים להמחשה בלבד; מקורות: רשות שוק ההון ומשרד האוצר. תשואות עבר אינן מעידות על תשואות עתיד. האמור אינו ייעוץ, שיווק פנסיוני או המלצה, ואינו תחליף לייעוץ אישי המתחשב בנתוניך.</div>
         </div>
       </div>
 
       <!-- פנסיה -->
       <div class="panel" id="p-pension">
         <div class="table-card">
+          <div class="rt-controls">
+            <div class="trackfilter">
+              <button class="active" data-track="">כל המסלולים</button>
+              <button data-track="כללי">כללי</button>
+              <button data-track="מניות">מניות</button>
+            </div>
+            <div class="search-mini"><input type="search" placeholder="🔍 חיפוש חברה..." aria-label="חיפוש חברה" /></div>
+          </div>
           <div class="table-scroll">
             <table class="rt tnum">
-              <thead><tr><th>#</th><th>חברה</th><th>מסלול</th><th>תשואה שנה</th><th>תשואה 3 שנים</th><th>תשואה 5 שנים</th><th>מדד שארפ</th><th>שירות</th></tr></thead>
+              <thead><tr><th>#</th><th>חברה</th><th>מסלול</th><th class="sortable" data-col="3">תשואה שנה <span class="sort-ic">⇅</span></th><th class="sortable" data-col="4">תשואה 3 שנים <span class="sort-ic">⇅</span></th><th class="sortable" data-col="5">תשואה 5 שנים <span class="sort-ic">⇅</span></th><th class="sortable" data-col="6">מדד שארפ <span class="sort-ic">⇅</span></th><th>שירות</th></tr></thead>
               <tbody>
                 <tr><td><span class="rank-num">1</span></td><td><span class="co"><span class="cdot" style="background:#6d28d9"></span>אנליסט</span></td><td><span class="badge">מניות</span></td><td class="pos">25.3%</td><td class="pos">14.2%</td><td class="pos">13.6%</td><td class="sharpe">1.27</td><td class="stars">★★★★☆</td></tr>
                 <tr><td><span class="rank-num">2</span></td><td><span class="co"><span class="cdot" style="background:#ea580c"></span>הפניקס</span></td><td><span class="badge">מניות</span></td><td class="pos">23.4%</td><td class="pos">13.1%</td><td class="pos">12.5%</td><td class="sharpe">1.20</td><td class="stars">★★★★★</td></tr>
@@ -448,16 +487,24 @@
               </tbody>
             </table>
           </div>
-          <div class="table-foot">* נתוני תשואה, מדד שארפ ודירוג שירות – להמחשה בלבד. מקורות: רשות שוק ההון ומשרד האוצר. אין באמור המלצה או ייעוץ.</div>
+          <div class="table-foot">💡 ניתן למיין לפי כל עמודה ולסנן לפי מסלול או חברה. &nbsp;·&nbsp; נתוני תשואה, מדד שארפ ודירוג שירות מוצגים להמחשה בלבד; מקורות: רשות שוק ההון ומשרד האוצר. תשואות עבר אינן מעידות על תשואות עתיד. האמור אינו ייעוץ, שיווק פנסיוני או המלצה, ואינו תחליף לייעוץ אישי המתחשב בנתוניך.</div>
         </div>
       </div>
 
       <!-- ביטוח מנהלים -->
       <div class="panel" id="p-bit">
         <div class="table-card">
+          <div class="rt-controls">
+            <div class="trackfilter">
+              <button class="active" data-track="">כל המסלולים</button>
+              <button data-track="כללי">כללי</button>
+              <button data-track="מניות">מניות</button>
+            </div>
+            <div class="search-mini"><input type="search" placeholder="🔍 חיפוש חברה..." aria-label="חיפוש חברה" /></div>
+          </div>
           <div class="table-scroll">
             <table class="rt tnum">
-              <thead><tr><th>#</th><th>חברה</th><th>מסלול</th><th>תשואה שנה</th><th>תשואה 3 שנים</th><th>תשואה 5 שנים</th><th>מדד שארפ</th><th>שירות</th></tr></thead>
+              <thead><tr><th>#</th><th>חברה</th><th>מסלול</th><th class="sortable" data-col="3">תשואה שנה <span class="sort-ic">⇅</span></th><th class="sortable" data-col="4">תשואה 3 שנים <span class="sort-ic">⇅</span></th><th class="sortable" data-col="5">תשואה 5 שנים <span class="sort-ic">⇅</span></th><th class="sortable" data-col="6">מדד שארפ <span class="sort-ic">⇅</span></th><th>שירות</th></tr></thead>
               <tbody>
                 <tr><td><span class="rank-num">1</span></td><td><span class="co"><span class="cdot" style="background:#ea580c"></span>הפניקס</span></td><td><span class="badge">מניות</span></td><td class="pos">23.1%</td><td class="pos">12.9%</td><td class="pos">12.3%</td><td class="sharpe">1.19</td><td class="stars">★★★★★</td></tr>
                 <tr><td><span class="rank-num">2</span></td><td><span class="co"><span class="cdot" style="background:#16a34a"></span>הראל</span></td><td><span class="badge">מניות</span></td><td class="pos">22.5%</td><td class="pos">12.5%</td><td class="pos">11.9%</td><td class="sharpe">1.15</td><td class="stars">★★★★☆</td></tr>
@@ -472,7 +519,7 @@
               </tbody>
             </table>
           </div>
-          <div class="table-foot">* נתוני תשואה, מדד שארפ ודירוג שירות – להמחשה בלבד. מקורות: רשות שוק ההון ומשרד האוצר. אין באמור המלצה או ייעוץ.</div>
+          <div class="table-foot">💡 ניתן למיין לפי כל עמודה ולסנן לפי מסלול או חברה. &nbsp;·&nbsp; נתוני תשואה, מדד שארפ ודירוג שירות מוצגים להמחשה בלבד; מקורות: רשות שוק ההון ומשרד האוצר. תשואות עבר אינן מעידות על תשואות עתיד. האמור אינו ייעוץ, שיווק פנסיוני או המלצה, ואינו תחליף לייעוץ אישי המתחשב בנתוניך.</div>
         </div>
       </div>
     </div>
@@ -619,6 +666,70 @@
       t.classList.add('active');
       document.getElementById(t.dataset.panel).classList.add('active');
     }));
+
+    // ranking tables: filter (track + search), sort, dynamic ranking
+    document.querySelectorAll('.panel').forEach(panel => {
+      const table = panel.querySelector('table.rt');
+      if (!table) return;
+      const tbody = table.querySelector('tbody');
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      const search = panel.querySelector('.search-mini input');
+      const trackBtns = panel.querySelectorAll('.trackfilter button');
+      let track = '', term = '';
+      let sortCol = 3, sortDir = -1; // default: sort by 1-year return, descending
+
+      const num = (row, col) => {
+        const t = row.children[col]?.textContent.replace(/[^0-9.\-]/g, '') || '';
+        const n = parseFloat(t); return isNaN(n) ? -Infinity : n;
+      };
+
+      function apply() {
+        // sort a working copy
+        const ordered = [...rows].sort((a, b) => sortDir * (num(a, sortCol) - num(b, sortCol)));
+        ordered.forEach(r => tbody.appendChild(r));
+        // filter + dynamic rank numbering
+        let rank = 0;
+        ordered.forEach(r => {
+          const trackVal = r.querySelector('.badge')?.textContent.trim() || '';
+          const company = r.querySelector('.co')?.textContent.trim() || '';
+          const show = (!track || trackVal === track) && (!term || company.includes(term));
+          r.classList.toggle('hidden', !show);
+          const rn = r.querySelector('.rank-num');
+          if (show) {
+            rank++;
+            rn.textContent = rank;
+            rn.classList.toggle('m1', rank === 1);
+            rn.classList.toggle('m2', rank === 2);
+            rn.classList.toggle('m3', rank === 3);
+          } else {
+            rn.classList.remove('m1', 'm2', 'm3');
+          }
+        });
+        // no-results note
+        let note = tbody.parentElement.parentElement.querySelector('.no-results');
+        if (rank === 0) {
+          if (!note) { note = document.createElement('div'); note.className = 'no-results'; note.textContent = 'לא נמצאו תוצאות לחיפוש זה.'; tbody.parentElement.parentElement.appendChild(note); }
+        } else if (note) { note.remove(); }
+        // header indicators
+        table.querySelectorAll('th.sortable').forEach(th => {
+          const ic = th.querySelector('.sort-ic');
+          if (+th.dataset.col === sortCol) { th.classList.add('sorted'); ic.textContent = sortDir === -1 ? '▼' : '▲'; }
+          else { th.classList.remove('sorted'); ic.textContent = '⇅'; }
+        });
+      }
+
+      table.querySelectorAll('th.sortable').forEach(th => th.addEventListener('click', () => {
+        const col = +th.dataset.col;
+        if (col === sortCol) sortDir = -sortDir; else { sortCol = col; sortDir = -1; }
+        apply();
+      }));
+      trackBtns.forEach(b => b.addEventListener('click', () => {
+        trackBtns.forEach(x => x.classList.remove('active'));
+        b.classList.add('active'); track = b.dataset.track; apply();
+      }));
+      if (search) search.addEventListener('input', () => { term = search.value.trim(); apply(); });
+      apply();
+    });
 
     // contact -> whatsapp
     const cf = document.getElementById('cform'), fs = document.getElementById('fsuccess');
