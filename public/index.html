@@ -167,6 +167,49 @@
     .stars{color:var(--amber);letter-spacing:1px;white-space:nowrap;font-size:.9rem}
     .table-foot{padding:.9rem 1.1rem;background:var(--surface2);color:var(--muted);font-size:.8rem;border-top:1px solid var(--line)}
 
+    /* ---------- compare & averages ---------- */
+    .sel-cell{text-align:center}
+    .selbtn{width:30px;height:30px;border-radius:8px;border:1.5px solid var(--line);background:#fff;color:var(--brand);font-weight:900;font-size:1.05rem;cursor:pointer;transition:var(--trans);line-height:1;font-family:inherit}
+    .selbtn:hover{border-color:var(--brand);background:var(--brand-soft)}
+    table.rt tbody tr.selected{background:var(--brand-soft)}
+    tr.selected .selbtn{background:var(--brand);color:#fff;border-color:var(--brand);font-size:.9rem}
+    table.rt td.pos.below{color:var(--ink);font-weight:600}
+    table.rt td.sharpe.below{color:var(--muted);font-weight:700}
+    table.rt tfoot td{background:var(--surface2);font-weight:800;color:var(--ink);padding:.85rem 1.1rem;border-top:2px solid var(--line);font-size:.92rem}
+    table.rt tfoot td[data-avg]{color:var(--brand-dark)}
+    .legend{display:flex;gap:1.2rem;flex-wrap:wrap;justify-content:center;margin-top:.9rem;color:var(--muted);font-size:.82rem}
+    .legend span{display:inline-flex;align-items:center;gap:.35rem}
+    .legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+    .cbar{position:fixed;left:50%;bottom:-160px;transform:translateX(-50%);z-index:300;background:var(--ink);color:#fff;border-radius:16px;padding:.8rem 1rem;display:flex;align-items:center;gap:.8rem;box-shadow:var(--shadow-lg);transition:bottom .3s ease;max-width:min(96vw,900px);flex-wrap:wrap;justify-content:center}
+    .cbar.show{bottom:22px}
+    .cbar.shake{animation:shake .4s}
+    @keyframes shake{0%,100%{transform:translateX(-50%)}25%{transform:translateX(calc(-50% - 6px))}75%{transform:translateX(calc(-50% + 6px))}}
+    .cbar .cb-title{font-weight:800;font-size:.9rem;white-space:nowrap}
+    .cbar .cb-title b{color:var(--teal)}
+    .cchips{display:flex;gap:.5rem;flex-wrap:wrap}
+    .cchip{display:inline-flex;align-items:center;gap:.4rem;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:.3rem .5rem .3rem .8rem;font-size:.85rem;font-weight:600}
+    .cchip i{width:9px;height:9px;border-radius:50%;display:inline-block}
+    .cchip button{border:0;background:rgba(255,255,255,.15);color:#fff;width:20px;height:20px;border-radius:50%;cursor:pointer;font-weight:900;line-height:1;font-family:inherit}
+    .cbar .btn{padding:.55rem 1.1rem;font-size:.92rem}
+    .cbar .btn-primary:disabled{opacity:.45;cursor:not-allowed;transform:none}
+    .cbar .btn-ghost{background:transparent;color:#cfd8e6;border-color:rgba(255,255,255,.25)}
+    .cmodal{position:fixed;inset:0;z-index:400;background:rgba(13,33,53,.55);display:none;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(3px)}
+    .cmodal.show{display:flex}
+    .cmodal-box{background:#fff;border-radius:var(--radius-lg);max-width:960px;width:100%;max-height:90vh;overflow:auto;box-shadow:var(--shadow-lg)}
+    .cmodal-head{display:flex;justify-content:space-between;align-items:center;padding:1.2rem 1.5rem;border-bottom:1px solid var(--line)}
+    .cmodal-head h3{font-size:1.25rem;font-weight:900}
+    .cmodal-close{border:0;background:var(--surface2);width:36px;height:36px;border-radius:10px;cursor:pointer;font-size:1.2rem;font-weight:900;color:var(--muted);font-family:inherit}
+    .cgrid{padding:1.2rem 1.5rem 1.5rem;display:grid;gap:.5rem}
+    .cg-head,.cg-row{display:grid;grid-template-columns:150px repeat(var(--n,2),1fr);gap:.5rem;align-items:center}
+    .cg-fund{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:.8rem;display:flex;flex-direction:column;align-items:center;gap:.35rem;text-align:center}
+    .cg-fund .cdot{width:12px;height:12px;border-radius:50%}
+    .cg-label{font-weight:700;color:var(--muted);font-size:.9rem}
+    .cg-val{background:#fff;border:1px solid var(--line);border-radius:10px;padding:.7rem;text-align:center;font-weight:800;font-variant-numeric:tabular-nums}
+    .cg-val.best{background:#e7f7ee;border-color:#b6e6c9;color:var(--green);position:relative}
+    .cg-val.best::after{content:'🏆';position:absolute;top:-8px;right:-6px;font-size:.85rem}
+    .cmodal-foot{padding:0 1.5rem 1.4rem;color:var(--muted);font-size:.82rem}
+    @media(max-width:640px){.cg-head,.cg-row{grid-template-columns:90px repeat(var(--n,2),1fr)}.cbar.show{bottom:88px}}
+
     /* ---------- guides ---------- */
     .guides-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem}
     .guide{background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm);transition:var(--trans)}
@@ -385,7 +428,7 @@
       <div class="sec-head">
         <span class="sec-tag">דירוג תשואות</span>
         <h2>המסלולים המובילים לפי תשואה</h2>
-        <p>השוואת תשואות לפי שנה, 3 שנים ו-5 שנים – בין חברות הביטוח ובתי ההשקעות ובין מסלולי ההשקעה. כולל מדד שארפ (תשואה מול סיכון) ודירוג שירות של משרד האוצר. מדורג מהגבוה לנמוך.</p>
+        <p>השוואת תשואות לפי שנה, 3 שנים ו-5 שנים – בין חברות הביטוח ובתי ההשקעות ובין מסלולי ההשקעה. כולל מדד שארפ (תשואה מול סיכון) ודירוג שירות של משרד האוצר. מדורג מהגבוה לנמוך. לחצי <b>+</b> כדי לבחור עד 3 מסלולים ולהשוות אותם זה לצד זה.</p>
       </div>
 
       <div class="tabs">
@@ -653,6 +696,22 @@
     <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
   </a>
 
+  <!-- COMPARE BAR -->
+  <div class="cbar" id="cbar" role="region" aria-label="סרגל השוואה">
+    <span class="cb-title">נבחרו להשוואה <b id="cbar-count">0</b>/3</span>
+    <div class="cchips" id="cbar-chips"></div>
+    <button class="btn btn-primary" id="cbar-go" disabled>השווה עכשיו ←</button>
+    <button class="btn btn-ghost" id="cbar-clear">נקה</button>
+  </div>
+  <!-- COMPARE MODAL -->
+  <div class="cmodal" id="cmodal" role="dialog" aria-modal="true" aria-label="השוואת מסלולים">
+    <div class="cmodal-box">
+      <div class="cmodal-head"><h3>השוואה זו לצד זו</h3><button class="cmodal-close" data-close aria-label="סגירה">×</button></div>
+      <div class="cgrid" id="cgrid"></div>
+      <div class="cmodal-foot">🏆 מסמן את הערך הטוב ביותר בכל שורה. נתוני המחשה בלבד; תשואות עבר אינן מעידות על תשואות עתיד. האמור אינו ייעוץ או שיווק פנסיוני.</div>
+    </div>
+  </div>
+
   <script>
     // mobile menu
     const mob = document.getElementById('mobile');
@@ -667,67 +726,130 @@
       document.getElementById(t.dataset.panel).classList.add('active');
     }));
 
-    // ranking tables: filter (track + search), sort, dynamic ranking
+    // ranking tables: filter, sort, dynamic ranking, category averages, side-by-side compare
+    const COMPARE_MAX = 3;
+    const compareSel = new Map();
+    const cbar = document.getElementById('cbar'), cbarChips = document.getElementById('cbar-chips');
+    const cmodal = document.getElementById('cmodal'), cgrid = document.getElementById('cgrid');
+
+    const rowData = r => ({
+      company: r.querySelector('.co')?.textContent.trim() || '',
+      color: r.querySelector('.cdot')?.style.background || '#999',
+      track: r.querySelector('.badge')?.textContent.trim() || '',
+      y1: r.children[3].textContent.trim(), y3: r.children[4].textContent.trim(), y5: r.children[5].textContent.trim(),
+      sharpe: r.children[6].textContent.trim(), stars: r.children[7].textContent.trim()
+    });
+    function setRowSelected(key, on) {
+      document.querySelectorAll('tr[data-key="' + key + '"]').forEach(r => {
+        r.classList.toggle('selected', on);
+        const b = r.querySelector('.selbtn'); if (b) b.textContent = on ? '✓' : '+';
+      });
+    }
+    function renderCbar() {
+      cbarChips.innerHTML = '';
+      compareSel.forEach((d, key) => {
+        const c = document.createElement('span'); c.className = 'cchip';
+        c.innerHTML = '<i style="background:' + d.color + '"></i>' + d.company + ' · ' + d.track + ' <button aria-label="הסרה" data-key="' + key + '">×</button>';
+        cbarChips.appendChild(c);
+      });
+      cbar.classList.toggle('show', compareSel.size > 0);
+      document.getElementById('cbar-go').disabled = compareSel.size < 2;
+      document.getElementById('cbar-count').textContent = compareSel.size;
+    }
+    cbarChips.addEventListener('click', e => {
+      const b = e.target.closest('button[data-key]'); if (!b) return;
+      compareSel.delete(b.dataset.key); setRowSelected(b.dataset.key, false); renderCbar();
+    });
+    document.getElementById('cbar-clear').addEventListener('click', () => {
+      [...compareSel.keys()].forEach(k => setRowSelected(k, false)); compareSel.clear(); renderCbar();
+    });
+    document.getElementById('cbar-go').addEventListener('click', () => {
+      const items = [...compareSel.values()];
+      const rowsDef = [['תשואה שנה', 'y1'], ['תשואה 3 שנים', 'y3'], ['תשואה 5 שנים', 'y5'], ['מדד שארפ', 'sharpe'], ['דירוג שירות', 'stars']];
+      let html = '<div class="cg-head"><div class="cg-label"></div>' + items.map(d =>
+        '<div class="cg-fund"><span class="cdot" style="background:' + d.color + '"></span><b>' + d.company + '</b><span class="badge">' + d.track + '</span></div>').join('') + '</div>';
+      rowsDef.forEach(([label, k]) => {
+        const nums = items.map(d => parseFloat(d[k])).filter(n => !isNaN(n));
+        const best = nums.length ? Math.max(...nums) : NaN;
+        html += '<div class="cg-row"><div class="cg-label">' + label + '</div>' + items.map(d => {
+          const n = parseFloat(d[k]); const isBest = k !== 'stars' && !isNaN(n) && n === best && nums.length > 1;
+          return '<div class="cg-val' + (isBest ? ' best' : '') + '">' + d[k] + '</div>';
+        }).join('') + '</div>';
+      });
+      cgrid.innerHTML = html; cgrid.style.setProperty('--n', items.length);
+      cmodal.classList.add('show'); document.body.style.overflow = 'hidden';
+    });
+    function closeModal() { cmodal.classList.remove('show'); document.body.style.overflow = ''; }
+    cmodal.addEventListener('click', e => { if (e.target === cmodal || e.target.closest('[data-close]')) closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
     document.querySelectorAll('.panel').forEach(panel => {
-      const table = panel.querySelector('table.rt');
-      if (!table) return;
+      const table = panel.querySelector('table.rt'); if (!table) return;
       const tbody = table.querySelector('tbody');
       const rows = Array.from(tbody.querySelectorAll('tr'));
       const search = panel.querySelector('.search-mini input');
       const trackBtns = panel.querySelectorAll('.trackfilter button');
-      let track = '', term = '';
-      let sortCol = 3, sortDir = -1; // default: sort by 1-year return, descending
+      let track = '', term = '', sortCol = 3, sortDir = -1;
 
-      const num = (row, col) => {
-        const t = row.children[col]?.textContent.replace(/[^0-9.\-]/g, '') || '';
-        const n = parseFloat(t); return isNaN(n) ? -Infinity : n;
-      };
+      // compare column (appended so sort indices stay stable)
+      const th = document.createElement('th'); th.textContent = 'השווה'; table.querySelector('thead tr').appendChild(th);
+      rows.forEach((r, i) => {
+        r.dataset.key = panel.id + '-' + i;
+        const td = document.createElement('td'); td.className = 'sel-cell';
+        td.innerHTML = '<button class="selbtn" type="button" aria-label="הוספה להשוואה">+</button>'; r.appendChild(td);
+      });
+      // category average row
+      const tfoot = document.createElement('tfoot');
+      tfoot.innerHTML = '<tr class="avg-row"><td></td><td colspan="2">ממוצע המסלולים המוצגים</td><td data-avg="3"></td><td data-avg="4"></td><td data-avg="5"></td><td data-avg="6"></td><td></td><td></td></tr>';
+      table.appendChild(tfoot);
+
+      const num = (row, col) => { const t = row.children[col]?.textContent.replace(/[^0-9.\-]/g, '') || ''; const n = parseFloat(t); return isNaN(n) ? -Infinity : n; };
 
       function apply() {
-        // sort a working copy
         const ordered = [...rows].sort((a, b) => sortDir * (num(a, sortCol) - num(b, sortCol)));
         ordered.forEach(r => tbody.appendChild(r));
-        // filter + dynamic rank numbering
-        let rank = 0;
+        let rank = 0; const vis = [];
         ordered.forEach(r => {
           const trackVal = r.querySelector('.badge')?.textContent.trim() || '';
           const company = r.querySelector('.co')?.textContent.trim() || '';
           const show = (!track || trackVal === track) && (!term || company.includes(term));
           r.classList.toggle('hidden', !show);
           const rn = r.querySelector('.rank-num');
-          if (show) {
-            rank++;
-            rn.textContent = rank;
-            rn.classList.toggle('m1', rank === 1);
-            rn.classList.toggle('m2', rank === 2);
-            rn.classList.toggle('m3', rank === 3);
-          } else {
-            rn.classList.remove('m1', 'm2', 'm3');
-          }
+          if (show) { rank++; vis.push(r); rn.textContent = rank; rn.classList.toggle('m1', rank === 1); rn.classList.toggle('m2', rank === 2); rn.classList.toggle('m3', rank === 3); }
+          else rn.classList.remove('m1', 'm2', 'm3');
         });
-        // no-results note
-        let note = tbody.parentElement.parentElement.querySelector('.no-results');
-        if (rank === 0) {
-          if (!note) { note = document.createElement('div'); note.className = 'no-results'; note.textContent = 'לא נמצאו תוצאות לחיפוש זה.'; tbody.parentElement.parentElement.appendChild(note); }
-        } else if (note) { note.remove(); }
-        // header indicators
+        // averages + above/below shading
+        [3, 4, 5, 6].forEach(c => {
+          const vals = vis.map(r => num(r, c)).filter(n => isFinite(n));
+          const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : NaN;
+          tfoot.querySelector('[data-avg="' + c + '"]').textContent = isNaN(avg) ? '–' : (c === 6 ? avg.toFixed(2) : avg.toFixed(1) + '%');
+          vis.forEach(r => r.children[c].classList.toggle('below', isFinite(avg) && num(r, c) < avg));
+        });
+        tfoot.style.display = vis.length ? '' : 'none';
+        let note = table.parentElement.querySelector('.no-results');
+        if (rank === 0) { if (!note) { note = document.createElement('div'); note.className = 'no-results'; note.textContent = 'לא נמצאו תוצאות לחיפוש זה.'; table.parentElement.appendChild(note); } }
+        else if (note) note.remove();
         table.querySelectorAll('th.sortable').forEach(th => {
           const ic = th.querySelector('.sort-ic');
           if (+th.dataset.col === sortCol) { th.classList.add('sorted'); ic.textContent = sortDir === -1 ? '▼' : '▲'; }
           else { th.classList.remove('sorted'); ic.textContent = '⇅'; }
         });
       }
-
       table.querySelectorAll('th.sortable').forEach(th => th.addEventListener('click', () => {
-        const col = +th.dataset.col;
-        if (col === sortCol) sortDir = -sortDir; else { sortCol = col; sortDir = -1; }
-        apply();
+        const col = +th.dataset.col; if (col === sortCol) sortDir = -sortDir; else { sortCol = col; sortDir = -1; } apply();
       }));
-      trackBtns.forEach(b => b.addEventListener('click', () => {
-        trackBtns.forEach(x => x.classList.remove('active'));
-        b.classList.add('active'); track = b.dataset.track; apply();
-      }));
+      trackBtns.forEach(b => b.addEventListener('click', () => { trackBtns.forEach(x => x.classList.remove('active')); b.classList.add('active'); track = b.dataset.track; apply(); }));
       if (search) search.addEventListener('input', () => { term = search.value.trim(); apply(); });
+      tbody.addEventListener('click', e => {
+        const btn = e.target.closest('.selbtn'); if (!btn) return;
+        const r = btn.closest('tr'), key = r.dataset.key;
+        if (compareSel.has(key)) { compareSel.delete(key); setRowSelected(key, false); }
+        else {
+          if (compareSel.size >= COMPARE_MAX) { cbar.classList.add('shake'); setTimeout(() => cbar.classList.remove('shake'), 400); return; }
+          compareSel.set(key, rowData(r)); setRowSelected(key, true);
+        }
+        renderCbar();
+      });
       apply();
     });
 
