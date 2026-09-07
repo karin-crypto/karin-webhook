@@ -8,15 +8,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/hishtalmut.css" />
+  <link rel="stylesheet" href="css/hishtalmut-portal.css" />
 </head>
 <body>
 
   <!-- NAVBAR -->
   <header class="navbar" id="navbar">
     <div class="container nav-inner">
-      <a href="index.html" class="logo">קרן קרן <span>|</span> פיננסים</a>
+      <a href="index.html" class="brand"><span class="mark">קק</span><span>קרן קרן<small>פורטל פיננסי</small></span></a>
       <nav class="nav-links">
         <a href="#what">מה זה</a>
         <a href="#benefits">יתרונות</a>
@@ -91,7 +90,7 @@
   <section class="section" id="what">
     <div class="container intro-grid">
       <div class="intro-prose">
-        <span class="section-tag" style="color:var(--gold);font-weight:800;">מה זה בעצם?</span>
+        <span class="section-tag">מה זה בעצם?</span>
         <h2>מה זו קרן השתלמות?</h2>
         <p>קרן השתלמות היא <strong>מכשיר חיסכון לטווח בינוני</strong> (6 שנים) הנהנה מהטבות מס ייחודיות. במקור נועדה למימון השתלמויות ולימודים, אך כיום היא משמשת בעיקר כאפיק חיסכון והשקעה משתלם במיוחד – בזכות היותה האפיק היחיד שנותר <strong>פטור ממס רווחי הון</strong> (עד לתקרת ההפקדה הקבועה בחוק).</p>
         <p>הכסף מנוהל במסלולי השקעה מגוונים (כללי, מנייתי, אג"ח ועוד) בחברות הביטוח ובבתי ההשקעות, ואת/ה בוחר/ת את רמת הסיכון והתשואה שמתאימה לך. אחרי 6 שנים הכסף הופך <strong>נזיל לחלוטין</strong> וניתן למשיכה – ללא מס.</p>
@@ -230,130 +229,28 @@
       <div class="section-header">
         <span class="section-tag">השוואת מסלולים</span>
         <h2>תשואות קרנות ההשתלמות המובילות</h2>
-        <p>נתוני תשואה עדכניים לפי חברה ומסלול. סנני, חפשי ומיני כדי למצוא את הקרן המתאימה לך.</p>
+        <p>השוואת תשואות לשנה, 3 שנים ו-5 שנים בין חברות הביטוח ובתי ההשקעות ובין מסלולי ההשקעה. לחצי על כותרת עמודה למיון.</p>
+        <p class="data-meta"></p>
       </div>
-
       <div class="tab-panel active">
         <div class="table-controls">
-          <select class="filter-select filter-company">
-            <option value="">כל החברות</option>
-            <option value="מנורה">מנורה מבטחים</option>
-            <option value="מגדל">מגדל</option>
-            <option value="הפניקס">הפניקס</option>
-            <option value="הראל">הראל</option>
-            <option value="מיטב">מיטב</option>
-            <option value="אלטשולר">אלטשולר שחם</option>
-          </select>
-          <input type="text" class="search-input" placeholder="🔍 חיפוש מסלול..." />
+          <select class="filter-select filter-company"><option value="">כל החברות</option></select>
+          <input type="text" class="search-input" placeholder="🔍 חיפוש חברה או מסלול..." />
         </div>
         <div class="table-wrap">
-          <table class="fin-table">
-            <thead>
-              <tr>
-                <th>חברה</th>
-                <th>שם הקרן / מסלול</th>
-                <th>סוג מסלול</th>
-                <th class="sortable">תשואה שנה <span class="sort-icon">⇅</span></th>
-                <th class="sortable">תשואה 3 שנים <span class="sort-icon">⇅</span></th>
-                <th class="sortable">תשואה 5 שנים <span class="sort-icon">⇅</span></th>
-                <th>דמי ניהול</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><div class="company-logo-cell"><div class="company-dot" style="background:#1e40af"></div>מנורה מבטחים</div></td>
-                <td>השתלמות מנורה</td>
-                <td><span class="track-badge">כללי</span></td>
-                <td class="yield-pos">15.0%</td>
-                <td class="yield-pos">9.3%</td>
-                <td class="yield-pos">9.7%</td>
-                <td class="fee-cell">0.5%</td>
-              </tr>
-              <tr>
-                <td><div class="company-logo-cell"><div class="company-dot" style="background:#1e40af"></div>מנורה מבטחים</div></td>
-                <td>השתלמות מנורה</td>
-                <td><span class="track-badge">מניות</span></td>
-                <td class="yield-pos">24.7%</td>
-                <td class="yield-pos">14.0%</td>
-                <td class="yield-pos">13.4%</td>
-                <td class="fee-cell">0.5%</td>
-              </tr>
-              <tr>
-                <td><div class="company-logo-cell"><div class="company-dot" style="background:#b45309"></div>אלטשולר שחם</div></td>
-                <td>השתלמות אלטשולר</td>
-                <td><span class="track-badge">כללי</span></td>
-                <td class="yield-pos">18.1%</td>
-                <td class="yield-pos">11.4%</td>
-                <td class="yield-pos">11.9%</td>
-                <td class="fee-cell">0.6%</td>
-              </tr>
-              <tr>
-                <td><div class="company-logo-cell"><div class="company-dot" style="background:#b45309"></div>אלטשולר שחם</div></td>
-                <td>השתלמות אלטשולר</td>
-                <td><span class="track-badge">מניות</span></td>
-                <td class="yield-pos">29.2%</td>
-                <td class="yield-pos">16.5%</td>
-                <td class="yield-pos">15.8%</td>
-                <td class="fee-cell">0.6%</td>
-              </tr>
-              <tr>
-                <td><div class="company-logo-cell"><div class="company-dot" style="background:#ea580c"></div>הפניקס</div></td>
-                <td>השתלמות הפניקס</td>
-                <td><span class="track-badge">כללי</span></td>
-                <td class="yield-pos">15.8%</td>
-                <td class="yield-pos">10.0%</td>
-                <td class="yield-pos">10.4%</td>
-                <td class="fee-cell">0.5%</td>
-              </tr>
-              <tr>
-                <td><div class="company-logo-cell"><div class="company-dot" style="background:#ea580c"></div>הפניקס</div></td>
-                <td>השתלמות הפניקס</td>
-                <td><span class="track-badge">מניות</span></td>
-                <td class="yield-pos">26.4%</td>
-                <td class="yield-pos">15.0%</td>
-                <td class="yield-pos">14.3%</td>
-                <td class="fee-cell">0.5%</td>
-              </tr>
-              <tr>
-                <td><div class="company-logo-cell"><div class="company-dot" style="background:#16a34a"></div>הראל</div></td>
-                <td>השתלמות הראל</td>
-                <td><span class="track-badge">כללי</span></td>
-                <td class="yield-pos">15.3%</td>
-                <td class="yield-pos">9.6%</td>
-                <td class="yield-pos">10.1%</td>
-                <td class="fee-cell">0.5%</td>
-              </tr>
-              <tr>
-                <td><div class="company-logo-cell"><div class="company-dot" style="background:#16a34a"></div>הראל</div></td>
-                <td>השתלמות הראל</td>
-                <td><span class="track-badge">מניות</span></td>
-                <td class="yield-pos">25.5%</td>
-                <td class="yield-pos">14.4%</td>
-                <td class="yield-pos">13.8%</td>
-                <td class="fee-cell">0.5%</td>
-              </tr>
-              <tr>
-                <td><div class="company-logo-cell"><div class="company-dot" style="background:#dc2626"></div>מגדל</div></td>
-                <td>השתלמות מגדל</td>
-                <td><span class="track-badge">כללי</span></td>
-                <td class="yield-pos">14.5%</td>
-                <td class="yield-pos">8.8%</td>
-                <td class="yield-pos">9.2%</td>
-                <td class="fee-cell">0.5%</td>
-              </tr>
-              <tr>
-                <td><div class="company-logo-cell"><div class="company-dot" style="background:#d97706"></div>מיטב</div></td>
-                <td>השתלמות מיטב</td>
-                <td><span class="track-badge">כללי</span></td>
-                <td class="yield-pos">13.9%</td>
-                <td class="yield-pos">8.3%</td>
-                <td class="yield-pos">8.7%</td>
-                <td class="fee-cell">0.55%</td>
-              </tr>
-            </tbody>
+          <table class="fin-table" data-cat="hishtalmut">
+            <thead><tr>
+              <th>חברה</th><th>מסלול</th>
+              <th class="sortable">תשואה שנה <span class="sort-icon">⇅</span></th>
+              <th class="sortable">תשואה 3 שנים <span class="sort-icon">⇅</span></th>
+              <th class="sortable">תשואה 5 שנים <span class="sort-icon">⇅</span></th>
+              <th class="sortable">מדד שארפ <span class="sort-icon">⇅</span></th>
+              <th>שירות</th>
+            </tr></thead>
+            <tbody></tbody>
           </table>
         </div>
-        <p class="table-note">* נתוני תשואה נומינליים להמחשה בלבד, לפני ניכוי דמי ניהול. מקור: רשות שוק ההון. אין באמור ייעוץ או המלצה.</p>
+        <p class="table-note">* תשואות נומינליות ברוטו. תשואות עבר אינן מעידות על תשואות עתיד. מדד שארפ = תשואה מול סיכון; דירוג שירות לפי משרד האוצר. האמור אינו ייעוץ, שיווק פנסיוני או המלצה.</p>
       </div>
     </div>
   </section>
@@ -513,7 +410,7 @@
     <div class="container">
       <div class="footer-grid">
         <div class="footer-brand">
-          <a href="index.html" class="logo">קרן קרן <span>|</span> פיננסים</a>
+          <a href="index.html" class="brand"><span class="mark">קק</span><span>קרן קרן<small>פורטל פיננסי</small></span></a>
           <p>סוכנת פיננסית מורשית – ייעוץ מקצועי, אישי ואמין. עם ניסיון של 15+ שנה בשוק ההון ובענף הביטוח.</p>
         </div>
         <div class="footer-col">
@@ -549,6 +446,7 @@
     <span class="whatsapp-tooltip">שלחי הודעה בוואטסאפ</span>
   </a>
 
+  <script src="js/returns.js"></script>
   <script>
   /* ---- navbar scroll ---- */
   const navbar = document.getElementById('navbar');
@@ -559,47 +457,6 @@
   const mobileMenu = document.getElementById('mobileMenu');
   hamburger.addEventListener('click', () => mobileMenu.classList.toggle('open'));
   function closeMobile() { mobileMenu.classList.remove('open'); }
-
-  /* ---- table filter ---- */
-  document.querySelectorAll('.table-wrap').forEach(wrap => {
-    const panel = wrap.closest('.tab-panel');
-    if (!panel) return;
-    const tbody = wrap.querySelector('.fin-table tbody');
-    const companyFilter = panel.querySelector('.filter-company');
-    const searchInput = panel.querySelector('.search-input');
-    function filterTable() {
-      const company = companyFilter ? companyFilter.value.toLowerCase() : '';
-      const search = searchInput ? searchInput.value.toLowerCase() : '';
-      tbody.querySelectorAll('tr').forEach(row => {
-        const text = row.textContent.toLowerCase();
-        const companyCell = row.querySelector('td:first-child')?.textContent.toLowerCase() || '';
-        row.style.display = (!company || companyCell.includes(company)) && (!search || text.includes(search)) ? '' : 'none';
-      });
-    }
-    if (companyFilter) companyFilter.addEventListener('change', filterTable);
-    if (searchInput) searchInput.addEventListener('input', filterTable);
-  });
-
-  /* ---- table sort ---- */
-  document.querySelectorAll('.fin-table').forEach(table => {
-    let sortCol = null, sortAsc = true;
-    table.querySelectorAll('th.sortable').forEach((th, idx) => {
-      th.addEventListener('click', () => {
-        const tbody = table.querySelector('tbody');
-        const rows = Array.from(tbody.querySelectorAll('tr'));
-        const colIdx = Array.from(th.parentNode.children).indexOf(th);
-        if (sortCol === colIdx) sortAsc = !sortAsc; else { sortCol = colIdx; sortAsc = true; }
-        table.querySelectorAll('th.sortable .sort-icon').forEach(i => i.textContent = '⇅');
-        const icon = th.querySelector('.sort-icon'); if (icon) icon.textContent = sortAsc ? '↑' : '↓';
-        rows.sort((a, b) => {
-          const aNum = parseFloat((a.children[colIdx]?.textContent || '').replace(/[^0-9.\-]/g, ''));
-          const bNum = parseFloat((b.children[colIdx]?.textContent || '').replace(/[^0-9.\-]/g, ''));
-          return sortAsc ? aNum - bNum : bNum - aNum;
-        });
-        rows.forEach(r => tbody.appendChild(r));
-      });
-    });
-  });
 
   /* ---- calculator ---- */
   const fmt = n => '₪' + Math.round(n).toLocaleString('he-IL');
