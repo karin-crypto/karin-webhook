@@ -56,7 +56,7 @@ export default function Funds() {
       <button onClick={() => setShowFilters(s => !s)} className="btn-ghost mb-4 w-full lg:hidden">{showFilters ? 'הסתרת סינון' : 'סינון מתקדם'}</button>
       <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
         <div className={showFilters ? '' : 'hidden lg:block'}><Filters filters={filters} onChange={setFilters} companies={companies} tracks={tracks} resultCount={filtered.length} /></div>
-        <div>{funds ? <FundTable funds={filtered} /> : <div className="card p-10 text-center text-muted">טוען נתונים…</div>}</div>
+        <div className="min-w-0">{funds ? <FundTable funds={filtered} /> : <div className="card p-10 text-center text-muted">טוען נתונים…</div>}</div>
       </div>
       <p className="mt-4 text-xs leading-relaxed text-muted">* תשואות נומינליות ברוטו לפני דמי ניהול. תשואה ל-3 ול-5 שנים מוצגת כממוצע שנתי. תשואות עבר אינן מעידות על תשואות עתיד. האמור אינו ייעוץ או שיווק פנסיוני.</p>
     </section>
