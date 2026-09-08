@@ -6,6 +6,7 @@ export default function LeadForm({ defaultProduct = '', context = '', compact = 
   const [form, setForm] = useState({ name: '', phone: '', email: '', product: defaultProduct, notes: context ? `מתעניין/ת ב: ${context}` : '' });
   const [errors, setErrors] = useState({});
   const [state, setState] = useState('idle'); // idle | sending | done
+  const [waUrl, setWaUrl] = useState(null);
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
 
   const validate = () => {
@@ -19,8 +20,8 @@ export default function LeadForm({ defaultProduct = '', context = '', compact = 
   const submit = async e => {
     e.preventDefault(); if (!validate()) return;
     setState('sending');
-    await submitLead({ ...form, source: 'compare-site', context, ts: new Date().toISOString() });
-    setState('done'); onDone?.();
+    const res = await submitLead({ ...form, context, source: 'compare-site' });
+    setWaUrl(res?.waUrl || null); setState('done'); onDone?.();
   };
 
   if (state === 'done') return (
@@ -28,6 +29,7 @@ export default function LeadForm({ defaultProduct = '', context = '', compact = 
       <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-pos-bg text-pos"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg></div>
       <h3 className="text-xl font-black text-navy">תודה, {form.name.trim().split(' ')[0]}! הפנייה התקבלה.</h3>
       <p className="mt-2 text-sm leading-relaxed text-muted">אבחן את הנתונים שלך ואחזור אליך תוך יום עסקים אחד עם המלצה ראשונית – איפה כדאי להשקיע ומה שווה לבדוק. הבדיקה ללא עלות וללא התחייבות.</p>
+      {waUrl && <a href={waUrl} target="_blank" rel="noopener" className="btn-primary mt-5 !bg-[#25D366] hover:!bg-[#1ebe5b]">להמשיך בוואטסאפ עכשיו ←</a>}
       <p className="mt-4 text-xs text-muted">נשלח לטלפון <b dir="ltr">{form.phone}</b>{form.email && <> ולמייל <b dir="ltr">{form.email}</b></>}</p>
     </div>
   );

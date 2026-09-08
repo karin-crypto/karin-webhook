@@ -16,6 +16,8 @@ export default function Footer() {
             <li><Link className="hover:text-white" to="/compare">כלי השוואה</Link></li>
             <li><Link className="hover:text-white" to="/articles">מאמרים</Link></li>
             <li><Link className="hover:text-white" to="/contact">צור קשר</Link></li>
+            <li><a className="hover:text-white" href="tel:+972502423356" dir="ltr">050-242-3356</a></li>
+            <li><a className="hover:text-white" href="mailto:karin@karinkeren.com">karin@karinkeren.com</a></li>
           </ul>
         </div>
         <div>

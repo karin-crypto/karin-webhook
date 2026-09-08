@@ -30,16 +30,16 @@ npm run preview    # תצוגה מקדימה של הבנייה ב-http://localho
 `dist/` היא תיקייה סטטית שאפשר להעלות לכל אחסון סטטי (Vercel, Netlify, Railway, S3, nginx…).
 מכיוון שזה SPA עם React Router, **צריך fallback ל-`index.html`** בשרת (ראו למטה).
 
-### שילוב בשרת ה-Express הקיים (karin-webhook)
+### פריסה (Railway) – אוטומטית
 
-ב-`index.js` של השרת הראשי, אחרי `express.static(public)`:
+האפליקציה **היא האתר הראשי** של `karin-webhook`:
 
-```js
-// Serve the comparison app (built with `npm run build` inside compare-app/)
-const compareDist = path.join(__dirname, 'compare-app', 'dist');
-app.use(express.static(compareDist));
-app.get(/^\/(funds|compare|articles|contact)(\/.*)?$/, (req, res) => res.sendFile(path.join(compareDist, 'index.html')));
-```
+- `index.js` (השרת) מגיש את `compare-app/dist` בשורש (`/`) עם fallback ל-`index.html` לנתיבי ה-SPA
+  (`/funds`, `/compare`, `/articles`, `/contact`), ולצידו ממשיך להגיש את פורטל הלקוחות, Mia והכלים מ-`public/`.
+- `package.json` בשורש מגדיר `npm run build` שמתקין ובונה את `compare-app`; Railway (Nixpacks) מריץ אותו אוטומטית בכל deploy.
+- טופס הליד שולח ל-`POST /api/contact` הקיים (שמירת הפנייה + לינק וואטסאפ).
+
+להרצה מקומית של האתר המלא: `npm install && npm run build && npm start` בשורש הריפו → http://localhost:3000
 
 אם האתר יוצב תחת תת-נתיב (למשל `/app/`), שנו `base: '/app/'` ב-`vite.config.js` והתאימו את הנתיבים.
 

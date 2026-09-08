@@ -16,6 +16,14 @@ const miaStore = createStore();
 // rawBody is needed by the WhatsApp channel to verify X-Hub-Signature-256.
 app.use(express.json({ verify: (req, _res, buf) => { req.rawBody = buf; } }));
 app.use(express.urlencoded({ extended: true }));
+// ---- Main website: React comparison app (compare-app/dist, built by `npm run build`) ----
+const COMPARE_DIST = path.join(__dirname, 'compare-app', 'dist');
+const COMPARE_INDEX = path.join(COMPARE_DIST, 'index.html');
+const hasCompareApp = fs.existsSync(COMPARE_INDEX);
+if (hasCompareApp) app.use(express.static(COMPARE_DIST, { index: 'index.html' }));
+else console.warn('⚠  compare-app/dist not found – run "npm run build" to build the website');
+
+// Legacy static assets (client portal, Mia, tools, images)
 app.use(express.static(path.join(__dirname, 'public')));
 
 /* ========================
@@ -358,7 +366,12 @@ app.get('/health', (req, res) => res.json({
   status: 'ok',
   mia: { claudeEnabled, model: MIA_MODEL, store: miaStore.kind, whatsapp: whatsappConfigured },
 }));
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+// Website routes (SPA): always serve the React app's index.html
+const spaRoutes = ['/', '/index.html', '/funds', '/funds/*', '/compare', '/articles', '/articles/*', '/contact'];
+app.get(spaRoutes, (req, res) => {
+  if (!hasCompareApp) return res.status(503).send('האתר בבנייה – compare-app/dist חסר. הריצו npm run build.');
+  res.sendFile(COMPARE_INDEX);
+});
 
 /* ========================
    CLEANUP EXPIRED RECORDS (every 5 min)
