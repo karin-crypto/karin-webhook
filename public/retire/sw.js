@@ -1,5 +1,5 @@
 /* Service worker — offline app shell for the retirement simulator */
-const CACHE = 'retire-v4';
+const CACHE = 'retire-v5';
 const ASSETS = [
   './', 'index.html', 'app.css', 'app.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png',
