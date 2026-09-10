@@ -1,0 +1,86 @@
+<style>
+  :root{
+    --ink:#070b10; --bone:#f4efe4; --muted:rgba(244,239,228,.66); --faint:rgba(244,239,228,.4);
+    --accent:#cdA857; --accent:#cda857; --accent-2:#e6cd8c; --line:rgba(244,239,228,.18);
+    --serif:'Cormorant Garamond','Hoefler Text',Georgia,'Times New Roman',serif;
+    --sans:'Montserrat',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  }
+  :root[data-theme="light"],:root[data-theme="dark"]{color-scheme:dark;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:var(--sans);background:var(--ink);color:var(--bone);font-weight:300;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+  a{color:inherit;text-decoration:none;}
+  .stage{position:relative;min-height:100vh;min-height:100svh;display:flex;flex-direction:column;overflow:hidden;}
+  .bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 28%;z-index:0;}
+  .stage::after{content:"";position:absolute;inset:0;z-index:1;background:
+     radial-gradient(120% 90% at 50% 20%,rgba(7,11,16,.25),rgba(7,11,16,.55) 55%,rgba(7,11,16,.9) 100%),
+     linear-gradient(180deg,rgba(7,11,16,.5),transparent 30%,rgba(7,11,16,.75));}
+
+  .top{position:relative;z-index:3;display:flex;justify-content:space-between;align-items:center;padding:22px clamp(20px,5vw,44px);}
+  .top .k{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--faint);font-family:var(--sans);}
+  .lang{display:flex;align-items:center;gap:4px;}
+  .lang button{background:transparent;border:0;color:var(--faint);cursor:pointer;font-family:var(--sans);font-weight:600;font-size:10px;letter-spacing:1px;padding:4px;transition:color .2s;}
+  .lang button.active{color:var(--accent);}
+
+  .core{position:relative;z-index:3;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px clamp(20px,5vw,44px);}
+  .eyebrow{font-size:10.5px;font-weight:600;letter-spacing:5px;text-transform:uppercase;color:var(--accent);margin-bottom:26px;}
+  .word{font-family:var(--serif);font-weight:400;font-size:clamp(76px,22vw,220px);line-height:.9;letter-spacing:6px;text-shadow:0 8px 60px rgba(0,0,0,.5);}
+  .dsh{display:flex;gap:clamp(12px,3vw,30px);justify-content:center;flex-wrap:wrap;margin:22px 0 4px;font-family:var(--serif);font-size:clamp(18px,3.4vw,34px);}
+  .dsh em{font-style:italic;color:var(--accent-2);}
+  .rule{width:56px;height:1px;background:var(--accent);opacity:.8;margin:26px 0;}
+  .sub{font-size:clamp(11px,1.5vw,13px);letter-spacing:3px;text-transform:uppercase;color:var(--muted);}
+  .soon{margin-top:34px;display:inline-flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:40px;padding:11px 24px;font-size:10.5px;letter-spacing:2.5px;text-transform:uppercase;color:var(--bone);background:rgba(7,11,16,.35);backdrop-filter:blur(4px);}
+  .soon b{color:var(--accent);font-weight:600;}
+
+  .foot{position:relative;z-index:3;display:flex;gap:14px;justify-content:center;flex-wrap:wrap;padding:0 20px clamp(30px,6vw,54px);}
+  .lnk{font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:13px 26px;border:1px solid var(--line);border-radius:2px;transition:all .3s;}
+  .lnk:hover{border-color:var(--accent);color:var(--accent);}
+  .lnk.solid{background:var(--accent);color:var(--ink);border-color:var(--accent);font-weight:600;}
+  .lnk.solid:hover{background:var(--accent-2);}
+  .credit{position:relative;z-index:3;text-align:center;padding:0 20px 22px;font-size:9px;letter-spacing:2px;color:var(--faint);text-transform:uppercase;}
+
+  .fade{opacity:0;transform:translateY(16px);animation:up 1.1s ease forwards;}
+  .d1{animation-delay:.15s}.d2{animation-delay:.35s}.d3{animation-delay:.55s}.d4{animation-delay:.75s}.d5{animation-delay:.95s}
+  @keyframes up{to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.fade{opacity:1;transform:none;animation:none}.bg{animation:none}}
+</style>
+
+<div class="stage">
+  <video class="bg" autoplay muted loop playsinline poster="__IMG__"><source src="__VID__" type="video/mp4"></video>
+
+  <div class="top">
+    <span class="k">KARINA</span>
+    <div class="lang" role="group" aria-label="Language">
+      <button id="btn-en" class="active" onclick="setLang('en')">EN</button>
+      <span style="color:var(--faint)">/</span>
+      <button id="btn-he" onclick="setLang('he')">עב</button>
+    </div>
+  </div>
+
+  <div class="core">
+    <div class="eyebrow fade d1" data-en="Marine Robot Ambassador" data-he="שגרירת הרובוט הימי">Marine Robot Ambassador</div>
+    <h1 class="word fade d2">KARINA</h1>
+    <div class="dsh fade d3">
+      <span data-en="Deep." data-he="עמוק.">Deep.</span>
+      <span data-en="Smart." data-he="חכם.">Smart.</span>
+      <span><em data-en="Human." data-he="אנושי.">Human.</em></span>
+    </div>
+    <div class="rule fade d3"></div>
+    <div class="sub fade d4" data-en="Built to explore. Designed to protect." data-he="נבנתה לחקור. עוצבה להגן.">Built to explore. Designed to protect.</div>
+    <div class="soon fade d5"><span data-en="Coming soon" data-he="בקרוב">Coming soon</span> · <b data-en="Monaco Yacht Show 2026" data-he="Monaco Yacht Show 2026">Monaco Yacht Show 2026</b></div>
+  </div>
+
+  <div class="foot fade d5">
+    <a href="mailto:karin@karinkeren.com" class="lnk solid" data-en="Request Information" data-he="בקשת מידע">Request Information</a>
+    <a href="https://wa.me/972546248546" class="lnk">WhatsApp</a>
+  </div>
+  <div class="credit fade d5">© 2026 KARINA · <span data-en="Inventor: Karin Keren" data-he="ממציאה: Karin Keren">Inventor: Karin Keren</span></div>
+</div>
+
+<script>
+  function setLang(lang){
+    var r=document.documentElement; r.setAttribute('lang',lang); r.setAttribute('dir',lang==='he'?'rtl':'ltr');
+    document.querySelectorAll('[data-en]').forEach(function(el){var v=el.getAttribute('data-'+lang);if(v!=null){if(/[<&]/.test(v))el.innerHTML=v;else el.textContent=v;}});
+    document.getElementById('btn-en').classList.toggle('active',lang==='en');
+    document.getElementById('btn-he').classList.toggle('active',lang==='he');
+  }
+</script>
