@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="הדמיה תלת-ממדית אינטראקטיבית של תערוכת היאכטות מונקו 2026 בנמל הרקולס – 84 יאכטות מהרשימה הרשמית עם קודי עגינה, רציפים אמיתיים מ-OpenStreetMap, מצבי יום ולילה. הדמיה: קרין קרן.">
+<meta name="description" content="הדמיה תלת-ממדית אינטראקטיבית של תערוכת היאכטות מונקו 2026 בנמל הרקולס – 84 יאכטות מהרשימה הרשמית עם קודי עגינה, רציפים אמיתיים מ-OpenStreetMap, השתקפויות, מצבי יום ולילה. הדמיה: קרין קרן.">
 <meta property="og:title" content="Monaco Yacht Show 2026 · 3D">
 <meta property="og:description" content="Interactive 3D model of the MYS 2026 fleet in Port Hercule, Monaco. Visualisation by Karin Keren.">
 <meta name="color-scheme" content="light dark">
@@ -177,7 +177,7 @@
 </head>
 <body>
 
-<div class="loading" id="loading"><div class="in"><div class="s">Port Hercule · Monaco</div><div class="t">Monaco Yacht Show 2026</div><div class="bar"><i id="loadbar"></i></div></div></div>
+<div class="loading" id="loading"><div class="in"><div class="s">Port Hercule · Monaco</div><div class="t">Monaco Yacht Show 2026</div><div class="bar"><i id="loadbar"></i></div><div class="s" id="loadmsg" style="opacity:.7">building the harbour…</div></div></div>
 <canvas id="stage" aria-label="Interactive 3D model of Port Hercule with the Monaco Yacht Show 2026 fleet"></canvas>
 <div id="labels" aria-hidden="true"></div>
 
@@ -190,6 +190,7 @@
   <div class="toolbar">
     <button class="btn" id="btnFleet" aria-pressed="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 5h12M2 8h12M2 11h8"/></svg><span class="t" data-i18n="fleet">Fleet</span></button>
     <button class="btn" id="btnLabels" aria-pressed="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 4h10v6H8l-3 3v-3H3z"/></svg><span class="t" data-i18n="labels">Names</span></button>
+    <button class="btn" id="btnFx" aria-pressed="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 2l1.6 3.6L13.5 6l-2.8 2.6.8 3.9L8 10.6l-3.5 1.9.8-3.9L2.5 6l3.9-.4z"/></svg><span class="t" data-i18n="fx">FX</span></button>
     <button class="btn" id="btnNight" aria-pressed="false"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 9.5A5.5 5.5 0 0 1 6.5 3a5.5 5.5 0 1 0 6.5 6.5z"/></svg><span class="t" data-i18n="night">Night</span></button>
     <button class="btn" id="btnLang"><span class="t">EN / עב</span></button>
     <button class="btn" id="btnAbout"><span class="t" data-i18n="aboutBtn">Sources</span><span class="k">i</span></button>
@@ -244,6 +245,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.158.0/three.min.js"></script>
 <script src="data.js"></script>
 <script src="engine.js"></script>
+<script src="fx.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

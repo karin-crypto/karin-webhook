@@ -1,7 +1,8 @@
 /* Monaco Yacht Show 2026 — application: harbour, berthing, UI */
 (function () {
   'use strict';
-  const E = window.MYS3D, T = E.T, D = window.MYS_DATA;
+  const E = window.MYS3D, FX = window.MYSFX, T = E.T, D = window.MYS_DATA;
+  const isMobile = window.innerWidth < 760 || /Mobi|Android/i.test(navigator.userAgent);
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ---------- i18n ---------- */
@@ -9,7 +10,7 @@
     en: {
       eyebrow: '35th edition · Port Hercule · 23–26 September 2026', h1: 'Monaco Yacht Show 2026', h1sub: 'A 3D model of the fleet in Port Hercule',
       sub: 'Drag to orbit · scroll to zoom · right-drag or two fingers to pan · click a yacht',
-      fleet: 'Fleet', labels: 'Names', night: 'Night', aboutBtn: 'Sources', fleetTitle: 'The Fleet', search: 'Search yacht or builder…',
+      fleet: 'Fleet', labels: 'Names', night: 'Night', fx: 'FX', aboutBtn: 'Sources', fleetTitle: 'The Fleet', search: 'Search yacht or builder…',
       loa: 'Length', beam: 'Beam', year: 'Year', type: 'Type', close: 'Close', aboutTitle: 'About this model',
       sigRole: '3D visualisation · Monaco Yacht Show 2026', sigMeta: 'Fleet, berths and beams compiled 12 Sept 2026 from the official list, shipyards, brokers and trade press', sigLink: 'accuracy notes',
       all: 'All', debut: 'Debuts', motor: 'Motor', sailing: 'Sail', explorer: 'Explorer', catamaran: 'Multihull', big: '60 m +',
@@ -25,7 +26,7 @@
     he: {
       eyebrow: 'המהדורה ה-35 · נמל הרקולס · 23–26 בספטמבר 2026', h1: 'Monaco Yacht Show 2026', h1sub: 'הדמיה תלת-ממדית של הצי בנמל הרקולס',
       sub: 'גררו לסיבוב · גלגלו לזום · לחצן ימני או שתי אצבעות להזזה · לחצו על יאכטה',
-      fleet: 'הצי', labels: 'שמות', night: 'לילה', aboutBtn: 'מקורות', fleetTitle: 'הצי', search: 'חיפוש יאכטה או מספנה…',
+      fleet: 'הצי', labels: 'שמות', night: 'לילה', fx: 'אפקטים', aboutBtn: 'מקורות', fleetTitle: 'הצי', search: 'חיפוש יאכטה או מספנה…',
       loa: 'אורך', beam: 'רוחב', year: 'שנה', type: 'סוג', close: 'סגירה', aboutTitle: 'על ההדמיה',
       sigRole: 'הדמיה תלת-ממדית · תערוכת היאכטות מונקו 2026', sigMeta: 'הצי, העגינות והמידות נאספו ב-12.9.2026 מהרשימה הרשמית, מספנות, ברוקרים ועיתונות המקצוע', sigLink: 'הערות דיוק',
       all: 'הכול', debut: 'בכורות', motor: 'מנוע', sailing: 'מפרש', explorer: 'אקספלורר', catamaran: 'רב-גופית', big: '60 מ׳ +',
@@ -59,8 +60,12 @@
   sun.castShadow = true; sun.shadow.mapSize.set(4096, 4096);
   const sc = sun.shadow.camera; sc.near = 50; sc.far = 3200; sc.left = -900; sc.right = 900; sc.top = 900; sc.bottom = -900; sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.6;
   scene.add(sun); scene.add(sun.target);
-  const sky = E.makeSky(); scene.add(sky);
-  const water = E.makeWater(9000); scene.add(water);
+  const sky = FX.makeSky(); scene.add(sky);
+  const water = FX.makeWater(9000, { reflectSize: isMobile ? 512 : 1024 }); scene.add(water);
+  let fxOn = !isMobile;
+  const post = FX.makePost(renderer);
+  const pmrem = new T.PMREMGenerator(renderer); const envScene = new T.Scene();
+  function updateEnv() { scene.remove(sky); envScene.add(sky); const rt = pmrem.fromScene(envScene, 0.04); envScene.remove(sky); scene.add(sky); if (scene.environment) scene.environment.dispose(); scene.environment = rt.texture; }
   scene.fog = new T.Fog(0xd7e6f0, 1400, 5200);
 
   /* ---------- terrain ---------- */
@@ -109,6 +114,7 @@
     h += (Math.sin(x * 0.011) * Math.cos(z * 0.013) + Math.sin(x * 0.031 + z * 0.02)) * 1.2 * E.smooth(0, 80, dCoast);
     return h;
   }
+  controls.setGround(elevation);
   (function buildTerrain() {
     const S = 3800, N = 190;
     const g = new T.PlaneGeometry(S, S, N, N); g.rotateX(-Math.PI / 2);
@@ -132,6 +138,7 @@
   });
   const land = new T.Mesh(E.mergeGeoms(landGeoms), stone); land.castShadow = true; land.receiveShadow = true; scene.add(land);
 
+  const facadeMat = FX.facadeMaterial(FX.makeFacadeTextures());
   // buildings (merged, coloured by height band; base on terrain)
   (function buildBuildings() {
     const geoms = [];
@@ -145,8 +152,52 @@
       geoms.push(E.paint(g, b.color || palette[i % palette.length]));
     });
     if (!geoms.length) return;
-    const m = new T.Mesh(E.mergeGeoms(geoms), new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.85 }));
+    const m = new T.Mesh(E.mergeGeoms(geoms, true), facadeMat);
     m.castShadow = true; m.receiveShadow = true; scene.add(m);
+  })();
+
+  // roads: asphalt ribbons draped on the terrain (the Grand Prix circuit runs on the harbour-front ones)
+  const roadSegs = [];
+  (function buildRoads() {
+    const geoms = [];
+    (H.roads || []).forEach(r => {
+      const xz = E.llArr(r.pts); const w = r.w;
+      for (let i = 0; i < xz.length - 1; i++) {
+        const a = xz[i], b = xz[i + 1]; const len = Math.hypot(b.x - a.x, b.z - a.z); if (len < 0.5) continue;
+        roadSegs.push([a, b]);
+        const ya = elevation(a.x, a.z) + 0.35, yb = elevation(b.x, b.z) + 0.35;
+        const g = new T.PlaneGeometry(len, w, Math.max(1, Math.round(len / 25)), 1); g.rotateX(-Math.PI / 2); g.rotateY(-Math.atan2(b.z - a.z, b.x - a.x));
+        const pa = g.attributes.position; for (let k = 0; k < pa.count; k++) { const px = pa.getX(k) + (a.x + b.x) / 2, pz = pa.getZ(k) + (a.z + b.z) / 2; pa.setX(k, px); pa.setZ(k, pz); pa.setY(k, Math.max(elevation(px, pz), 0) + 0.35); }
+        geoms.push(E.paint(g, r.f1 ? 0x3d3f45 : 0x4a4b50));
+        const joint = new T.CircleGeometry(w / 2, 8); joint.rotateX(-Math.PI / 2); joint.translate(b.x, yb, b.z); geoms.push(E.paint(joint, r.f1 ? 0x3d3f45 : 0x4a4b50));
+        if (i === 0) { const j0 = new T.CircleGeometry(w / 2, 8); j0.rotateX(-Math.PI / 2); j0.translate(a.x, ya, a.z); geoms.push(E.paint(j0, 0x4a4b50)); }
+      }
+    });
+    if (!geoms.length) return;
+    const m = new T.Mesh(E.mergeGeoms(geoms), new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, polygonOffset: true, polygonOffsetFactor: -1 }));
+    m.receiveShadow = true; scene.add(m);
+  })();
+
+  // trees: scattered on land away from buildings, roads and quays; denser in the gardens
+  (function buildTrees() {
+    const bPolys = (H.buildings || []).map(b => { const xz = E.llArr(b.pts); let minx = 1e9, maxx = -1e9, minz = 1e9, maxz = -1e9; xz.forEach(p => { minx = Math.min(minx, p.x); maxx = Math.max(maxx, p.x); minz = Math.min(minz, p.z); maxz = Math.max(maxz, p.z); }); return { xz, minx, maxx, minz, maxz }; });
+    const inBuilding = (x, z) => bPolys.some(b => x > b.minx - 2 && x < b.maxx + 2 && z > b.minz - 2 && z < b.maxz + 2 && pointInPoly(x, z, b.xz));
+    const nearRoad = (x, z) => roadSegs.some(([a, b]) => { const dx = b.x - a.x, dz = b.z - a.z; const l2 = dx * dx + dz * dz || 1; const u = E.clamp(((x - a.x) * dx + (z - a.z) * dz) / l2, 0, 1); return Math.hypot(x - (a.x + u * dx), z - (a.z + u * dz)) < 6; });
+    const pts = []; let seed = 7;
+    const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    const tryAdd = (x, z, k, s) => {
+      if (!pointInPoly(x, z, landXZ)) return; if (distToPoly(x, z, landXZ) < 30) return;
+      if (inBuilding(x, z) || nearRoad(x, z)) return;
+      const y = elevation(x, z); if (y < 2) return;
+      pts.push({ x, y: y - 0.3, z, k, s });
+    };
+    (H.gardens || []).forEach(([lat, lon, r, n]) => { const c = E.ll(lat, lon); for (let i = 0; i < n; i++) { const a = rnd() * 6.283, d = Math.sqrt(rnd()) * r; tryAdd(c.x + Math.cos(a) * d, c.z + Math.sin(a) * d, rnd() < 0.5 ? 0 : 1, 0.8 + rnd() * 0.6); } });
+    for (let i = 0; i < 9000 && pts.length < (isMobile ? 900 : 2600); i++) {
+      const a = rnd() * 6.283, d = 150 + Math.pow(rnd(), 0.6) * 1750; const x = Math.cos(a) * d, z = Math.sin(a) * d;
+      const far = d > 1000; if (!far && rnd() < 0.55) continue;
+      tryAdd(x, z, far || rnd() < 0.6 ? 0 : 1, 0.7 + rnd() * 0.8);
+    }
+    scene.add(FX.makeTrees(pts));
   })();
 
   // quay zone strips (thin coloured kerb along each show quay) + tents
@@ -298,7 +349,8 @@
       scene.fog.color.set(0x0b1524); renderer.toneMappingExposure = 0.9;
     }
     const dir = sun.position.clone().normalize(); wu.uSun.value.copy(dir); su.uSun.value.copy(dir);
-    nightGroup.visible = night;
+    wu.fogColor.value.copy(scene.fog.color); facadeMat.emissiveIntensity = night ? 0.6 : 0;
+    nightGroup.visible = night; updateEnv();
     document.getElementById('btnNight').setAttribute('aria-pressed', String(night));
   }
   applyLighting();
@@ -315,6 +367,7 @@
     });
   }
   goView('aerial'); controls.snap();
+  if (!reduceMotion) { controls.goal.dist = 2600; controls.goal.theta += 0.9; controls.goal.phi = 1.25; controls.snap(); controls.setDamp(0.022); goView('aerial'); setTimeout(() => controls.setDamp(0.12), 4200); }
 
   /* ---------- labels ---------- */
   const labelsEl = document.getElementById('labels');
@@ -467,6 +520,9 @@
   const btnLabels = document.getElementById('btnLabels');
   btnLabels.addEventListener('click', () => { showLabels = !showLabels; btnLabels.setAttribute('aria-pressed', String(showLabels)); });
   document.getElementById('btnNight').addEventListener('click', () => { night = !night; applyLighting(); });
+  const btnFx = document.getElementById('btnFx'); btnFx.setAttribute('aria-pressed', String(fxOn));
+  btnFx.addEventListener('click', () => { fxOn = !fxOn; btnFx.setAttribute('aria-pressed', String(fxOn)); water.userData.uniforms.uUseReflect.value = fxOn ? 1 : 0; });
+  water.userData.uniforms.uUseReflect.value = fxOn ? 1 : 0;
   document.getElementById('btnLang').addEventListener('click', () => { lang = lang === 'he' ? 'en' : 'he'; try { localStorage.setItem('mys-lang', lang); } catch (e) { } applyLang(); });
   function applyLang() {
     document.documentElement.setAttribute('dir', lang === 'he' ? 'rtl' : 'ltr');
@@ -479,17 +535,26 @@
   applyLang();
 
   /* ---------- resize + loop ---------- */
-  function resize() { const w = canvas.clientWidth || window.innerWidth, h = canvas.clientHeight || window.innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+  const dbs = new T.Vector2();
+  function resize() { const w = canvas.clientWidth || window.innerWidth, h = canvas.clientHeight || window.innerHeight; renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2)); renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.getDrawingBufferSize(dbs); post.setSize(dbs.x, dbs.y); }
   window.addEventListener('resize', resize); resize();
   const clock = new T.Clock(); let frame = 0;
   function loop() {
     requestAnimationFrame(loop);
     const dt = clock.getDelta();
     if (!reduceMotion) water.userData.uniforms.uTime.value += dt;
-    controls.update();
+    // idle: slow cinematic orbit after 30 s without input
+    if (!reduceMotion && performance.now() - controls.lastInput() > 30000) controls.goal.theta += 0.00045;
+    controls.update(); camera.updateMatrixWorld();
+    sky.userData.uniforms.uTime.value = water.userData.uniforms.uTime.value;
     // keep the shadow frustum centred where the camera looks
     sun.target.position.copy(controls.state.target); sun.position.copy(controls.state.target).add(night ? new T.Vector3(900, 260, -600) : new T.Vector3(-320, 780, 720));
-    renderer.render(scene, camera);
+    if (fxOn) {
+      if ((frame & 1) === 0 || controls.state.dist < 600) water.userData.renderReflection(renderer, scene, camera, [nightGroup]);
+      post.render(scene, camera, night, water.userData.uniforms.uTime.value);
+    } else {
+      renderer.setRenderTarget(null); renderer.render(scene, camera);
+    }
     if ((frame++ & 1) === 0) updateLabels();
   }
   const loading = document.getElementById('loading');
@@ -497,5 +562,5 @@
   setTimeout(() => loading.classList.add('done'), 350);
   loop();
 
-  window.MYS_APP = { select, goView, yachts, quays };
+  window.MYS_APP = { select, goView, yachts, quays, controls };
 })();

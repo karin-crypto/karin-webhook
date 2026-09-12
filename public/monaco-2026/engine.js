@@ -42,22 +42,29 @@
     g.translate(0, y0 || 0, 0);
     return g;
   }
-  function mergeGeoms(list) {
+  function mergeGeoms(list, withUv) {
     const parts = list.map(g => g.index ? g.toNonIndexed() : g);
     let n = 0; parts.forEach(g => n += g.attributes.position.count);
     const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), col = new Float32Array(n * 3);
+    const uv = withUv ? new Float32Array(n * 2) : null, wall = withUv ? new Float32Array(n) : null;
     let o = 0;
     parts.forEach(g => {
       pos.set(g.attributes.position.array, o * 3);
       if (!g.attributes.normal) g.computeVertexNormals();
       nor.set(g.attributes.normal.array, o * 3);
       if (g.attributes.color) col.set(g.attributes.color.array, o * 3);
+      if (withUv) {
+        if (g.attributes.uv) uv.set(g.attributes.uv.array, o * 2);
+        const na = g.attributes.normal.array, c = g.attributes.position.count;
+        for (let i = 0; i < c; i++) wall[o + i] = Math.abs(na[i * 3 + 1]) < 0.5 ? 1 : 0;
+      }
       o += g.attributes.position.count;
     });
     const out = new T.BufferGeometry();
     out.setAttribute('position', new T.BufferAttribute(pos, 3));
     out.setAttribute('normal', new T.BufferAttribute(nor, 3));
     out.setAttribute('color', new T.BufferAttribute(col, 3));
+    if (withUv) { out.setAttribute('uv', new T.BufferAttribute(uv, 2)); out.setAttribute('aWall', new T.BufferAttribute(wall, 1)); }
     return out;
   }
   function paint(g, color) {
@@ -69,9 +76,9 @@
 
   /* ---------- materials ---------- */
   const MAT = {
-    hull: (c) => new T.MeshStandardMaterial({ color: c, roughness: 0.32, metalness: 0.08 }),
-    super: (c) => new T.MeshStandardMaterial({ color: c, roughness: 0.45, metalness: 0.05 }),
-    glass: new T.MeshStandardMaterial({ color: 0x0b1a2b, roughness: 0.12, metalness: 0.7 }),
+    hull: (c) => new T.MeshStandardMaterial({ color: c, roughness: 0.22, metalness: 0.1, vertexColors: true, envMapIntensity: 1.0 }),
+    super: (c) => new T.MeshStandardMaterial({ color: c, roughness: 0.38, metalness: 0.05 }),
+    glass: new T.MeshStandardMaterial({ color: 0x0b1a2b, roughness: 0.08, metalness: 0.85 }),
     teak: new T.MeshStandardMaterial({ color: 0xb98a5a, roughness: 0.8, metalness: 0.0 }),
     mast: new T.MeshStandardMaterial({ color: 0xd9dde2, roughness: 0.5, metalness: 0.3 }),
     dome: new T.MeshStandardMaterial({ color: 0xf2f2f2, roughness: 0.6 }),
@@ -133,6 +140,14 @@
     for (let i = 0; i < N; i++) { const a = d0 + i * 2; idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); }
     const g = new T.BufferGeometry();
     g.setAttribute('position', new T.Float32BufferAttribute(pos, 3));
+    const colors = new Float32Array(pos.length);
+    for (let i = 0; i < pos.length; i += 3) {
+      const y = pos[i + 1]; let r = 1, gg = 1, b = 1;
+      if (y < 0.02) { r = 0.42; gg = 0.16; b = 0.14; }               // antifouling red
+      else if (y < 0.02 + fb * 0.16) { r = 0.16; gg = 0.2; b = 0.26; } // boot-top stripe
+      colors[i] = r; colors[i + 1] = gg; colors[i + 2] = b;
+    }
+    g.setAttribute('color', new T.BufferAttribute(colors, 3));
     g.setIndex(idx);
     g.computeVertexNormals();
     g.addGroup(0, N * (M - 1) * 6 + (M - 1) * 3, 0);
@@ -367,8 +382,9 @@
     const o = Object.assign({ minDist: 25, maxDist: 2600, minPolar: 0.08, maxPolar: 1.48 }, opts);
     const s = { target: new T.Vector3(0, 0, 0), theta: 0.6, phi: 0.9, dist: 900, enabled: true };
     const goal = { target: s.target.clone(), theta: s.theta, phi: s.phi, dist: s.dist };
+    let ground = null;
     let ptrs = new Map(), lastPinch = 0, lastMid = null, mode = null, moved = false;
-    const damp = 0.12;
+    let damp = 0.12; let lastInput = performance.now();
     function apply() {
       camera.position.set(
         s.target.x + s.dist * Math.sin(s.phi) * Math.sin(s.theta),
@@ -384,7 +400,7 @@
       goal.target.x = clamp(goal.target.x, -1600, 1600); goal.target.z = clamp(goal.target.z, -1600, 1600);
     }
     dom.addEventListener('pointerdown', e => {
-      if (!s.enabled) return; dom.setPointerCapture(e.pointerId);
+      if (!s.enabled) return; dom.setPointerCapture(e.pointerId); lastInput = performance.now();
       ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); moved = false;
       mode = (e.button === 2 || e.shiftKey || e.ctrlKey) ? 'pan' : 'rot';
       if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; lastPinch = Math.hypot(a.x - b.x, a.y - b.y); lastMid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; }
@@ -405,19 +421,23 @@
     });
     const up = e => { ptrs.delete(e.pointerId); lastPinch = 0; lastMid = null; };
     dom.addEventListener('pointerup', up); dom.addEventListener('pointercancel', up);
-    dom.addEventListener('wheel', e => { e.preventDefault(); goal.dist = clamp(goal.dist * Math.exp(e.deltaY * 0.0012), o.minDist, o.maxDist); }, { passive: false });
+    dom.addEventListener('wheel', e => { e.preventDefault(); lastInput = performance.now(); goal.dist = clamp(goal.dist * Math.exp(e.deltaY * 0.0012), o.minDist, o.maxDist); }, { passive: false });
     dom.addEventListener('contextmenu', e => e.preventDefault());
     const api = {
       state: s, goal,
       wasDrag: () => moved,
+      lastInput: () => lastInput,
+      setDamp(d) { damp = d; },
+      setGround(fn) { ground = fn; },
       update() {
         s.theta += (goal.theta - s.theta) * damp; s.phi += (goal.phi - s.phi) * damp; s.dist += (goal.dist - s.dist) * damp;
         s.target.lerp(goal.target, damp);
         // keep the camera above the water and the terrain
         apply();
-        if (camera.position.y < 4) { s.phi = Math.min(s.phi, Math.acos(4 / Math.max(s.dist, 5))); goal.phi = Math.min(goal.phi, s.phi); apply(); }
+        const gMin = Math.max(4, ground ? ground(camera.position.x, camera.position.z) + 9 : 4);
+        if (camera.position.y < gMin) { s.phi = Math.min(s.phi, Math.acos(clamp((gMin - s.target.y) / Math.max(s.dist, 5), -1, 1))); goal.phi = Math.min(goal.phi, s.phi); apply(); }
       },
-      flyTo(target, theta, phi, dist) { goal.target.copy(target); if (theta !== undefined) goal.theta = theta; if (phi !== undefined) goal.phi = phi; if (dist !== undefined) goal.dist = clamp(dist, o.minDist, o.maxDist); },
+      flyTo(target, theta, phi, dist) { lastInput = performance.now(); goal.target.copy(target); if (theta !== undefined) goal.theta = theta; if (phi !== undefined) goal.phi = phi; if (dist !== undefined) goal.dist = clamp(dist, o.minDist, o.maxDist); },
       snap() { s.theta = goal.theta; s.phi = goal.phi; s.dist = goal.dist; s.target.copy(goal.target); apply(); },
     };
     return api;
