@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="הדמיה תלת-ממדית אינטראקטיבית של תערוכת היאכטות מונקו 2026 בנמל הרקולס – 72 יאכטות מהרשימה הרשמית, רציפים אמיתיים מ-OpenStreetMap, מצבי יום ולילה. הדמיה: קרין קרן.">
+<meta property="og:title" content="Monaco Yacht Show 2026 · 3D">
+<meta property="og:description" content="Interactive 3D model of the MYS 2026 fleet in Port Hercule, Monaco. Visualisation by Karin Keren.">
+<meta name="color-scheme" content="light dark">
+<title>Monaco Yacht Show 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,600;1,6..96,400&family=Frank+Ruhl+Libre:wght@400;500;700&family=Assistant:wght@300;400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ink: #0e1b2a; --ink-2: #1b2d40; --paper: #f6f3ec; --paper-2: #ebe6db;
+    --text: #12202e; --text-2: #4c5c6b; --line: rgba(18, 32, 46, .14);
+    --panel: rgba(250, 248, 243, .84); --panel-strong: rgba(250, 248, 243, .96);
+    --brass: #a8842f; --brass-2: #c8a24a; --sea: #0a3f5c; --aqua: #2e8ba8; --red: #c8102e;
+    --shadow: 0 18px 50px rgba(8, 24, 40, .22);
+    --glass-blur: 14px;
+    --display-lat: 'Bodoni Moda', 'Frank Ruhl Libre', Georgia, 'Times New Roman', serif;
+    --display-he: 'Frank Ruhl Libre', 'Bodoni Moda', Georgia, serif;
+    --body: 'Assistant', 'Segoe UI', Arial, sans-serif;
+    --mono: 'IBM Plex Mono', 'SFMono-Regular', Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0e1b2a; --paper-2: #16283a; --text: #eef0f2; --text-2: #a9b6c2; --line: rgba(238, 240, 242, .14);
+      --panel: rgba(12, 22, 34, .78); --panel-strong: rgba(12, 22, 34, .95); --brass: #d4b15e; --brass-2: #e6c97a;
+      --shadow: 0 18px 50px rgba(0, 0, 0, .5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0e1b2a; --paper-2: #16283a; --text: #eef0f2; --text-2: #a9b6c2; --line: rgba(238, 240, 242, .14);
+    --panel: rgba(12, 22, 34, .78); --panel-strong: rgba(12, 22, 34, .95); --brass: #d4b15e; --brass-2: #e6c97a;
+    --shadow: 0 18px 50px rgba(0, 0, 0, .5);
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--paper); color: var(--text); font-family: var(--body); font-size: 15px; line-height: 1.45; overflow: hidden; }
+  button { font: inherit; color: inherit; }
+  button:focus-visible, input:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--brass-2); outline-offset: 2px; }
+
+  #stage { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+  #stage.dragging { cursor: grabbing; }
+  #stage.hover { cursor: pointer; }
+
+  /* ---------- top bar ---------- */
+  .top { position: fixed; inset-inline: 0; top: 0; z-index: 5; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 14px 18px; pointer-events: none; }
+  .top > * { pointer-events: auto; }
+  .plate { background: var(--panel); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--line); border-radius: 4px; box-shadow: var(--shadow); }
+  .title { padding: 12px 18px 12px; flex: 0 1 560px; min-width: min(300px, 100%); }
+  .title .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--brass); display: flex; gap: 10px; flex-wrap: wrap; }
+  .title h1 { margin: 2px 0 0; font-family: var(--display-lat); font-weight: 400; font-size: clamp(22px, 3.2vw, 34px); line-height: 1.05; letter-spacing: .01em; text-wrap: balance; }
+  .title h1 .he { font-family: var(--display-he); font-weight: 500; display: block; font-size: .78em; margin-top: 3px; color: var(--text-2); }
+  .title .sub { margin: 6px 0 0; color: var(--text-2); font-size: 13.5px; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; flex: 0 0 auto; }
+  .btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 12px; border-radius: 4px; border: 1px solid var(--line); background: var(--panel); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); cursor: pointer; font-weight: 600; font-size: 13.5px; transition: background .15s, border-color .15s; }
+  .btn:hover { border-color: var(--brass-2); }
+  .btn[aria-pressed="true"] { background: var(--brass); color: #fff; border-color: var(--brass); }
+  .btn .k { font-family: var(--mono); font-size: 11px; opacity: .7; }
+  .btn svg { width: 15px; height: 15px; }
+
+  /* ---------- camera presets ---------- */
+  .views { position: fixed; z-index: 5; inset-inline-end: 18px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 6px; }
+  .views .btn { padding: 7px 10px; font-size: 12.5px; }
+  .views .btn small { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; opacity: .65; }
+
+  /* ---------- fleet drawer ---------- */
+  .drawer { position: fixed; z-index: 6; inset-inline-start: 18px; top: 178px; bottom: 96px; width: min(360px, calc(100vw - 36px)); display: flex; flex-direction: column; overflow: hidden; transition: transform .28s ease, opacity .28s; }
+  .drawer[hidden] { display: flex; opacity: 0; pointer-events: none; transform: translateX(-16px); }
+  [dir="rtl"] .drawer[hidden] { transform: translateX(16px); }
+  .drawer header { padding: 12px 14px 10px; border-bottom: 1px solid var(--line); display: grid; gap: 8px; }
+  .drawer header .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .drawer h2 { margin: 0; font-family: var(--display-lat); font-weight: 400; font-size: 20px; }
+  .drawer h2 .he { font-family: var(--display-he); }
+  .count { font-family: var(--mono); font-size: 11.5px; color: var(--text-2); letter-spacing: .06em; }
+  .search { width: 100%; padding: 8px 10px; border-radius: 4px; border: 1px solid var(--line); background: var(--paper-2); color: var(--text); font: inherit; font-size: 14px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .chip { padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); background: transparent; font-size: 12px; cursor: pointer; }
+  .chip[aria-pressed="true"] { background: var(--ink-2); color: #fff; border-color: var(--ink-2); }
+  :root[data-theme="dark"] .chip[aria-pressed="true"] { background: var(--brass-2); color: #0e1b2a; border-color: var(--brass-2); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .chip[aria-pressed="true"] { background: var(--brass-2); color: #0e1b2a; border-color: var(--brass-2); } }
+  .list { overflow-y: auto; flex: 1; padding: 6px 0 10px; scrollbar-width: thin; }
+  .item { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: baseline; width: 100%; text-align: start; padding: 8px 14px; border: 0; background: transparent; cursor: pointer; border-inline-start: 3px solid transparent; }
+  .item:hover { background: var(--paper-2); }
+  .item[aria-current="true"] { border-inline-start-color: var(--brass-2); background: var(--paper-2); }
+  .item .n { font-family: var(--display-lat); font-size: 16px; font-weight: 600; letter-spacing: .01em; }
+  .item .n .debut { display: inline-block; vertical-align: middle; margin-inline-start: 6px; width: 7px; height: 7px; border-radius: 50%; background: var(--red); }
+  .item .b { font-size: 12.5px; color: var(--text-2); grid-column: 1; }
+  .item .m { font-family: var(--mono); font-size: 13px; grid-row: 1 / span 2; align-self: center; font-variant-numeric: tabular-nums; }
+  .item .m small { font-size: 10px; opacity: .7; }
+
+  /* ---------- yacht card ---------- */
+  .card { position: fixed; z-index: 7; inset-inline-end: 18px; bottom: 96px; width: min(400px, calc(100vw - 36px)); padding: 16px 18px 14px; display: grid; gap: 8px; transition: transform .25s, opacity .25s; }
+  .card[hidden] { display: grid; opacity: 0; pointer-events: none; transform: translateY(10px); }
+  .card .close { position: absolute; top: 8px; inset-inline-end: 8px; width: 30px; height: 30px; border: 0; background: transparent; cursor: pointer; border-radius: 50%; font-size: 18px; color: var(--text-2); }
+  .card .close:hover { background: var(--paper-2); }
+  .card .tags { display: flex; gap: 6px; flex-wrap: wrap; font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; }
+  .tag { padding: 2px 8px; border-radius: 3px; border: 1px solid var(--line); color: var(--text-2); }
+  .tag.debut { background: var(--red); color: #fff; border-color: var(--red); }
+  .tag.conf { border-color: var(--brass); color: var(--brass); }
+  .card h3 { margin: 0; font-family: var(--display-lat); font-weight: 400; font-size: 28px; line-height: 1.05; letter-spacing: .005em; }
+  .card .builder { color: var(--text-2); font-size: 14px; margin-top: -4px; }
+  .specs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--line); }
+  .specs div { display: grid; gap: 1px; }
+  .specs dt { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-2); }
+  .specs dd { margin: 0; font-family: var(--mono); font-size: 16px; font-variant-numeric: tabular-nums; }
+  .specs dd small { font-size: 11px; opacity: .7; }
+  .card .zone { font-size: 13.5px; color: var(--text-2); }
+  .card .zone b { color: var(--text); font-weight: 600; }
+  .card .note { font-size: 12.5px; color: var(--text-2); }
+  .card .src a { color: var(--brass); font-size: 12px; text-decoration: none; border-bottom: 1px dotted var(--brass); }
+
+  /* ---------- legend + footer ---------- */
+  .bottom { position: fixed; z-index: 5; inset-inline: 0; bottom: 0; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 0 18px 14px; pointer-events: none; }
+  .bottom > * { pointer-events: auto; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; padding: 9px 14px; font-size: 12.5px; max-width: 640px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+  .sig { text-align: end; padding: 10px 16px 9px; }
+  .sig .name { font-family: var(--display-lat); font-style: italic; font-size: 22px; line-height: 1; letter-spacing: .01em; }
+  .sig .name .he { font-family: var(--display-he); font-style: normal; font-weight: 500; font-size: 18px; }
+  .sig .role { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--brass); margin-top: 4px; }
+  .sig .meta { font-size: 11.5px; color: var(--text-2); margin-top: 2px; }
+  .sig .meta button { border: 0; background: none; padding: 0; color: var(--brass); cursor: pointer; text-decoration: underline dotted; }
+
+  /* ---------- 3D labels ---------- */
+  .lbl { position: fixed; z-index: 4; transform: translate(-50%, -100%); pointer-events: none; white-space: nowrap; font-family: var(--display-lat); font-size: 13px; letter-spacing: .04em; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .8), 0 0 12px rgba(0, 0, 0, .5); padding-bottom: 8px; }
+  .lbl::after { content: ''; position: absolute; left: 50%; bottom: 0; width: 1px; height: 8px; background: rgba(255, 255, 255, .8); }
+  .lbl.place { font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: #ffe9b0; opacity: .9; padding-bottom: 4px; }
+  .lbl.place::after { display: none; }
+  .lbl.sel { font-size: 16px; color: #ffe9b0; }
+  .lbl .len { font-family: var(--mono); font-size: 10px; opacity: .85; margin-inline-start: 5px; }
+
+  /* ---------- about dialog ---------- */
+  .about { position: fixed; z-index: 9; inset: 0; background: rgba(6, 14, 24, .55); display: grid; place-items: center; padding: 16px; }
+  .about[hidden] { display: none; }
+  .about .box { max-width: 640px; max-height: 88vh; overflow: auto; padding: 24px 26px; display: grid; gap: 10px; background: var(--panel-strong); }
+  .about h2 { margin: 0; font-family: var(--display-lat); font-weight: 400; font-size: 26px; }
+  .about p, .about li { font-size: 14px; color: var(--text); }
+  .about ul { margin: 0; padding-inline-start: 18px; }
+  .about .facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px 0; border-block: 1px solid var(--line); }
+  .about .facts dt { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-2); }
+  .about .facts dd { margin: 0; font-family: var(--mono); font-size: 15px; }
+  .about a { color: var(--brass); }
+
+  /* ---------- loading ---------- */
+  .loading { position: fixed; z-index: 10; inset: 0; display: grid; place-items: center; background: var(--paper); transition: opacity .5s; }
+  .loading.done { opacity: 0; pointer-events: none; }
+  .loading .in { text-align: center; display: grid; gap: 8px; }
+  .loading .in .t { font-family: var(--display-lat); font-size: 30px; }
+  .loading .in .s { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--brass); }
+  .loading .bar { width: 160px; height: 2px; background: var(--line); margin: 6px auto 0; overflow: hidden; }
+  .loading .bar i { display: block; height: 100%; width: 0; background: var(--brass-2); transition: width .3s; }
+
+  @media (max-width: 760px) {
+    .top { padding: 10px 12px; flex-wrap: wrap; }
+    .title { padding: 9px 12px; }
+    .title .sub { display: none; }
+    .toolbar .btn .t { display: none; }
+    .views { inset-inline-end: 12px; top: auto; bottom: 150px; transform: none; flex-direction: row; flex-wrap: wrap; justify-content: flex-end; max-width: 60vw; }
+    .views .btn small { display: none; }
+    .drawer { inset-inline: 12px; top: auto; bottom: 0; width: auto; max-height: 55vh; border-radius: 10px 10px 0 0; }
+    .card { inset-inline: 12px; bottom: 74px; width: auto; }
+    .specs { grid-template-columns: repeat(2, 1fr); }
+    .bottom { padding: 0 12px 10px; }
+    .legend { display: none; }
+    .sig { padding: 8px 12px 7px; }
+    .sig .name { font-size: 18px; }
+    .sig .meta { display: none; }
+    .about .facts { grid-template-columns: 1fr 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) { .drawer, .card, .loading { transition: none; } }
+</style>
+</head>
+<body>
+
+<div class="loading" id="loading"><div class="in"><div class="s">Port Hercule · Monaco</div><div class="t">Monaco Yacht Show 2026</div><div class="bar"><i id="loadbar"></i></div></div></div>
+<canvas id="stage" aria-label="Interactive 3D model of Port Hercule with the Monaco Yacht Show 2026 fleet"></canvas>
+<div id="labels" aria-hidden="true"></div>
+
+<div class="top">
+  <div class="plate title">
+    <div class="eyebrow"><span data-i18n="eyebrow">35th edition · Port Hercule · 23–26 Sept 2026</span></div>
+    <h1><span data-i18n="h1">Monaco Yacht Show 2026</span><span class="he" data-i18n="h1sub">הדמיה תלת-ממדית של הצי בנמל הרקולס</span></h1>
+    <p class="sub" data-i18n="sub">Drag to orbit · scroll to zoom · right-drag or two fingers to pan · click a yacht</p>
+  </div>
+  <div class="toolbar">
+    <button class="btn" id="btnFleet" aria-pressed="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 5h12M2 8h12M2 11h8"/></svg><span class="t" data-i18n="fleet">Fleet</span></button>
+    <button class="btn" id="btnLabels" aria-pressed="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 4h10v6H8l-3 3v-3H3z"/></svg><span class="t" data-i18n="labels">Names</span></button>
+    <button class="btn" id="btnNight" aria-pressed="false"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 9.5A5.5 5.5 0 0 1 6.5 3a5.5 5.5 0 1 0 6.5 6.5z"/></svg><span class="t" data-i18n="night">Night</span></button>
+    <button class="btn" id="btnLang"><span class="t">EN / עב</span></button>
+    <button class="btn" id="btnAbout"><span class="t" data-i18n="aboutBtn">Sources</span><span class="k">i</span></button>
+  </div>
+</div>
+
+<div class="views" id="views"></div>
+
+<aside class="plate drawer" id="drawer" aria-label="Fleet list">
+  <header>
+    <div class="row"><h2><span data-i18n="fleetTitle">The Fleet</span></h2><span class="count" id="count"></span></div>
+    <input class="search" id="search" type="search" placeholder="Search yacht or builder…" data-i18n-ph="search" autocomplete="off">
+    <div class="chips" id="chips"></div>
+  </header>
+  <div class="list" id="list" role="listbox"></div>
+</aside>
+
+<section class="plate card" id="card" hidden aria-live="polite">
+  <button class="close" id="cardClose" aria-label="Close">×</button>
+  <div class="tags" id="cardTags"></div>
+  <h3 id="cardName"></h3>
+  <div class="builder" id="cardBuilder"></div>
+  <dl class="specs">
+    <div><dt data-i18n="loa">Length</dt><dd id="cardLoa"></dd></div>
+    <div><dt data-i18n="beam">Beam</dt><dd id="cardBeam"></dd></div>
+    <div><dt data-i18n="year">Year</dt><dd id="cardYear"></dd></div>
+    <div><dt data-i18n="type">Type</dt><dd id="cardType"></dd></div>
+  </dl>
+  <div class="zone" id="cardZone"></div>
+  <div class="note" id="cardNote"></div>
+  <div class="src" id="cardSrc"></div>
+</section>
+
+<div class="bottom">
+  <div class="plate legend" id="legend"></div>
+  <div class="plate sig">
+    <div class="name"><span class="he">קרין קרן</span> · Karin Keren</div>
+    <div class="role" data-i18n="sigRole">3D visualisation · Monaco Yacht Show 2026</div>
+    <div class="meta"><span data-i18n="sigMeta">Fleet data compiled 12 Sept 2026 from the official list and trade press</span> · <button id="btnAbout2" data-i18n="sigLink">accuracy notes</button></div>
+  </div>
+</div>
+
+<div class="about" id="about" hidden role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+  <div class="plate box">
+    <h2 id="aboutTitle" data-i18n="aboutTitle">About this model</h2>
+    <dl class="facts" id="facts"></dl>
+    <div id="aboutBody"></div>
+    <div style="display:flex;justify-content:flex-end"><button class="btn" id="aboutClose" data-i18n="close">Close</button></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.158.0/three.min.js"></script>
+<script src="data.js"></script>
+<script src="engine.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
