@@ -11,14 +11,14 @@
       sub: 'Drag to orbit · scroll to zoom · right-drag or two fingers to pan · click a yacht',
       fleet: 'Fleet', labels: 'Names', night: 'Night', aboutBtn: 'Sources', fleetTitle: 'The Fleet', search: 'Search yacht or builder…',
       loa: 'Length', beam: 'Beam', year: 'Year', type: 'Type', close: 'Close', aboutTitle: 'About this model',
-      sigRole: '3D visualisation · Monaco Yacht Show 2026', sigMeta: 'Fleet data compiled 12 Sept 2026 from the official list and trade press', sigLink: 'accuracy notes',
+      sigRole: '3D visualisation · Monaco Yacht Show 2026', sigMeta: 'Fleet, berths and beams compiled 12 Sept 2026 from the official list, shipyards, brokers and trade press', sigLink: 'accuracy notes',
       all: 'All', debut: 'Debuts', motor: 'Motor', sailing: 'Sail', explorer: 'Explorer', catamaran: 'Multihull', big: '60 m +',
       tDebut: 'World / show debut', tConfirmed: 'Official list', tReported: 'Reported', tMotor: 'Motor yacht', tSailing: 'Sailing yacht', tExplorer: 'Explorer', tCatamaran: 'Multihull',
       berth: 'Berth', est: 'est.', shownAt: 'Shown at', yachts: 'yachts', source: 'Source',
       views: { aerial: ['Aerial', 'Overview'], digue: ['Digue', 'Rainier III'], etats: ['Quai', 'des États-Unis'], antoine: ['Quai', 'Antoine 1er'], rocher: ['From', 'Le Rocher'], entrance: ['Harbour', 'entrance'] },
       about: [
-        '<p>Every yacht in this model is drawn from its published length overall, beam and type, and moored where the show places it when a berth or quay was published (Quai Rainier III berth R03, Damen berths E14 / S10 / H15, Quai des États-Unis stands, Quai Louis II, Appontement Jules Soccal, the cruise terminal). Where no berth was published the yacht is placed on a quay of matching size following the show’s customary layout, largest hulls outboard on the Digue and Quai Rainier III.</p>',
-        '<p>Quays, breakwaters and the surrounding buildings are traced from OpenStreetMap geometry of Port Hercule. Hull and superstructure shapes are parametric approximations, not shipyard drawings. Terrain height is approximated.</p>',
+        '<p>Every yacht in this model is drawn from its published length overall, beam and type, and moored where the show places it when a berth or quay was published. Berth codes follow the official scheme: D = Quai Rainier III (Digue), R = Quai Rainier 1er, E = Quai des États-Unis, C = Quai Chicane, S = Appontement Jules Soccal (the T-Central pier), H = Quai de l’Hirondelle, L = Jetée Lucciana, J = Quai Jarlan; numbered berths are placed in numeric order along their quay. Where no berth was published the yacht is placed on a quay of matching size following the show’s customary layout, largest hulls outboard on the Digue and Quai Rainier III.</p>',
+        '<p>Quays, breakwaters and the surrounding buildings are traced from OpenStreetMap geometry of Port Hercule. Hull and superstructure shapes are parametric approximations, not shipyard drawings. Terrain is interpolated from published street and landmark altitudes; Le Rocher follows the Monaco-Ville district boundary; the tallest Monte-Carlo towers carry their real heights.</p>',
         '<p>The fleet list combines the official MYS 2026 superyacht list with shipyard, broker and trade-press announcements as of 12 September 2026. Confidence is marked on each card: <b>Official list</b> or <b>Reported</b>. About 40 further yachts, mostly brokerage boats under 55 m, had not been named publicly at compile time.</p>',
       ],
     },
@@ -27,14 +27,14 @@
       sub: 'גררו לסיבוב · גלגלו לזום · לחצן ימני או שתי אצבעות להזזה · לחצו על יאכטה',
       fleet: 'הצי', labels: 'שמות', night: 'לילה', aboutBtn: 'מקורות', fleetTitle: 'הצי', search: 'חיפוש יאכטה או מספנה…',
       loa: 'אורך', beam: 'רוחב', year: 'שנה', type: 'סוג', close: 'סגירה', aboutTitle: 'על ההדמיה',
-      sigRole: 'הדמיה תלת-ממדית · תערוכת היאכטות מונקו 2026', sigMeta: 'נתוני הצי נאספו ב-12.9.2026 מהרשימה הרשמית ומעיתונות המקצוע', sigLink: 'הערות דיוק',
+      sigRole: 'הדמיה תלת-ממדית · תערוכת היאכטות מונקו 2026', sigMeta: 'הצי, העגינות והמידות נאספו ב-12.9.2026 מהרשימה הרשמית, מספנות, ברוקרים ועיתונות המקצוע', sigLink: 'הערות דיוק',
       all: 'הכול', debut: 'בכורות', motor: 'מנוע', sailing: 'מפרש', explorer: 'אקספלורר', catamaran: 'רב-גופית', big: '60 מ׳ +',
       tDebut: 'בכורה עולמית / בתערוכה', tConfirmed: 'ברשימה הרשמית', tReported: 'דווח', tMotor: 'יאכטת מנוע', tSailing: 'יאכטת מפרש', tExplorer: 'אקספלורר', tCatamaran: 'רב-גופית',
       berth: 'עגינה', est: 'משוער', shownAt: 'מוצגת ב', yachts: 'יאכטות', source: 'מקור',
       views: { aerial: ['מבט על', 'הנמל כולו'], digue: ['הדיג', 'רנייה השלישי'], etats: ['רציף', 'ארצות הברית'], antoine: ['רציף', 'אנטואן הראשון'], rocher: ['מבט', 'מהסלע'], entrance: ['פתח', 'הנמל'] },
       about: [
-        '<p>כל יאכטה במודל בנויה לפי האורך הכולל, הרוחב והסוג שפורסמו לגביה, ומעוגנת במקום שבו התערוכה מציבה אותה כאשר פורסם רציף או מספר עגינה (רציף רנייה השלישי R03, עגינות Damen ‏E14 / S10 / H15, דוכני Quai des États-Unis, ‏Quai Louis II, ‏Appontement Jules Soccal, טרמינל השיט). כשלא פורסם מיקום, היאכטה הוצבה ברציף התואם לגודלה לפי הפריסה המקובלת של התערוכה: הגופים הגדולים ביותר על הדיג ועל רציף רנייה השלישי.</p>',
-        '<p>הרציפים, שוברי הגלים והבניינים שמסביב משורטטים מגיאומטריית OpenStreetMap של נמל הרקולס. צורות הגוף והמבנה העילי הן קירובים פרמטריים, לא שרטוטי מספנה. גובה הטופוגרפיה משוער.</p>',
+        '<p>כל יאכטה במודל בנויה לפי האורך הכולל, הרוחב והסוג שפורסמו לגביה, ומעוגנת במקום שבו התערוכה מציבה אותה כאשר פורסם רציף או קוד עגינה. קודי העגינה לפי הסכמה הרשמית: D = רציף רנייה השלישי (הדיג), R = רציף רנייה הראשון, E = רציף ארצות הברית, C = רציף השיקאן, S = מזח ז׳ול סוקאל (מזח ה-T המרכזי), H = רציף לירונדל, L = מזח לוצ׳יאנה, J = רציף ז׳רלן; עגינות ממוספרות מוצבות לפי הסדר המספרי לאורך הרציף. כשלא פורסם מיקום, היאכטה הוצבה ברציף התואם לגודלה לפי הפריסה המקובלת של התערוכה: הגופים הגדולים ביותר על הדיג ועל רציף רנייה השלישי.</p>',
+        '<p>הרציפים, שוברי הגלים והבניינים שמסביב משורטטים מגיאומטריית OpenStreetMap של נמל הרקולס. צורות הגוף והמבנה העילי הן קירובים פרמטריים, לא שרטוטי מספנה. הטופוגרפיה מחושבת מגבהים ידועים של רחובות ואתרים; הסלע עוקב אחר גבול רובע מונקו-ויל; המגדלים הגבוהים של מונטה קרלו בגובהם האמיתי.</p>',
         '<p>רשימת הצי משלבת את הרשימה הרשמית של MYS 2026 עם הודעות מספנות, ברוקרים ועיתונות מקצועית נכון ל-12 בספטמבר 2026. רמת הוודאות מסומנת בכל כרטיס: <b>ברשימה הרשמית</b> או <b>דווח</b>. כ-40 יאכטות נוספות, רובן סירות ברוקראז׳ מתחת ל-55 מ׳, טרם פורסמו בשמן.</p>',
       ],
     },
@@ -83,18 +83,30 @@
     return best;
   }
   const landXZ = E.llArr(H.landPoly);
-  const ridges = (H.ridges || []).map(r => ({ a: E.ll(r.pts[0][0], r.pts[0][1]), b: E.ll(r.pts[1][0], r.pts[1][1]), radius: r.radius, h0: r.h0, h1: r.h1 }));
+  const rockXZ = E.llArr(H.rockPoly);
+  const rockRidge = { a: E.ll(43.7313, 7.4200), b: E.ll(43.7331, 7.4280) };
+  // spot heights + coastline zeros -> inverse-distance field
+  const spots = H.spots.map(p => ({ x: E.ll(p[0], p[1]).x, z: E.ll(p[0], p[1]).z, h: p[2] }));
+  for (let i = 0; i < H.coastCount; i += 3) { const c = landXZ[i]; spots.push({ x: c.x, z: c.z, h: 0 }); }
+  function idw(x, z) {
+    let num = 0, den = 0;
+    for (const s of spots) { const d2 = (x - s.x) * (x - s.x) + (z - s.z) * (z - s.z) + 400; const w = 1 / (d2 * d2); num += w * s.h; den += w; }
+    return num / den;
+  }
   function elevation(x, z) {
     if (!pointInPoly(x, z, landXZ)) return -2.5;
-    const d = distToPoly(x, z, landXZ);
-    let h = Math.min(175, Math.pow(Math.max(0, d - 24), 1.08) * 0.24);
-    for (const r of ridges) {
-      const dx = r.b.x - r.a.x, dz = r.b.z - r.a.z; const l2 = dx * dx + dz * dz;
-      const u = E.clamp(((x - r.a.x) * dx + (z - r.a.z) * dz) / l2, 0, 1);
-      const dd = Math.hypot(x - (r.a.x + u * dx), z - (r.a.z + u * dz));
-      h = Math.max(h, E.lerp(r.h0, r.h1, u) * E.smooth(r.radius + 70, r.radius - 30, dd));
+    let h = Math.max(0, idw(x, z));
+    const dCoast = distToPoly(x, z, landXZ);
+    h *= E.smooth(8, 60, dCoast);                       // quays and promenades stay flat
+    // Le Rocher: plateau bounded by cliffs (Monaco-Ville district ring)
+    if (pointInPoly(x, z, rockXZ)) {
+      const dx = rockRidge.b.x - rockRidge.a.x, dz = rockRidge.b.z - rockRidge.a.z;
+      const u = E.clamp(((x - rockRidge.a.x) * dx + (z - rockRidge.a.z) * dz) / (dx * dx + dz * dz), 0, 1);
+      const top = u < 0.7 ? E.lerp(62, 52, u / 0.7) : E.lerp(52, 21, (u - 0.7) / 0.3);
+      const dEdge = distToPoly(x, z, rockXZ);
+      h = Math.max(h, top * E.smooth(18, 62, dEdge));
     }
-    h += (Math.sin(x * 0.011) * Math.cos(z * 0.013) + Math.sin(x * 0.031 + z * 0.02)) * 1.5 * E.smooth(0, 60, d);
+    h += (Math.sin(x * 0.011) * Math.cos(z * 0.013) + Math.sin(x * 0.031 + z * 0.02)) * 1.2 * E.smooth(0, 80, dCoast);
     return h;
   }
   (function buildTerrain() {
@@ -103,7 +115,7 @@
     const p = g.attributes.position;
     for (let i = 0; i < p.count; i++) p.setY(i, elevation(p.getX(i), p.getZ(i)) - 0.6);
     g.computeVertexNormals();
-    const m = new T.Mesh(g, new T.MeshStandardMaterial({ color: 0x7f8a64, roughness: 1 }));
+    const m = new T.Mesh(g, new T.MeshStandardMaterial({ color: 0x7a8560, roughness: 1 }));
     m.receiveShadow = true; scene.add(m);
   })();
 
@@ -138,7 +150,7 @@
   })();
 
   // quay zone strips (thin coloured kerb along each show quay) + tents
-  const ZONE_COLORS = { etats: 0xc8a24a, rainier: 0x2e8ba8, digue: 0x1e2b45, antoine: 0xc8102e, louis: 0x4f9f6a, soccal: 0xd97a3a, anchor: 0x9ec5d8, hirondelle: 0x3b6fb6, cruise: 0x6b6b78 };
+  const ZONE_COLORS = { etats: 0xc8a24a, rainier: 0x2e8ba8, digue: 0x1e2b45, antoine: 0xc8102e, louis: 0x4f9f6a, soccal: 0xd97a3a, anchor: 0x9ec5d8, hirondelle: 0x3b6fb6, cruise: 0x6b6b78, chicane: 0xe0c060, lucciana: 0x7fb7a8, jarlan: 0xb56b8a };
   const stripMat = new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.6 });
   const strips = [];
   H.quays.forEach(q => {
@@ -165,23 +177,26 @@
       segs.push({ a, b, d, n, len });
     }
     const total = segs.reduce((s, x) => s + x.len, 0);
-    return { ...q, segs, total, used: q.margin || 0, endMargin: q.endMargin || 6, placed: [] };
+    return { ...q, segs, total, used: q.margin ?? 0, endMargin: q.endMargin ?? 6, placed: [] };
   });
   const quayById = Object.fromEntries(quays.map(q => [q.id, q]));
   function zoneFor(y) {
     const z = (y.zone || '').toLowerCase();
     if (/cruise terminal/.test(z)) return 'cruise';
     if (/anchor/.test(z)) return 'anchor';
-    if (/rainier|r0\d/.test(z)) return 'rainier';
-    if (/etats|états|qe\d/.test(z)) return 'etats';
-    if (/louis|ql\d/.test(z)) return 'louis';
-    if (/soccal|js\d/.test(z)) return 'soccal';
-    if (/berth e\d/.test(z)) return 'etats';
-    if (/berth s\d/.test(z)) return 'soccal';
-    if (/berth h\d|sailing|hirondelle/.test(z)) return 'hirondelle';
+    if (/berth d\d|digue/.test(z)) return y.loa >= 88 ? 'cruise' : 'digue';
+    if (/berth r\d|rainier/.test(z)) return 'rainier';
+    if (/berth e\d|etats|états|qe\d/.test(z)) return 'etats';
+    if (/berth c\d|chicane/.test(z)) return 'chicane';
+    if (/berth s\d|soccal|js\d/.test(z)) return 'soccal';
+    if (/berth h\d|hirondelle|sailing/.test(z)) return 'hirondelle';
+    if (/berth l\d|lucciana/.test(z)) return 'lucciana';
+    if (/berth j\d|jarlan/.test(z)) return 'jarlan';
+    if (/ql\d|louis/.test(z)) return 'louis';
     if (/antoine/.test(z)) return 'antoine';
     return null;
   }
+  function berthNo(y) { const m = /berth [a-z](\d+)/i.exec(y.zone || ''); return m ? +m[1] : 999; }
   function fits(q, y) {
     const need = q.mode === 'alongside' ? y.loa + 6 : (y.beam || E.estBeam(y.loa, y.type)) + 3.2;
     return (!q.maxLoa || y.loa <= q.maxLoa) && (!q.minLoa || y.loa >= q.minLoa) && q.used + need <= q.total - q.endMargin;
@@ -205,9 +220,11 @@
     return { x, z, heading, quay: q };
   }
   const yachts = D.yachts.slice().sort((a, b) => b.loa - a.loa);
-  const order = ['digue', 'rainier', 'etats', 'hirondelle', 'louis', 'soccal', 'antoine', 'cruise'];
+  // placement order: yachts with a published berth number first (in berth order along their quay), then the rest by size
+  const placeOrder = yachts.slice().sort((a, b) => { const za = zoneFor(a) ? 0 : 1, zb = zoneFor(b) ? 0 : 1; if (za !== zb) return za - zb; const na = berthNo(a), nb = berthNo(b); if (na !== nb) return na - nb; return b.loa - a.loa; });
+  const order = ['digue', 'rainier', 'etats', 'chicane', 'hirondelle', 'soccal', 'louis', 'lucciana', 'antoine', 'jarlan', 'cruise'];
   const anchorSlots = (H.anchorage || []).map(a => ({ ...a, xz: E.ll(a.lat, a.lon), used: false }));
-  yachts.forEach(y => {
+  placeOrder.forEach(y => {
     let zone = zoneFor(y);
     if (!zone && (y.type === 'sailing' || y.sailCat)) zone = 'hirondelle';
     let spot = null;
@@ -222,6 +239,12 @@
     y.spot = spot; y.placedZone = spot.quay.zone || 'anchor'; y.quayName = spot.quay.name;
     const g = E.buildYacht(y);
     g.position.set(spot.x, 0, spot.z); g.rotation.y = spot.heading;
+    if (spot.quay.mode === 'stern') { // passerelle from the stern to the quay
+      const fbH = y.type === 'sailing' ? y.loa * 0.022 + 0.9 : y.loa * 0.026 + 1.25;
+      const gl = Math.max(4, y.loa * 0.08);
+      const gw = new T.Mesh(new T.BoxGeometry(gl, 0.12, 0.9), E.MAT.mast);
+      gw.position.set(-y.loa / 2 - gl / 2 + 0.6, (fbH + 2.2) / 2 + 0.3, 0); gw.rotation.z = -Math.atan2(fbH - 2.0, gl) ; g.add(gw);
+    }
     scene.add(g); y.obj = g;
     y.top = new T.Vector3(0, y.type === 'sailing' ? y.loa * 1.3 + 4 : y.loa * 0.16 + 14, 0);
   });
@@ -255,7 +278,7 @@
       pts.push(cx, elevation(cx, cz) + (b.height || 16) * 0.6, cz); cols.push(warm.r, warm.g, warm.b); });
     const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(pts, 3)); g.setAttribute('color', new T.Float32BufferAttribute(cols, 3));
     const tex = (function () { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'); const gr = x.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.3, 'rgba(255,255,255,.6)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = gr; x.fillRect(0, 0, 64, 64); return new T.CanvasTexture(c); })();
-    const m = new T.PointsMaterial({ size: 9, map: tex, vertexColors: true, transparent: true, depthWrite: false, blending: T.AdditiveBlending, sizeAttenuation: true });
+    const m = new T.PointsMaterial({ size: 12, map: tex, vertexColors: true, transparent: true, depthWrite: false, blending: T.AdditiveBlending, sizeAttenuation: true });
     nightGroup.add(new T.Points(g, m));
   })();
 
@@ -264,12 +287,12 @@
   function applyLighting() {
     const wu = water.userData.uniforms, su = sky.userData.uniforms;
     if (!night) {
-      sun.position.set(-700, 900, 500); sun.intensity = 2.4; sun.color.set(0xfff1d8); hemi.intensity = 0.75;
+      sun.position.set(-320, 780, 720); sun.intensity = 2.4; sun.color.set(0xfff1d8); hemi.intensity = 0.75;
       su.uTop.value.set(0x2f6fb0); su.uHorizon.value.set(0xdbe8f1); su.uNight.value = 0;
       wu.uDeep.value.set(0x0a3f5c); wu.uShallow.value.set(0x1f7f9c); wu.uSky.value.set(0xa9d1e6); wu.uNight.value = 0;
       scene.fog.color.set(0xd7e6f0); renderer.toneMappingExposure = 1.05;
     } else {
-      sun.position.set(900, 260, -600); sun.intensity = 0.35; sun.color.set(0xb9c8ff); hemi.intensity = 0.18;
+      sun.position.set(900, 260, -600); sun.intensity = 0.4; sun.color.set(0xb9c8ff); hemi.intensity = 0.3;
       su.uTop.value.set(0x050b18); su.uHorizon.value.set(0x1b2a45); su.uNight.value = 1;
       wu.uDeep.value.set(0x03101e); wu.uShallow.value.set(0x0a2438); wu.uSky.value.set(0x223a5a); wu.uNight.value = 1;
       scene.fog.color.set(0x0b1524); renderer.toneMappingExposure = 0.9;
@@ -317,7 +340,7 @@
       const want = showLabels && (y === selected || y === hovered || shown < maxN);
       if (!want) { el.style.display = 'none'; continue; }
       v3.copy(y.top).applyMatrix4(y.obj.matrixWorld).project(camera);
-      if (v3.z > 1 || Math.abs(v3.x) > 1.1 || Math.abs(v3.y) > 1.1) { el.style.display = 'none'; continue; }
+      if (v3.z > 1 || Math.abs(v3.x) > 0.98 || Math.abs(v3.y) > 0.98) { el.style.display = 'none'; continue; }
       const d = camera.position.distanceTo(y.obj.position);
       if (y !== selected && y !== hovered && d > 2600) { el.style.display = 'none'; continue; }
       const sx = (v3.x + 1) / 2 * w, sy = (1 - v3.y) / 2 * h;
@@ -405,7 +428,8 @@
     yachts.forEach(y => {
       if (!passes(y)) return; n++;
       const b = document.createElement('button'); b.className = 'item'; b.dataset.id = y.id; b.setAttribute('role', 'option'); b.setAttribute('aria-current', String(selected === y));
-      b.innerHTML = `<span class="n" dir="ltr">${shortName(y)}${y.debut ? '<i class="debut" title="debut"></i>' : ''}</span><span class="m">${y.loa}<small> m</small></span><span class="b" dir="ltr">${y.builder || ''}${y.year ? ' · ' + y.year : ''}</span>`;
+      const qn = y.quayName ? (lang === 'he' && y.quayName.he ? y.quayName.he : y.quayName.en || y.quayName) : '';
+      b.innerHTML = `<span class="n" dir="ltr">${shortName(y)}${y.debut ? '<i class="debut" title="debut"></i>' : ''}</span><span class="m">${y.loa}<small> m</small></span><span class="b"><span dir="ltr">${y.builder || ''}${y.year ? ' · ' + y.year : ''}</span>${qn ? ` · <span class="q">${qn.split(' · ')[0]}</span>` : ''}</span>`;
       b.addEventListener('click', () => select(y, true));
       listEl.appendChild(b);
     });
@@ -464,7 +488,7 @@
     if (!reduceMotion) water.userData.uniforms.uTime.value += dt;
     controls.update();
     // keep the shadow frustum centred where the camera looks
-    sun.target.position.copy(controls.state.target); sun.position.copy(controls.state.target).add(night ? new T.Vector3(900, 260, -600) : new T.Vector3(-700, 900, 500));
+    sun.target.position.copy(controls.state.target); sun.position.copy(controls.state.target).add(night ? new T.Vector3(900, 260, -600) : new T.Vector3(-320, 780, 720));
     renderer.render(scene, camera);
     if ((frame++ & 1) === 0) updateLabels();
   }

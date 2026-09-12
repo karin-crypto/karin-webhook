@@ -103,7 +103,7 @@
     for (let i = 0; i <= N; i++) {
       const t = i / N;                       // 0 stern -> 1 bow
       const x = -L / 2 + t * L;
-      let f = 1 - Math.pow(Math.max(0, (t - 0.52) / 0.48), sailing ? 1.4 : 1.9);
+      let f = 1 - Math.pow(Math.max(0, (t - (type === 'explorer' ? 0.62 : 0.52)) / (type === 'explorer' ? 0.38 : 0.48)), sailing ? 1.4 : type === 'explorer' ? 2.6 : 1.9);
       f *= 0.86 + 0.14 * smooth(0, 0.28, t);
       if (sailing) f *= 0.75 + 0.25 * smooth(0, 0.5, t);
       const b = Math.max(0.05, B / 2 * f);
@@ -168,6 +168,18 @@
       if (type === 'sailing') addRig(g, meshes, L, B, h.fb, superColor);
       else addDeckhouses(g, meshes, L, B, h.fb, type, superColor, spec.name);
     }
+    // hull-side window strip (main-deck cabins) and swim platform
+    if (type !== 'sailing' && L > 34) {
+      const fbH = L * 0.026 + 1.25;
+      for (const side of [-1, 1]) {
+        const strip = new T.Mesh(new T.BoxGeometry(L * 0.46, fbH * 0.22, 0.12), MAT.glass);
+        strip.position.set(-L * 0.06, fbH * 0.62, side * (B / 2 * 0.985)); g.add(strip);
+      }
+    }
+    if (type !== 'sailing') {
+      const plat = new T.Mesh(new T.BoxGeometry(Math.max(1.6, L * 0.035), 0.25, B * 0.72), MAT.teak);
+      plat.position.set(-L / 2 - Math.max(0.8, L * 0.0175), 0.55, 0); g.add(plat); meshes.push(plat);
+    }
     meshes.forEach(m => { m.castShadow = true; m.receiveShadow = true; m.userData.yacht = spec; });
     g.userData = { spec, meshes };
     return g;
@@ -207,6 +219,16 @@
       x0 = x0 + len * (explorer ? 0.30 : 0.22) + dh * 0.4;
       w *= shrink;
       if (x1 - x0 < dh * 1.5) break;
+    }
+    // hardtop over the aft part of the top deck (open sun deck / flybridge)
+    if (L > 30) {
+      const htL = Math.max(4, (x1 - x0) * 0.9), htW = w * 0.95 + 1.0;
+      const ht = new T.Mesh(extrudeUp(roundedPlan(topX - htL * 0.15, topX + htL * 0.85, htW / 2, htW * 0.5, 1.0), 0.28, topY + dh * 0.72), MAT.super(color));
+      g.add(ht); meshes.push(ht);
+      for (const side of [-1, 1]) for (const k of [0.15, 0.8]) {
+        const post = new T.Mesh(new T.BoxGeometry(0.18, dh * 0.72, 0.18), MAT.mast);
+        post.position.set(topX - htL * 0.15 + htL * k, topY + dh * 0.36, side * (htW / 2 - 0.4)); g.add(post);
+      }
     }
     // sun deck details: mast + radar arch + domes
     const mastH = clamp(L * 0.09, 3, 12);
