@@ -19,7 +19,7 @@
       views: { aerial: ['Aerial', 'Overview'], digue: ['Digue', 'Rainier III'], etats: ['Quai', 'des États-Unis'], antoine: ['Quai', 'Antoine 1er'], rocher: ['From', 'Le Rocher'], entrance: ['Harbour', 'entrance'] },
       about: [
         '<p>Every yacht in this model is drawn from its published length overall, beam and type, and moored where the show places it when a berth or quay was published. Berth codes follow the official scheme: D = Quai Rainier III (Digue), R = Quai Rainier 1er, E = Quai des États-Unis, C = Quai Chicane, S = Appontement Jules Soccal (the T-Central pier), H = Quai de l’Hirondelle, L = Jetée Lucciana, J = Quai Jarlan; numbered berths are placed in numeric order along their quay. Where no berth was published the yacht is placed on a quay of matching size following the show’s customary layout, largest hulls outboard on the Digue and Quai Rainier III.</p>',
-        '<p>Quays, breakwaters and the surrounding buildings are traced from OpenStreetMap geometry of Port Hercule. Hull and superstructure shapes are parametric approximations, not shipyard drawings. Terrain is interpolated from published street and landmark altitudes; Le Rocher follows the Monaco-Ville district boundary; the tallest Monte-Carlo towers carry their real heights.</p>',
+        '<p>Quays, breakwaters and the surrounding buildings are traced from OpenStreetMap geometry of Port Hercule. Hull and superstructure shapes are parametric models driven by each yacht’s researched appearance (hull and superstructure colour, bow type, deck count, rig, helipad, pool, expedition deck) where the press or shipyard published it; they are not shipyard drawings. Terrain comes from the Mapzen / AWS terrarium elevation tiles (SRTM and EU-DEM, 25–30 m source resolution), flattened at the waterfront; Le Rocher’s plateau is restored to its published height inside the Monaco-Ville district boundary; the tallest Monte-Carlo towers carry their real heights.</p>',
         '<p>The fleet list combines the official MYS 2026 superyacht list with shipyard, broker and trade-press announcements as of 12 September 2026. Confidence is marked on each card: <b>Official list</b> or <b>Reported</b>. About 40 further yachts, mostly brokerage boats under 55 m, had not been named publicly at compile time.</p>',
       ],
     },
@@ -35,7 +35,7 @@
       views: { aerial: ['מבט על', 'הנמל כולו'], digue: ['הדיג', 'רנייה השלישי'], etats: ['רציף', 'ארצות הברית'], antoine: ['רציף', 'אנטואן הראשון'], rocher: ['מבט', 'מהסלע'], entrance: ['פתח', 'הנמל'] },
       about: [
         '<p>כל יאכטה במודל בנויה לפי האורך הכולל, הרוחב והסוג שפורסמו לגביה, ומעוגנת במקום שבו התערוכה מציבה אותה כאשר פורסם רציף או קוד עגינה. קודי העגינה לפי הסכמה הרשמית: D = רציף רנייה השלישי (הדיג), R = רציף רנייה הראשון, E = רציף ארצות הברית, C = רציף השיקאן, S = מזח ז׳ול סוקאל (מזח ה-T המרכזי), H = רציף לירונדל, L = מזח לוצ׳יאנה, J = רציף ז׳רלן; עגינות ממוספרות מוצבות לפי הסדר המספרי לאורך הרציף. כשלא פורסם מיקום, היאכטה הוצבה ברציף התואם לגודלה לפי הפריסה המקובלת של התערוכה: הגופים הגדולים ביותר על הדיג ועל רציף רנייה השלישי.</p>',
-        '<p>הרציפים, שוברי הגלים והבניינים שמסביב משורטטים מגיאומטריית OpenStreetMap של נמל הרקולס. צורות הגוף והמבנה העילי הן קירובים פרמטריים, לא שרטוטי מספנה. הטופוגרפיה מחושבת מגבהים ידועים של רחובות ואתרים; הסלע עוקב אחר גבול רובע מונקו-ויל; המגדלים הגבוהים של מונטה קרלו בגובהם האמיתי.</p>',
+        '<p>הרציפים, שוברי הגלים והבניינים שמסביב משורטטים מגיאומטריית OpenStreetMap של נמל הרקולס. צורות הגוף והמבנה העילי הן מודלים פרמטריים המונעים מהמראה האמיתי שנחקר לכל יאכטה (צבע גוף ומבנה עילי, סוג חרטום, מספר סיפונים, ריג, מנחת מסוקים, בריכה, סיפון משלחות) היכן שפורסם; אלה אינם שרטוטי מספנה. הטופוגרפיה מגיעה מאריחי גובה אמיתיים (Mapzen / AWS terrarium, מקור SRTM ו-EU-DEM ברזולוציה של 25–30 מ׳), מיושרת בקו המים; רמת הסלע הוחזרה לגובהה המפורסם בתוך גבול רובע מונקו-ויל; המגדלים הגבוהים של מונטה קרלו בגובהם האמיתי.</p>',
         '<p>רשימת הצי משלבת את הרשימה הרשמית של MYS 2026 עם הודעות מספנות, ברוקרים ועיתונות מקצועית נכון ל-12 בספטמבר 2026. רמת הוודאות מסומנת בכל כרטיס: <b>ברשימה הרשמית</b> או <b>דווח</b>. כ-40 יאכטות נוספות, רובן סירות ברוקראז׳ מתחת ל-55 מ׳, טרם פורסמו בשמן.</p>',
       ],
     },
@@ -90,7 +90,7 @@
   const landXZ = E.llArr(H.landPoly);
   const rockXZ = E.llArr(H.rockPoly);
   const rockRidge = { a: E.ll(43.7313, 7.4200), b: E.ll(43.7331, 7.4280) };
-  // spot heights + coastline zeros -> inverse-distance field
+  // real terrain: Mapzen terrarium heightmap (SRTM / EU-DEM source) decoded from terrain.js; spot-height IDW as fallback
   const spots = H.spots.map(p => ({ x: E.ll(p[0], p[1]).x, z: E.ll(p[0], p[1]).z, h: p[2] }));
   for (let i = 0; i < H.coastCount; i += 3) { const c = landXZ[i]; spots.push({ x: c.x, z: c.z, h: 0 }); }
   function idw(x, z) {
@@ -98,12 +98,23 @@
     for (const s of spots) { const d2 = (x - s.x) * (x - s.x) + (z - s.z) * (z - s.z) + 400; const w = 1 / (d2 * d2); num += w * s.h; den += w; }
     return num / den;
   }
+  const DEM = (function () {
+    const d = window.MYS_DEM; if (!d) return null;
+    const bin = atob(d.data); const buf = new ArrayBuffer(bin.length); const u8 = new Uint8Array(buf); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+    return { n: d.n, size: d.size, a: new Int16Array(buf), step: d.size / (d.n - 1) };
+  })();
+  function demAt(x, z) {
+    const gx = (x + DEM.size / 2) / DEM.step, gz = (z + DEM.size / 2) / DEM.step;
+    const i0 = E.clamp(Math.floor(gx), 0, DEM.n - 2), j0 = E.clamp(Math.floor(gz), 0, DEM.n - 2); const fx = E.clamp(gx - i0, 0, 1), fz = E.clamp(gz - j0, 0, 1);
+    const a = DEM.a[j0 * DEM.n + i0], b = DEM.a[j0 * DEM.n + i0 + 1], c = DEM.a[(j0 + 1) * DEM.n + i0], d = DEM.a[(j0 + 1) * DEM.n + i0 + 1];
+    return ((a * (1 - fx) + b * fx) * (1 - fz) + (c * (1 - fx) + d * fx) * fz) / 10;
+  }
   function elevation(x, z) {
     if (!pointInPoly(x, z, landXZ)) return -2.5;
-    let h = Math.max(0, idw(x, z));
     const dCoast = distToPoly(x, z, landXZ);
-    h *= E.smooth(8, 60, dCoast);                       // quays and promenades stay flat
-    // Le Rocher: plateau bounded by cliffs (Monaco-Ville district ring)
+    let h = DEM ? Math.max(0, demAt(x, z)) : Math.max(0, idw(x, z));
+    h = E.lerp(Math.min(h, 1.2), h, E.smooth(14, 90, dCoast));   // quays, promenades and reclaimed land stay flat at the waterfront
+    // Le Rocher: the 30 m DEM smooths the plateau; restore its published height along the ridge, bounded by the Monaco-Ville ring (cliffs)
     if (pointInPoly(x, z, rockXZ)) {
       const dx = rockRidge.b.x - rockRidge.a.x, dz = rockRidge.b.z - rockRidge.a.z;
       const u = E.clamp(((x - rockRidge.a.x) * dx + (z - rockRidge.a.z) * dz) / (dx * dx + dz * dz), 0, 1);
@@ -111,7 +122,6 @@
       const dEdge = distToPoly(x, z, rockXZ);
       h = Math.max(h, top * E.smooth(18, 62, dEdge));
     }
-    h += (Math.sin(x * 0.011) * Math.cos(z * 0.013) + Math.sin(x * 0.031 + z * 0.02)) * 1.2 * E.smooth(0, 80, dCoast);
     return h;
   }
   controls.setGround(elevation);
@@ -214,6 +224,15 @@
     }
   });
   if (strips.length) { const m = new T.Mesh(E.mergeGeoms(strips), stripMat); scene.add(m); }
+  (function buildBollards() {
+    const pts = [];
+    H.quays.forEach(q => { const xz = E.llArr(q.pts); for (let i = 0; i < xz.length - 1; i++) { const a = xz[i], b = xz[i + 1]; const len = Math.hypot(b.x - a.x, b.z - a.z); for (let d = 6; d < len; d += 12) { const t = d / len; pts.push([a.x + (b.x - a.x) * t, a.z + (b.z - a.z) * t]); } } });
+    if (!pts.length) return;
+    const geo = new T.CylinderGeometry(0.28, 0.34, 0.9, 8); geo.translate(0, 0.45, 0);
+    const im = new T.InstancedMesh(geo, new T.MeshStandardMaterial({ color: 0x2a2d31, roughness: 0.6, metalness: 0.4 }), pts.length);
+    const o = new T.Object3D(); pts.forEach((p, i) => { o.position.set(p[0], 2.2, p[1]); o.updateMatrix(); im.setMatrixAt(i, o.matrix); });
+    im.castShadow = true; scene.add(im);
+  })();
 
   /* ---------- berthing ---------- */
   const quays = H.quays.map(q => {
@@ -290,6 +309,13 @@
     y.spot = spot; y.placedZone = spot.quay.zone || 'anchor'; y.quayName = spot.quay.name;
     const g = E.buildYacht(y);
     g.position.set(spot.x, 0, spot.z); g.rotation.y = spot.heading;
+    if (spot.quay.mode === 'stern') { // stern lines to the quay bollards
+      const bw = (y.beam || E.estBeam(y.loa, y.type)) / 2;
+      const fbH0 = y.type === 'sailing' ? y.loa * 0.022 + 0.9 : y.loa * 0.026 + 1.25;
+      const pts = [];
+      for (const side of [-1, 1]) { pts.push(new T.Vector3(-y.loa / 2 + 0.5, fbH0 + 0.4, side * bw * 0.85)); pts.push(new T.Vector3(-y.loa / 2 - 2.6, 2.1, side * (bw * 0.85 + 2.2))); }
+      const lines = new T.LineSegments(new T.BufferGeometry().setFromPoints(pts), E.MAT.rope); g.add(lines);
+    }
     if (spot.quay.mode === 'stern') { // passerelle from the stern to the quay
       const fbH = y.type === 'sailing' ? y.loa * 0.022 + 0.9 : y.loa * 0.026 + 1.25;
       const gl = Math.max(4, y.loa * 0.08);

@@ -100,30 +100,35 @@
   }
 
   /* ---------- hull loft ---------- */
-  function hullGeometry(L, B, type) {
-    const N = 30, M = 11;
+  const HULL_COLORS = { white: 0xf3f1ec, navy: 0x1e2b45, grey: 0x8d959c, gray: 0x8d959c, black: 0x1a1a1f, silver: 0xc9ced3, iceblue: 0xbfd0dc, green: 0x2f4f3e, blue: 0x2b4f8a, cream: 0xefe6d2, red: 0x8a1c1c, darkblue: 0x16223a, bronze: 0x7a6a52, champagne: 0xd8cbb0, darkgrey: 0x4a5058 };
+  function hullGeometry(L, B, type, bow) {
+    const N = 32, M = 11;
     const sailing = type === 'sailing';
     const fb = sailing ? L * 0.022 + 0.9 : L * 0.026 + 1.25;   // freeboard at midship
     const draft = clamp(sailing ? L * 0.05 + 0.8 : L * 0.038 + 0.8, 1, 6.5);
+    bow = bow || (type === 'explorer' ? 'plumb' : sailing ? 'plumb' : 'raked');
+    const rake = bow === 'axe' ? -L * 0.028 : bow === 'plumb' ? L * 0.006 : bow === 'bulbous' ? L * 0.04 : L * 0.045;
     const pos = [], idx = [];
     const stations = [];
     for (let i = 0; i <= N; i++) {
       const t = i / N;                       // 0 stern -> 1 bow
       const x = -L / 2 + t * L;
-      let f = 1 - Math.pow(Math.max(0, (t - (type === 'explorer' ? 0.62 : 0.52)) / (type === 'explorer' ? 0.38 : 0.48)), sailing ? 1.4 : type === 'explorer' ? 2.6 : 1.9);
+      const full = type === 'explorer' || bow === 'plumb' || bow === 'axe';
+      let f = 1 - Math.pow(Math.max(0, (t - (full ? 0.60 : 0.52)) / (full ? 0.40 : 0.48)), sailing ? 1.5 : full ? 2.4 : 1.9);
       f *= 0.86 + 0.14 * smooth(0, 0.28, t);
-      if (sailing) f *= 0.75 + 0.25 * smooth(0, 0.5, t);
+      if (sailing) f *= 0.72 + 0.28 * smooth(0, 0.5, t);
       const b = Math.max(0.05, B / 2 * f);
-      const yd = fb * (1 + (sailing ? 0.28 : 0.38) * Math.pow(t, 2.6)) + (sailing ? 0 : 0.0);
+      const yd = fb * (1 + (sailing ? 0.28 : bow === 'axe' ? 0.22 : 0.38) * Math.pow(t, 2.6));
       const yk = -draft * (0.55 + 0.45 * Math.sin(Math.PI * Math.pow(t, 0.9)));
-      stations.push({ x, b, yd, yk });
+      stations.push({ x, b, yd, yk, t });
       for (let j = 0; j < M; j++) {
         const s = -1 + 2 * j / (M - 1);   // -1 port .. +1 stbd
         const phi = s * Math.PI / 2;
         const z = b * Math.sign(s) * Math.pow(Math.abs(Math.sin(phi)), sailing ? 0.95 : 0.78);
         const c = Math.pow(Math.cos(phi), sailing ? 1.1 : 0.7);
         const y = yd - (yd - yk) * c;
-        pos.push(x, y, z);
+        const xr = x + rake * ((y - yk) / (yd - yk)) * smooth(0.72, 1, t); // stem rake / plumb / reverse
+        pos.push(xr, y, z);
       }
     }
     for (let i = 0; i < N; i++) for (let j = 0; j < M - 1; j++) {
@@ -136,7 +141,7 @@
     for (let j = 0; j < M - 1; j++) idx.push(base, j + 1, j);
     // deck
     const d0 = pos.length / 3;
-    stations.forEach(s => { pos.push(s.x, s.yd + 0.02, -s.b); pos.push(s.x, s.yd + 0.02, s.b); });
+    stations.forEach(s => { const xr = s.x + rake * smooth(0.72, 1, s.t); pos.push(xr, s.yd + 0.02, -s.b); pos.push(xr, s.yd + 0.02, s.b); });
     for (let i = 0; i < N; i++) { const a = d0 + i * 2; idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); }
     const g = new T.BufferGeometry();
     g.setAttribute('position', new T.Float32BufferAttribute(pos, 3));
@@ -155,19 +160,33 @@
     return { geom: g, fb, draft, stations };
   }
 
-  /* ---------- yacht builder ---------- */
+  /* ---------- foam / water disturbance around a hull ---------- */
+  let foamTex = null;
+  function getFoamTex() {
+    if (foamTex) return foamTex;
+    const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d');
+    const gr = x.createRadialGradient(64, 64, 20, 64, 64, 64); gr.addColorStop(0, 'rgba(255,255,255,0.0)'); gr.addColorStop(0.55, 'rgba(255,255,255,0.28)'); gr.addColorStop(0.75, 'rgba(255,255,255,0.10)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = gr; x.fillRect(0, 0, 128, 128);
+    foamTex = new T.CanvasTexture(c); return foamTex;
+  }
+
+  /* ---------- yacht builder (v3: per-yacht look parameters) ---------- */
   function buildYacht(spec) {
     const type = spec.type || 'motor';
+    const look = spec.look || {};
     const L = spec.loa, B = spec.beam || estBeam(L, type);
     const g = new T.Group();
-    const hullColor = spec.hullColor || (type === 'explorer' ? (hash(spec.name) < 0.5 ? 0x2b3a4d : 0x8d959c) : pickHull(spec.name));
-    const superColor = 0xf5f4f0;
+    const hullColor = spec.hullColor || (look.hull && HULL_COLORS[look.hull]) || (type === 'explorer' ? (hash(spec.name) < 0.5 ? 0x2b3a4d : 0x8d959c) : pickHull(spec.name));
+    const superColor = spec.superColor || (look.superstructure && look.superstructure !== 'white' && HULL_COLORS[look.superstructure]) || 0xf5f4f0;
+    const glassy = (look.style || []).some(k => /rwd|sinot|winch|oino|nuvolari|glass|zuccon|espen|vripack|design unlimited|tim heywood/i.test(k)) || L > 70;
+    const feats = (look.features || []).join(' ').toLowerCase();
+    const opts = { glassy, decks: look.decks || null, flybridge: look.flybridge, aftDeckOpen: look.aftDeckOpen, feats, bow: look.bow && look.bow !== 'unknown' ? look.bow : null };
     const meshes = [];
 
     if (type === 'catamaran') {
       const bh = B * 0.24;
       for (const side of [-1, 1]) {
-        const h = hullGeometry(L, bh, 'motor');
+        const h = hullGeometry(L, bh, 'motor', 'plumb');
         const m = new T.Mesh(h.geom, [MAT.hull(hullColor), MAT.teak]);
         m.position.z = side * (B / 2 - bh / 2);
         g.add(m); meshes.push(m);
@@ -175,19 +194,20 @@
       const fb = L * 0.026 + 1.25;
       const bridge = new T.Mesh(extrudeUp(roundedPlan(-L * 0.42, L * 0.30, B / 2 - 0.3, B * 0.35, 0.8), 0.6, fb - 0.3), MAT.super(superColor));
       g.add(bridge); meshes.push(bridge);
-      addDeckhouses(g, meshes, L * 0.9, B * 0.95, fb + 0.3, 'motor', superColor, spec.name);
+      if (spec.sailCat) addRig(g, meshes, L, B * 0.5, fb + 0.3, superColor, { rig: 'sloop', masts: 1, mastHeight: look.mastHeight_m, house: false });
+      else addDeckhouses(g, meshes, L * 0.9, B * 0.95, fb + 0.3, 'motor', superColor, spec.name, Object.assign({}, opts, { decks: look.flybridge === false ? 1 : (look.decks || 2) }));
     } else {
-      const h = hullGeometry(L, B, type);
+      const h = hullGeometry(L, B, type, opts.bow);
       const m = new T.Mesh(h.geom, [MAT.hull(hullColor), MAT.teak]);
       g.add(m); meshes.push(m);
-      if (type === 'sailing') addRig(g, meshes, L, B, h.fb, superColor);
-      else addDeckhouses(g, meshes, L, B, h.fb, type, superColor, spec.name);
+      if (type === 'sailing') addRig(g, meshes, L, B, h.fb, superColor, { rig: look.rig, masts: look.masts, mastHeight: look.mastHeight_m, house: true });
+      else addDeckhouses(g, meshes, L, B, h.fb, type, superColor, spec.name, opts);
     }
     // hull-side window strip (main-deck cabins) and swim platform
     if (type !== 'sailing' && L > 34) {
       const fbH = L * 0.026 + 1.25;
       for (const side of [-1, 1]) {
-        const strip = new T.Mesh(new T.BoxGeometry(L * 0.46, fbH * 0.22, 0.12), MAT.glass);
+        const strip = new T.Mesh(new T.BoxGeometry(L * 0.46, fbH * (glassy ? 0.3 : 0.22), 0.12), MAT.glass);
         strip.position.set(-L * 0.06, fbH * 0.62, side * (B / 2 * 0.985)); g.add(strip);
       }
     }
@@ -195,36 +215,43 @@
       const plat = new T.Mesh(new T.BoxGeometry(Math.max(1.6, L * 0.035), 0.25, B * 0.72), MAT.teak);
       plat.position.set(-L / 2 - Math.max(0.8, L * 0.0175), 0.55, 0); g.add(plat); meshes.push(plat);
     }
+    // foam ring at the waterline
+    const foam = new T.Mesh(new T.PlaneGeometry(L * 1.3, B * 2.6), new T.MeshBasicMaterial({ map: getFoamTex(), transparent: true, depthWrite: false, opacity: 0.9 }));
+    foam.rotation.x = -Math.PI / 2; foam.position.y = 0.08; g.add(foam);
     meshes.forEach(m => { m.castShadow = true; m.receiveShadow = true; m.userData.yacht = spec; });
     g.userData = { spec, meshes };
     return g;
   }
 
-  function addDeckhouses(g, meshes, L, B, fb, type, color, name) {
-    const levels = L < 26 ? 2 : L < 42 ? 3 : L < 70 ? 4 : L < 110 ? 5 : 6;
+  function addDeckhouses(g, meshes, L, B, fb, type, color, name, o) {
+    o = o || {};
+    const levels = o.decks || (L < 26 ? 2 : L < 42 ? 3 : L < 70 ? 4 : L < 110 ? 5 : 6);
     const dh = clamp(L * 0.012 + 2.3, 2.4, 3.2);       // deck height
     const explorer = type === 'explorer';
+    const aftOpen = explorer && o.aftDeckOpen !== false;
     let y = fb;
-    let x0 = explorer ? -L * 0.22 : -L * 0.40, x1 = explorer ? L * 0.34 : L * 0.27;
+    let x0 = aftOpen ? -L * 0.20 : explorer ? -L * 0.34 : -L * 0.40, x1 = explorer ? L * 0.34 : L * 0.27;
     let w = B * (explorer ? 0.90 : 0.84);
     const rnd = hash(name + ':ss');
+    const bandFrac = o.glassy ? 0.72 : 0.42, bandY = o.glassy ? 0.16 : 0.35;
     let topX = 0, topY = y;
     for (let i = 0; i < levels; i++) {
       const last = i === levels - 1;
-      // floor slab / terrace of this level (extends aft over the deck below)
       const slabAft = i === 0 ? x0 : x0 - dh * 1.4;
       const slab = new T.Mesh(extrudeUp(roundedPlan(slabAft, x1 + 0.4, w / 2 + 0.35, w * 0.55, 1.2), 0.32, y - 0.32), MAT.super(color));
       g.add(slab); meshes.push(slab);
-      if (i > 0) { // railing line along the terrace edge
+      if (i > 0) {
         const rail = new T.Mesh(new T.BoxGeometry(x1 - slabAft, 0.05, 0.05), MAT.mast);
         rail.position.set((slabAft + x1) / 2, y + 1.0, w / 2 + 0.3); g.add(rail);
         const rail2 = rail.clone(); rail2.position.z = -(w / 2 + 0.3); g.add(rail2);
+        // stanchions
+        const nSt = Math.max(2, Math.round((x1 - slabAft) / 3));
+        for (let k = 0; k <= nSt; k++) for (const side of [-1, 1]) { const st = new T.Mesh(new T.BoxGeometry(0.06, 1.0, 0.06), MAT.mast); st.position.set(slabAft + (x1 - slabAft) * k / nSt, y + 0.5, side * (w / 2 + 0.3)); g.add(st); }
       }
       const hH = last && !explorer ? dh * 0.85 : dh;
-      const house = new T.Mesh(extrudeUp(roundedPlan(x0, x1, w / 2, w * 0.6, 0.9), hH, y), MAT.super(color));
+      const house = new T.Mesh(extrudeUp(roundedPlan(x0, x1, w / 2, w * (o.glassy ? 0.75 : 0.6), 0.9), hH, y), MAT.super(color));
       g.add(house); meshes.push(house);
-      // window band
-      const band = new T.Mesh(extrudeUp(roundedPlan(x0 + 0.3, x1 + 0.12, w / 2 + 0.06, w * 0.6, 0.9), hH * 0.42, y + hH * 0.35), MAT.glass);
+      const band = new T.Mesh(extrudeUp(roundedPlan(x0 + 0.3, x1 + 0.12, w / 2 + 0.06, w * (o.glassy ? 0.75 : 0.6), 0.9), hH * bandFrac, y + hH * bandY), MAT.glass);
       g.add(band); meshes.push(band);
       topX = (x0 + x1) / 2; topY = y + hH;
       y += hH;
@@ -235,8 +262,7 @@
       w *= shrink;
       if (x1 - x0 < dh * 1.5) break;
     }
-    // hardtop over the aft part of the top deck (open sun deck / flybridge)
-    if (L > 30) {
+    if (L > 30 && o.flybridge !== false) {
       const htL = Math.max(4, (x1 - x0) * 0.9), htW = w * 0.95 + 1.0;
       const ht = new T.Mesh(extrudeUp(roundedPlan(topX - htL * 0.15, topX + htL * 0.85, htW / 2, htW * 0.5, 1.0), 0.28, topY + dh * 0.72), MAT.super(color));
       g.add(ht); meshes.push(ht);
@@ -245,7 +271,6 @@
         post.position.set(topX - htL * 0.15 + htL * k, topY + dh * 0.36, side * (htW / 2 - 0.4)); g.add(post);
       }
     }
-    // sun deck details: mast + radar arch + domes
     const mastH = clamp(L * 0.09, 3, 12);
     const arch = new T.Mesh(new T.BoxGeometry(0.6, mastH, w * 0.9 + 1.2), MAT.mast);
     arch.position.set(topX + (explorer ? 2 : 1), topY + mastH / 2, 0); arch.rotation.z = -0.25; g.add(arch);
@@ -256,35 +281,46 @@
       const d = new T.Mesh(new T.SphereGeometry(domeR, 12, 8), MAT.dome);
       d.position.set(topX + 1 + mastH * 0.35, topY + mastH + 0.4 + domeR, dz * (domeR + 0.3)); g.add(d);
     }
-    // helipad / tender-deck / pool hints for big yachts
-    if (L > 75 && !explorer) {
-      const pad = new T.Mesh(new T.CylinderGeometry(clamp(L * 0.07, 6, 11), clamp(L * 0.07, 6, 11), 0.12, 24), new T.MeshStandardMaterial({ color: 0x9db9c9, roughness: 0.9 }));
+    const feats = o.feats || '';
+    const wantPad = /helipad|heli|touch-and-go/.test(feats) || (L > 75 && !explorer && !feats);
+    if (wantPad) {
+      const r = clamp(L * 0.07, 6, 11);
+      const pad = new T.Mesh(new T.CylinderGeometry(r, r, 0.12, 24), new T.MeshStandardMaterial({ color: 0x9db9c9, roughness: 0.9 }));
       pad.position.set(L * 0.36, fb + 0.1, 0); g.add(pad);
+      const H = new T.Mesh(new T.RingGeometry(r * 0.75, r * 0.82, 24), new T.MeshBasicMaterial({ color: 0xffffff })); H.rotation.x = -Math.PI / 2; H.position.set(L * 0.36, fb + 0.18, 0); g.add(H);
     }
-    if (explorer) {
+    if (explorer || /crane|expedition|tender garage|submarine/.test(feats)) {
       const crane = new T.Mesh(new T.BoxGeometry(0.5, clamp(L * 0.08, 3, 9), 0.5), MAT.mast);
       crane.position.set(-L * 0.36, fb + clamp(L * 0.08, 3, 9) / 2, B * 0.32); crane.rotation.x = 0.35; g.add(crane);
-      const tender = buildTender(clamp(L * 0.14, 5, 12)); tender.position.set(-L * 0.35, fb + 0.6, -B * 0.15); g.add(tender);
+      if (aftOpen || explorer) { const tender = buildTender(clamp(L * 0.14, 5, 12)); tender.position.set(-L * 0.35, fb + 0.6, -B * 0.15); g.add(tender); }
     }
-    if (rnd < 0.5 && L > 40) { // pool
+    if ((/pool|jacuzzi|spa/.test(feats) || (!feats && rnd < 0.5)) && L > 40) {
       const pool = new T.Mesh(new T.BoxGeometry(clamp(L * 0.07, 3, 8), 0.1, clamp(B * 0.28, 2, 5)), new T.MeshStandardMaterial({ color: 0x3fb7d6, roughness: 0.1, metalness: 0.2 }));
       pool.position.set(-L * 0.44, fb + 0.08, 0); g.add(pool);
     }
   }
   function buildTender(l) {
     const t = new T.Group();
-    const h = hullGeometry(l, l * 0.3, 'motor');
+    const h = hullGeometry(l, l * 0.3, 'motor', 'raked');
     const m = new T.Mesh(h.geom, [MAT.hull(0xe8e8e4), MAT.teak]); t.add(m);
     const con = new T.Mesh(new T.BoxGeometry(l * 0.25, 0.9, l * 0.14), MAT.glass); con.position.set(l * 0.05, h.fb + 0.45, 0); t.add(con);
     return t;
   }
-  function addRig(g, meshes, L, B, fb, color) {
-    const house = new T.Mesh(extrudeUp(roundedPlan(-L * 0.30, L * 0.12, B * 0.30, B * 0.3, 1.0), 1.5, fb), MAT.super(color));
-    g.add(house); meshes.push(house);
-    const band = new T.Mesh(extrudeUp(roundedPlan(-L * 0.29, L * 0.125, B * 0.30 + 0.05, B * 0.3, 1.0), 0.6, fb + 0.6), MAT.glass);
-    g.add(band); meshes.push(band);
-    const ketch = L > 52;
-    const masts = ketch ? [{ x: L * 0.12, h: L * 1.22 }, { x: -L * 0.26, h: L * 0.95 }] : [{ x: L * 0.08, h: L * 1.28 }];
+  function addRig(g, meshes, L, B, fb, color, r) {
+    r = r || {};
+    if (r.house !== false) {
+      const house = new T.Mesh(extrudeUp(roundedPlan(-L * 0.30, L * 0.12, B * 0.30, B * 0.3, 1.0), 1.5, fb), MAT.super(color));
+      g.add(house); meshes.push(house);
+      const band = new T.Mesh(extrudeUp(roundedPlan(-L * 0.29, L * 0.125, B * 0.30 + 0.05, B * 0.3, 1.0), 0.6, fb + 0.6), MAT.glass);
+      g.add(band); meshes.push(band);
+    }
+    const rig = r.rig || (L > 52 ? 'ketch' : 'sloop');
+    const nM = r.masts || (rig === 'sloop' ? 1 : 2);
+    const mh = r.mastHeight ? r.mastHeight - fb : L * 1.28;
+    let masts;
+    if (nM === 1) masts = [{ x: L * 0.08, h: mh }];
+    else if (rig === 'schooner') masts = [{ x: L * 0.22, h: mh * 0.85 }, { x: -L * 0.16, h: mh }];
+    else masts = [{ x: L * 0.12, h: mh }, { x: -L * 0.26, h: mh * 0.78 }];
     masts.forEach(mm => {
       const mast = new T.Mesh(new T.CylinderGeometry(0.18, 0.42, mm.h, 10), MAT.mast);
       mast.position.set(mm.x, fb + mm.h / 2, 0); g.add(mast); meshes.push(mast);
@@ -443,5 +479,5 @@
     return api;
   }
 
-  global.MYS3D = { T, ll, llArr, clamp, lerp, smooth, hash, planShape, roundedPlan, extrudeUp, mergeGeoms, paint, MAT, buildYacht, estBeam, makeWater, makeSky, OrbitControls, ORIGIN };
+  global.MYS3D = { HULL_COLORS, T, ll, llArr, clamp, lerp, smooth, hash, planShape, roundedPlan, extrudeUp, mergeGeoms, paint, MAT, buildYacht, estBeam, makeWater, makeSky, OrbitControls, ORIGIN };
 })(window);
