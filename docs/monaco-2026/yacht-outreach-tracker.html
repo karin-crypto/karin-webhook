@@ -1,0 +1,329 @@
+<title>מעקב יאכטות · מונקו 2026</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700&family=Assistant:wght@400;600;700&family=Bodoni+Moda:opsz,wght@6..96,400;6..96,600&display=swap">
+<style>
+:root{
+  --ink:#0B1F3A; --ink-2:#2C3E57; --mute:#6E7B8F; --line:#D7DBE1; --line-2:#E8EBEF;
+  --ground:#F4F5F3; --paper:#FFFFFF; --panel:#0B1F3A; --panel-ink:#F4F5F3; --panel-mute:#9FB0C6;
+  --brass:#A98A55; --brass-ink:#7C6236; --brass-soft:#F3EDE0;
+  --sea:#1E6F78; --sea-soft:#E3EFF0;
+  --ok:#2F7A4B; --ok-soft:#E4F1E7; --warn:#9A6A12; --warn-soft:#FBF1DC; --bad:#C8323B; --bad-soft:#F9E5E6;
+  --shadow:0 8px 24px rgba(11,31,58,.08);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ink:#EEF1F5; --ink-2:#C9D2DF; --mute:#8E9BB0; --line:#27364D; --line-2:#1D2B3F;
+    --ground:#0A1526; --paper:#112036; --panel:#F0EDE6; --panel-ink:#0B1F3A; --panel-mute:#5D6B80;
+    --brass:#C9A96E; --brass-ink:#E2C88F; --brass-soft:#2A2417;
+    --sea:#5FB3BC; --sea-soft:#14303A;
+    --ok:#7CC58F; --ok-soft:#16301F; --warn:#E5B85C; --warn-soft:#3A2D12; --bad:#F08A90; --bad-soft:#3F1A1D;
+    --shadow:0 8px 24px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#EEF1F5; --ink-2:#C9D2DF; --mute:#8E9BB0; --line:#27364D; --line-2:#1D2B3F;
+  --ground:#0A1526; --paper:#112036; --panel:#F0EDE6; --panel-ink:#0B1F3A; --panel-mute:#5D6B80;
+  --brass:#C9A96E; --brass-ink:#E2C88F; --brass-soft:#2A2417;
+  --sea:#5FB3BC; --sea-soft:#14303A;
+  --ok:#7CC58F; --ok-soft:#16301F; --warn:#E5B85C; --warn-soft:#3A2D12; --bad:#F08A90; --bad-soft:#3F1A1D;
+  --shadow:0 8px 24px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:"Assistant",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;font-size:16px;line-height:1.5;padding-inline:clamp(16px,3vw,40px);padding-block:0 72px;direction:rtl}
+h1,h2,h3{margin:0;text-wrap:balance}
+.serif{font-family:"Frank Ruhl Libre","David",Georgia,serif}
+.latin{font-family:"Bodoni Moda","Didot",Georgia,serif;letter-spacing:-.01em}
+a{color:var(--sea)}
+.num{font-variant-numeric:tabular-nums}
+.wrap{max-width:1180px;margin:0 auto}
+button,select,input,textarea{font-family:inherit;font-size:14px;color:var(--ink)}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--sea);outline-offset:2px}
+
+/* masthead */
+.top{display:flex;justify-content:space-between;align-items:center;gap:16px;padding-block:16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.top .mast{font-family:"Bodoni Moda",serif;font-size:14px;letter-spacing:.06em;direction:ltr}
+.top .mast span{color:var(--brass-ink)}
+.top .sync{font-size:13px;color:var(--mute);display:flex;align-items:center;gap:8px}
+.top .sync i{width:8px;height:8px;border-radius:50%;background:var(--mute);display:inline-block}
+.top .sync.live i{background:var(--ok)}
+.top .sync.local i{background:var(--warn)}
+
+header.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:28px;align-items:end;padding-block:36px 26px;border-bottom:1px solid var(--line)}
+.eyebrow{font-size:12px;letter-spacing:.04em;color:var(--brass-ink);font-weight:700}
+header.hero h1{font-size:clamp(32px,5vw,54px);line-height:1.05;margin-top:10px}
+header.hero h1 em{font-style:normal;color:var(--brass-ink)}
+header.hero .lede{margin:14px 0 0;color:var(--ink-2);max-width:60ch;font-size:17px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 20px;margin-top:16px;font-size:14px;color:var(--mute)}
+.meta b{color:var(--ink);font-weight:600}
+
+/* summary */
+.summary{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.sum{background:var(--paper);border:1px solid var(--line);padding:12px 14px;cursor:pointer;text-align:right;border-radius:2px;transition:border-color .15s}
+.sum:hover{border-color:var(--brass)}
+.sum[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.sum .n{font-family:"Bodoni Moda",serif;font-size:30px;line-height:1;color:var(--ink)}
+.sum .l{font-size:12.5px;color:var(--mute);margin-top:6px;display:flex;align-items:center;gap:6px}
+.sum .l i{width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--dot)}
+
+/* filters */
+.bar{position:sticky;top:0;z-index:5;background:var(--ground);border-bottom:1px solid var(--line);padding-block:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.bar .grp{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.bar .lab{font-size:12px;color:var(--mute);letter-spacing:.03em;margin-inline-end:4px}
+.chip{border:1px solid var(--line);background:var(--paper);color:var(--ink-2);padding:6px 12px;border-radius:999px;font-size:13.5px;font-weight:600;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+.bar .spacer{flex:1}
+.bar .count{font-size:13px;color:var(--mute)}
+
+/* list */
+.list{display:grid;gap:14px;padding-block:20px}
+.yacht{background:var(--paper);border:1px solid var(--line);border-radius:2px;display:grid;grid-template-columns:72px 1fr;box-shadow:none;transition:box-shadow .2s}
+.yacht:hover{box-shadow:var(--shadow)}
+.yacht .rank{border-inline-end:1px solid var(--line-2);display:flex;flex-direction:column;align-items:center;padding-block:18px;gap:6px}
+.yacht .rank b{font-family:"Bodoni Moda",serif;font-size:34px;line-height:1;color:var(--brass-ink);font-weight:400}
+.yacht .rank small{font-size:11px;color:var(--mute)}
+.yacht .body{padding:18px 20px 16px;display:grid;gap:14px}
+.head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px 18px;align-items:baseline}
+.head .name{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.head h2{font-family:"Bodoni Moda",serif;font-weight:400;font-size:30px;line-height:1;direction:ltr;letter-spacing:-.01em}
+.head .spec{font-size:14px;color:var(--ink-2)}
+.head .spec b{font-weight:600;color:var(--ink)}
+.status{display:inline-flex;align-items:center;gap:7px;padding:5px 11px;border-radius:999px;font-size:13px;font-weight:700;background:var(--s-soft);color:var(--s-ink);border:1px solid transparent}
+.status i{width:8px;height:8px;border-radius:50%;background:var(--s-ink);display:inline-block}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:12px;padding:3px 9px;border-radius:3px;background:var(--brass-soft);color:var(--brass-ink);font-weight:600}
+.tag.debut{background:var(--sea-soft);color:var(--sea)}
+.tag.prio{background:transparent;border:1px solid var(--brass);color:var(--brass-ink)}
+.why{margin:0;color:var(--ink-2);font-size:15px;max-width:72ch}
+.where{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:14px;color:var(--ink-2)}
+.where b{color:var(--ink);font-weight:600}
+.where .unv{color:var(--warn);font-size:12.5px}
+.contacts{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px}
+.ct{border:1px solid var(--line-2);padding:10px 12px;border-radius:2px;font-size:13.5px;display:grid;gap:3px;background:var(--ground)}
+.ct .role{font-size:11.5px;letter-spacing:.03em;color:var(--brass-ink);font-weight:700}
+.ct .who{color:var(--ink);font-weight:600}
+.ct a{word-break:break-all;text-decoration:none}
+.ct a:hover{text-decoration:underline}
+.ct .note{color:var(--mute);font-size:12.5px}
+.ct .ph{direction:ltr;text-align:right;display:inline-block}
+
+/* tracking row */
+.track{display:grid;grid-template-columns:170px 130px 150px 1fr;gap:10px;align-items:start;border-top:1px dashed var(--line);padding-top:14px}
+.track label{display:grid;gap:4px;font-size:12px;color:var(--mute)}
+.track select,.track input,.track textarea{border:1px solid var(--line);background:var(--paper);border-radius:2px;padding:7px 9px;width:100%}
+.track textarea{min-height:38px;resize:vertical;font-size:13.5px}
+.track input[type=date]{direction:ltr}
+.track .slot{display:none}
+.yacht[data-status="approved"] .track .slot{display:grid}
+.saved{font-size:12px;color:var(--ok);min-height:16px;margin-top:2px}
+
+/* footer */
+.foot{margin-top:28px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.dark{background:var(--panel);color:var(--panel-ink);padding:22px 24px;border-radius:2px}
+.dark .eyebrow{color:var(--brass)}
+.dark p{margin:8px 0 0;font-size:14.5px;max-width:60ch}
+.dark a{color:inherit}
+.dark .soft{color:var(--panel-mute)}
+.src{font-size:12.5px;color:var(--mute);padding-top:14px;line-height:1.6}
+.toast{position:fixed;bottom:18px;inset-inline-start:18px;background:var(--ink);color:var(--ground);padding:10px 16px;border-radius:3px;font-size:14px;opacity:0;transform:translateY(8px);transition:all .2s;pointer-events:none}
+.toast.show{opacity:1;transform:none}
+
+@media (max-width:900px){
+  header.hero{grid-template-columns:1fr}
+  .summary{grid-template-columns:repeat(3,1fr)}
+  .track{grid-template-columns:1fr 1fr}
+  .foot{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .summary{grid-template-columns:repeat(2,1fr)}
+  .yacht{grid-template-columns:1fr}
+  .yacht .rank{flex-direction:row;border-inline-end:0;border-bottom:1px solid var(--line-2);padding:10px 16px;justify-content:flex-start}
+  .track{grid-template-columns:1fr}
+  .head h2{font-size:26px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media print{.bar,.top .sync,.toast{display:none} .yacht{break-inside:avoid} body{background:#fff;color:#000}}
+</style>
+
+<div class="wrap">
+<header class="top">
+  <div class="mast">KARIN KEREN <span>|</span> YACHTING, WEALTH &amp; LUXURY</div>
+  <div class="sync" id="sync"><i></i><span>מתחבר…</span></div>
+</header>
+
+<header class="hero">
+  <div>
+    <div class="eyebrow">Monaco Yacht Show · Port Hercule · 23–26.09.2026</div>
+    <h1 class="serif">מעקב פניות<br>ל־<em>10 היאכטות הגדולות</em></h1>
+    <p class="lede">לכל יאכטה: איש קשר לעיתונות במספנה, הברוקר המציג, מיקום עגינה, ולמה היא שווה כתבה. סטטוס הפנייה נשמר ומשותף לקארין ולמעיין.</p>
+    <div class="meta">
+      <span><b>דירוג</b> YachtBuyer, 17.07.2026</span>
+      <span><b>מרכז העיתונות</b> Quai Antoine Ier · נקודה 18</span>
+      <span><b>Press Office MYS</b> <a href="mailto:communicationdivision@monacoyachtshow.mc">communicationdivision@monacoyachtshow.mc</a></span>
+    </div>
+  </div>
+  <div class="summary" id="summary" role="group" aria-label="סיכום סטטוסים"></div>
+</header>
+
+<nav class="bar" aria-label="סינון">
+  <div class="grp"><span class="lab">נושא</span>
+    <button class="chip" data-theme-filter="all" aria-pressed="true">הכול</button>
+    <button class="chip" data-theme-filter="debut" aria-pressed="false">בכורה 2026</button>
+    <button class="chip" data-theme-filter="icon" aria-pressed="false">ותיקות מוכחות</button>
+    <button class="chip" data-theme-filter="hybrid" aria-pressed="false">Hybrid / Tech</button>
+    <button class="chip" data-theme-filter="exploration" aria-pressed="false">Exploration</button>
+  </div>
+  <div class="grp"><span class="lab">אחראי</span>
+    <button class="chip" data-owner-filter="all" aria-pressed="true">הכול</button>
+    <button class="chip" data-owner-filter="קארין" aria-pressed="false">קארין</button>
+    <button class="chip" data-owner-filter="מעיין" aria-pressed="false">מעיין</button>
+  </div>
+  <span class="spacer"></span>
+  <span class="count" id="count"></span>
+</nav>
+
+<main class="list" id="list"></main>
+
+<section class="foot">
+  <div class="dark">
+    <div class="eyebrow">איך לפנות</div>
+    <p>תג עיתונות לא מקנה עלייה לסיפון. הביקור onboard הוא לפי שיקול דעת המספנה או הברוקר המציג, ולכן סוגרים מראש: פנייה אחת לכל בית (Oceanco = Leviathan + Draak · Burgess = Malia + Vanish + Synthesis · Edmiston = Nixie + Angelique + Silver Fox · Damen = Pangea + Synthesis · Turquoise = Angelique + N2H).</p>
+    <p class="soft">מבקשים שלושה דברים: slot של 30–45 דק׳ לצילום B-roll, ראיון קצר עם נציג המספנה/הברוקר, ואישור לפרסום Reel/TikTok ממותג.</p>
+  </div>
+  <div class="dark">
+    <div class="eyebrow">מה עדיין לא מאומת</div>
+    <p>עגינה (berth) פורסמה רשמית רק ל־Leviathan, Draak, Pangea ו־Synthesis; Nixie לפי Edmiston. לשאר – לבדוק ברשימת MYS או במרכז העיתונות בהגעה.</p>
+    <p class="soft">אימייל של Georgia Lewis (Oceanco) מופיע בהודעה לעיתונות של 6.8.2026 ב־PR Newswire ולא הועתק לכאן – לאמת לפני שליחה. ל־Turquoise אין כתובת Press ייעודית שפורסמה.</p>
+  </div>
+</section>
+<p class="src" id="src"></p>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const DATA = {"show": {"name": "Monaco Yacht Show 2026", "dates": "23–26.09.2026", "venue": "Port Hercule, Monaco", "pressOffice": {"email": "communicationdivision@monacoyachtshow.mc", "pressCentre": "Quai Antoine Ier (מפה 2026: Virage Louis Chiron) · נקודה 18"}, "source": "YachtBuyer, 10 Largest Superyachts Confirmed for MYS 2026 (17.07.2026); רשימת MYS הרשמית; הודעות מספנות/ברוקרים, נכון ל-12.09.2026"}, "statuses": [{"id": "none", "label": "לא פנינו"}, {"id": "sent", "label": "פנייה נשלחה"}, {"id": "pending", "label": "ממתינים לתשובה"}, {"id": "approved", "label": "צילום אושר"}, {"id": "declined", "label": "נדחה"}], "yachts": [{"id": "leviathan", "rank": 1, "name": "Leviathan", "length": "111 מ׳", "builder": "Oceanco", "year": "2025", "debut": false, "themes": ["flagship", "exploration"], "priority": "כתבת הדגל", "berth": "D02 · Quai Rainier III", "berthVerified": true, "why": "הגדולה בתערוכה. מעבדה, מרכז צלילה, הנעה מתקדמת. סיפור luxury × science × technology, לא רק יאכטה יפה. הבעלים: גייב ניואל (Valve).", "exhibitor": "Oceanco", "contacts": [{"role": "Press · Oceanco", "name": "Georgia Lewis, PR Manager", "phone": "+31 6 83 19 46 88", "email": "", "note": "האימייל מופיע בהודעה לעיתונות של Oceanco (PR Newswire, 6.8.2026) – לאמת לפני שליחה", "url": "https://www.oceancoyacht.com/newsroom/"}], "links": [{"label": "Oceanco · Leviathan", "url": "https://www.oceancoyacht.com/fleet/leviathan/"}]}, {"id": "nixie", "rank": 2, "name": "Nixie", "length": "102.4 מ׳", "builder": "Lürssen", "year": "2026", "debut": true, "themes": ["flagship", "debut"], "priority": "יעד מס׳ 1 למעיין", "berth": "Quai Rainier Ier (לפי Edmiston)", "berthVerified": false, "why": "בכורה עולמית. מסירה יוני 2026 (לשעבר Project JASSJ). Beach club של 126 מ״ר, בריכת אינפיניטי עם רצפת זכוכית, מנחת מסוקים מוסמך. עיצוב RWD. לשכירות דרך Edmiston מ-€2.4M לשבוע.", "exhibitor": "Edmiston (סוכן שכירות בלעדי)", "contacts": [{"role": "Press · Lürssen", "name": "Yacht PR", "phone": "+49 421 6604 190", "email": "ypr@luerssen.de", "note": "", "url": "https://www.lurssen.com/en/news-media-friends/press-releases/"}, {"role": "Broker · Edmiston", "name": "Rory Noble, Head of Marketing & Brand", "phone": "", "email": "", "note": "דרך עמוד Press & Media של Edmiston (משרד מונקו)", "url": "https://edmiston.com/press-and-media"}], "links": [{"label": "Edmiston · MYS 2026 guide", "url": "https://www.edmiston.com/monaco-yacht-show-complete-guide/"}]}, {"id": "draak", "rank": 3, "name": "Draak", "length": "92.8 מ׳", "builder": "Oceanco (rebuild)", "year": "2026 (rebuild)", "debut": false, "themes": ["exploration"], "priority": "סיפור משותף עם Leviathan", "berth": "D01 · Quai Rainier III", "berthVerified": true, "why": "לשעבר Equanimity / Tranquility. נבנתה מחדש כ-support vessel ל-Leviathan: יאכטת־אם וספינת־צל שעובדות כמערכת אחת למחקר ים. לראשונה Oceanco מציגה new build ו-rebuild יחד.", "exhibitor": "Oceanco", "contacts": [{"role": "Press · Oceanco", "name": "Georgia Lewis, PR Manager", "phone": "+31 6 83 19 46 88", "email": "", "note": "אותו איש קשר כמו Leviathan – לבקש את שתי היאכטות בפנייה אחת", "url": "https://www.oceancoyacht.com/fleet/draak/"}], "links": []}, {"id": "angelique", "rank": 4, "name": "Angelique", "length": "87.7 מ׳", "builder": "Turquoise Yachts", "year": "2026", "debut": true, "themes": ["debut", "newgen"], "priority": "The New Generation of Superyachts", "berth": "לא פורסם עדיין", "berthVerified": false, "why": "הגדולה ביותר שנבנתה בטורקיה (2,646 GT). מסירה מאי 2026, הופעה ציבורית ראשונה. עיצוב H2 Yacht Design: סיפון בעלים פרטי, beach club ברוחב מלא, בריכה עם קיר זכוכית. שכירות בלעדית Edmiston מ-€1.2M לשבוע.", "exhibitor": "Turquoise Yachts / Edmiston", "contacts": [{"role": "Shipyard · Turquoise", "name": "Turquoise Yachts, Istanbul", "phone": "+1 754 258 4755 (US office)", "email": "infousa@turquoiseyachts.com", "note": "אין כתובת Press ייעודית שפורסמה – לפנות דרך טופס Contact ולבקש את מחלקת התקשורת", "url": "https://www.turquoiseyachts.com/contact"}, {"role": "Broker · Edmiston", "name": "Rory Noble, Head of Marketing & Brand", "phone": "", "email": "", "note": "", "url": "https://edmiston.com/press-and-media"}], "links": []}, {"id": "pangea", "rank": 5, "name": "Pangea", "length": "80 מ׳", "builder": "Amels (Damen Yachting)", "year": "2025", "debut": true, "themes": ["hybrid", "debut"], "priority": "כתבת משנה: העתיד של התחום", "berth": "E14 · Quai des États-Unis", "berthVerified": true, "why": "Amels 80 הראשונה שמוצגת בתערוכה אי פעם (show debut). הנעה היברידית, 14 אורחים ב-7 סוויטות. צוות Damen Yachting בעמדה JS6 (Jules Soccal).", "exhibitor": "Damen Yachting · stand JS6", "contacts": [{"role": "Press · Damen Yachting / Amels", "name": "Press Officer", "phone": "", "email": "team@damenyachting.com", "note": "לציין Pangea + Synthesis באותה פנייה", "url": "https://www.amelsyachting.com/media-and-press"}], "links": [{"label": "Damen · MYS 2026 guide", "url": "https://www.damenyachting.com/events/monaco-yacht-show"}]}, {"id": "malia", "rank": 6, "name": "Malia", "length": "77.7 מ׳", "builder": "Golden Yachts", "year": "2023 (refit 2024)", "debut": false, "themes": ["icon"], "priority": "ויזואל חזק לווידאו", "berth": "לא פורסם עדיין", "berthVerified": false, "why": "עיצוב Studio Vafiadis. מנחת מסוקים בחרטום, beach club, בריכות עם רצפת זכוכית, טווח 6,500 מייל. למכירה ב-€110M דרך Burgess; שכירות מ-€750K לשבוע.", "exhibitor": "Burgess", "contacts": [{"role": "Press · Burgess", "name": "Nicci Perides, Head of PR & Communications", "phone": "+44 20 7766 4300", "email": "press@burgessyachts.com", "note": "Burgess מציגה גם את Vanish ו-Synthesis – פנייה אחת לשלוש יאכטות", "url": "https://www.burgessyachts.com/en/about-us/press-centre"}, {"role": "Shipyard · Golden Yachts", "name": "Marketing", "phone": "+30 210 4410719", "email": "marketing@goldenyachts.gr", "note": "", "url": "https://www.goldenyachts.gr/contact/"}], "links": []}, {"id": "n2h", "rank": 7, "name": "N2H", "length": "76.25 מ׳", "builder": "Turquoise Yachts", "year": "2026", "debut": true, "themes": ["hybrid", "debut"], "priority": "כתבת משנה: hybrid", "berth": "לא פורסם עדיין", "berthVerified": false, "why": "הסופר־יאכטה ההיברידית הראשונה של Turquoise. חיצוני Team for Design (Enrico Gobbi), פנים H2. Beach club מדורג, מרפסות מתקפלות, touch-and-go helipad. לא למכירה – יאכטה פרטית (משויכת ל-Kees Vermaat).", "exhibitor": "Turquoise Yachts", "contacts": [{"role": "Shipyard · Turquoise", "name": "Turquoise Yachts, Istanbul", "phone": "+1 754 258 4755 (US office)", "email": "infousa@turquoiseyachts.com", "note": "יאכטה פרטית – הסיכוי לעלייה לסיפון נמוך יותר; לבקש ראיון עם המספנה על ההנעה ההיברידית גם בלי צילום פנים", "url": "https://www.turquoiseyachts.com/contact"}], "links": []}, {"id": "synthesis", "rank": 8, "name": "Synthesis", "length": "74 מ׳", "builder": "Amels 242 (Damen Yachting)", "year": "2021 (refit 2026)", "debut": false, "themes": ["icon", "refit"], "priority": "Owner's Deck + refit 2026", "berth": "H15 · Quai de l'Hirondelle", "berthVerified": true, "why": "חיצוני Tim Heywood, פנים Winch Design. Refit משמעותי 2026, סיפון בעלים שלם עם ספא, בריכת אינפיניטי, קולנוע פתוח. למכירה ב-€132M דרך Burgess + Torrance Yachts (co-exhibitors).", "exhibitor": "Burgess + Torrance Yachts (עם Damen Yachting)", "contacts": [{"role": "Press · Burgess", "name": "Nicci Perides, Head of PR & Communications", "phone": "+44 20 7766 4300", "email": "press@burgessyachts.com", "note": "", "url": "https://www.burgessyachts.com/en/about-us/press-centre"}, {"role": "Press · Damen Yachting / Amels", "name": "Press Officer", "phone": "", "email": "team@damenyachting.com", "note": "", "url": "https://www.amelsyachting.com/media-and-press"}], "links": []}, {"id": "silver-fox", "rank": 9, "name": "Silver Fox", "length": "72 מ׳ (MYS: 73.4)", "builder": "Sanlorenzo · 74Steel", "year": "2026", "debut": true, "themes": ["hybrid", "debut"], "priority": "כתבת משנה: diesel-electric", "berth": "לא פורסם עדיין", "berthVerified": false, "why": "הראשונה בסדרת 74Steel, בכורה עולמית. חיצוני Zuccon International Project, פנים Francesco Paszkowski. שכירות בלעדית Edmiston מ-€900K לשבוע. Sanlorenzo מציגה גם 58Steel.", "exhibitor": "Sanlorenzo / Edmiston", "contacts": [{"role": "Media Relations · Sanlorenzo", "name": "Mariangela Barbato", "phone": "+39 340 9955110", "email": "", "note": "", "url": "https://www.sanlorenzoyacht.com/uk/news/comunicati-stampa.asp"}, {"role": "Press Office · Comin & Partners (עבור Sanlorenzo)", "name": "Giulia Mori · Tommaso Accomanno", "phone": "+39 347 4938864", "email": "tommaso.accomanno@cominandpartners.com", "note": "", "url": ""}, {"role": "Broker · Edmiston", "name": "Rory Noble, Head of Marketing & Brand", "phone": "", "email": "", "note": "", "url": "https://edmiston.com/press-and-media"}], "links": []}, {"id": "vanish", "rank": 10, "name": "Vanish", "length": "71.5 מ׳", "builder": "Feadship", "year": "2021", "debut": false, "themes": ["icon"], "priority": "הכי יקרה למכירה בתערוכה", "berth": "לא פורסם עדיין", "berthVerified": false, "why": "Feadship עטורת פרסים, עיצוב Harrison Eidsgaard, בריכה + helipad. למכירה לראשונה: €148M דרך Burgess (Christian Bakewell) – היאכטה היקרה ביותר למכירה ב-MYS 2026.", "exhibitor": "Burgess", "contacts": [{"role": "Press · Burgess", "name": "Nicci Perides, Head of PR & Communications", "phone": "+44 20 7766 4300", "email": "press@burgessyachts.com", "note": "הברוקר האחראי: Christian Bakewell", "url": "https://www.burgessyachts.com/en/about-us/press-centre"}, {"role": "Press · Feadship", "name": "Francis Vermeer, PR & Communications Manager", "phone": "", "email": "francis@feadship.nl", "note": "", "url": "https://www.feadship.nl/pressroom"}], "links": []}]};
+const THEME_LABEL = {flagship:"Flagship", debut:"World Debut 2026", exploration:"Exploration & Science", newgen:"New Generation", hybrid:"Hybrid / Diesel-electric", icon:"Proven icon", refit:"Refit 2026"};
+const STATUS = Object.fromEntries(DATA.statuses.map(s=>[s.id,s.label]));
+const STATUS_COLOR = {none:["var(--line-2)","var(--mute)"], sent:["var(--sea-soft)","var(--sea)"], pending:["var(--warn-soft)","var(--warn)"], approved:["var(--ok-soft)","var(--ok)"], declined:["var(--bad-soft)","var(--bad)"]};
+const EMPTY = ()=>({status:"none", owner:"", contactedAt:"", slot:"", note:""});
+
+let state = {};               // id -> tracking record
+let filters = {theme:"all", owner:"all", status:"all"};
+let db = null, saveTimers = {};
+const LS_KEY = "mys26-tracker";
+
+// ---- persistence -----------------------------------------------------
+function loadLocal(){ try{ const raw = localStorage.getItem(LS_KEY); if(raw) state = Object.assign(state, JSON.parse(raw)); }catch(e){} }
+function saveLocal(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){} }
+function setSync(mode, text){ const el=document.getElementById("sync"); el.className="sync "+mode; el.querySelector("span").textContent=text; }
+
+async function connect(){
+  try{ db = await window.claude?.use?.("db"); }catch(e){ db = null; }
+  if(!db){ setSync("local","נשמר במכשיר הזה בלבד"); return; }
+  db.collection("yachts").onSnapshot(snap=>{
+    snap.docs.forEach(d=>{ if(d.exists) state[d.id] = Object.assign(EMPTY(), d.data()); });
+    saveLocal(); render(false);
+    setSync("live","משותף · מסונכרן");
+  }, err=>{ setSync("local","אין חיבור למאגר המשותף · נשמר במכשיר"); });
+}
+function persist(id){
+  saveLocal();
+  clearTimeout(saveTimers[id]);
+  saveTimers[id] = setTimeout(async ()=>{
+    if(!db){ toast("נשמר במכשיר"); return; }
+    try{ await db.doc("yachts/"+id).set(Object.assign({}, state[id], {updatedAt:new Date().toISOString()})); toast("נשמר ושותף"); }
+    catch(e){ toast("השמירה למאגר נכשלה – נשמר במכשיר"); }
+  }, 500);
+}
+let toastT; function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),1800); }
+
+// ---- render ----------------------------------------------------------
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function rec(id){ return state[id] || (state[id]=EMPTY()); }
+
+function renderSummary(){
+  const counts = {}; DATA.statuses.forEach(s=>counts[s.id]=0);
+  DATA.yachts.forEach(y=>counts[rec(y.id).status]++);
+  document.getElementById("summary").innerHTML = DATA.statuses.map(s=>`
+    <button class="sum" data-status-filter="${s.id}" aria-pressed="${filters.status===s.id}" style="--dot:${STATUS_COLOR[s.id][1]}">
+      <div class="n num">${counts[s.id]}</div><div class="l"><i></i>${s.label}</div></button>`).join("");
+}
+
+function visible(y){
+  const r = rec(y.id);
+  if(filters.status!=="all" && r.status!==filters.status) return false;
+  if(filters.owner!=="all" && r.owner!==filters.owner) return false;
+  if(filters.theme!=="all" && !y.themes.includes(filters.theme)) return false;
+  return true;
+}
+
+function contactHTML(c){
+  const tel = c.phone ? `<a class="ph num" href="tel:${esc(c.phone.replace(/[^+\d]/g,''))}">${esc(c.phone)}</a>` : "";
+  const mail = c.email ? `<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>` : "";
+  const link = c.url ? `<a href="${esc(c.url)}" target="_blank" rel="noopener">עמוד עיתונות ↗</a>` : "";
+  return `<div class="ct"><div class="role">${esc(c.role)}</div><div class="who">${esc(c.name)}</div>${mail}${tel}${link}${c.note?`<div class="note">${esc(c.note)}</div>`:""}</div>`;
+}
+
+function yachtHTML(y){
+  const r = rec(y.id); const [soft,ink] = STATUS_COLOR[r.status]||STATUS_COLOR.none;
+  const tags = y.themes.map(t=>`<span class="tag ${t==="debut"?"debut":""}">${esc(THEME_LABEL[t]||t)}</span>`).join("") + `<span class="tag prio">${esc(y.priority)}</span>`;
+  return `<article class="yacht" data-id="${y.id}" data-status="${r.status}">
+    <div class="rank"><b class="num">${y.rank}</b><small>${esc(y.length)}</small></div>
+    <div class="body">
+      <div class="head">
+        <div class="name"><h2 class="latin">${esc(y.name)}</h2><span class="spec"><b>${esc(y.builder)}</b> · ${esc(y.year)}</span></div>
+        <span class="status" style="--s-soft:${soft};--s-ink:${ink}"><i></i>${STATUS[r.status]}${r.owner?` · ${esc(r.owner)}`:""}</span>
+      </div>
+      <div class="tags">${tags}</div>
+      <p class="why">${esc(y.why)}</p>
+      <div class="where"><span><b>עגינה</b> ${esc(y.berth)} ${y.berthVerified?"":'<span class="unv">· לא אומת</span>'}</span><span><b>מציג</b> ${esc(y.exhibitor)}</span>${y.links.map(l=>`<a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)} ↗</a>`).join("")}</div>
+      <div class="contacts">${y.contacts.map(contactHTML).join("")}</div>
+      <div class="track">
+        <label>סטטוס פנייה<select id="st-${y.id}" data-field="status">${DATA.statuses.map(s=>`<option value="${s.id}" ${s.id===r.status?"selected":""}>${s.label}</option>`).join("")}</select></label>
+        <label>אחראי/ת<select id="ow-${y.id}" data-field="owner"><option value="" ${!r.owner?"selected":""}>—</option><option ${r.owner==="קארין"?"selected":""}>קארין</option><option ${r.owner==="מעיין"?"selected":""}>מעיין</option></select></label>
+        <label>תאריך פנייה<input id="dt-${y.id}" type="date" data-field="contactedAt" value="${esc(r.contactedAt)}"></label>
+        <label>הערות / למי פנינו<textarea id="nt-${y.id}" data-field="note" placeholder="למשל: מייל ל-Georgia 12.9, ביקשנו 30 דק׳ ביום ד׳ בבוקר">${esc(r.note)}</textarea></label>
+        <label class="slot">שעת צילום מאושרת<input id="sl-${y.id}" type="text" data-field="slot" placeholder="ד׳ 23.9 · 11:30" value="${esc(r.slot)}"></label>
+      </div>
+    </div></article>`;
+}
+
+function render(full=true){
+  renderSummary();
+  const list = document.getElementById("list");
+  const shown = DATA.yachts.filter(visible);
+  document.getElementById("count").textContent = shown.length===DATA.yachts.length ? `${DATA.yachts.length} יאכטות` : `${shown.length} מתוך ${DATA.yachts.length}`;
+  // keep focus: only re-render cards whose record changed or when filters change
+  const active = document.activeElement;
+  if(active && active.closest && active.closest(".yacht") && !full){
+    // update only non-focused cards
+    const focusedId = active.closest(".yacht").dataset.id;
+    list.querySelectorAll(".yacht").forEach(el=>{ if(el.dataset.id!==focusedId){ const y=DATA.yachts.find(x=>x.id===el.dataset.id); el.outerHTML = yachtHTML(y);} });
+    list.querySelectorAll(".yacht").forEach(el=>{ el.hidden = !visible(DATA.yachts.find(x=>x.id===el.dataset.id)); });
+    return;
+  }
+  list.innerHTML = shown.map(yachtHTML).join("");
+  if(!shown.length) list.innerHTML = `<p class="src">אין יאכטות שמתאימות לסינון הזה.</p>`;
+}
+
+// ---- events ----------------------------------------------------------
+document.addEventListener("click", e=>{
+  const t = e.target.closest("[data-theme-filter],[data-owner-filter],[data-status-filter]"); if(!t) return;
+  if(t.dataset.themeFilter!==undefined){ filters.theme = t.dataset.themeFilter; document.querySelectorAll("[data-theme-filter]").forEach(b=>b.setAttribute("aria-pressed", b===t)); }
+  if(t.dataset.ownerFilter!==undefined){ filters.owner = t.dataset.ownerFilter; document.querySelectorAll("[data-owner-filter]").forEach(b=>b.setAttribute("aria-pressed", b===t)); }
+  if(t.dataset.statusFilter!==undefined){ filters.status = filters.status===t.dataset.statusFilter ? "all" : t.dataset.statusFilter; }
+  render(true);
+});
+document.addEventListener("input", e=>{
+  const f = e.target.dataset.field; if(!f) return;
+  const card = e.target.closest(".yacht"); const id = card.dataset.id; const r = rec(id);
+  r[f] = e.target.value;
+  if(f==="status" && r.status!=="none" && !r.contactedAt && r.status!=="declined"){ r.contactedAt = new Date().toISOString().slice(0,10); const d=card.querySelector('[data-field="contactedAt"]'); if(d) d.value=r.contactedAt; }
+  card.dataset.status = r.status;
+  const [soft,ink] = STATUS_COLOR[r.status]; const pill = card.querySelector(".status");
+  pill.style.setProperty("--s-soft",soft); pill.style.setProperty("--s-ink",ink); pill.innerHTML = `<i></i>${STATUS[r.status]}${r.owner?` · ${esc(r.owner)}`:""}`;
+  renderSummary();
+  persist(id);
+});
+
+document.getElementById("src").textContent = "מקורות: " + DATA.show.source + ". אורכים לפי YachtBuyer; הרשימה הרשמית של MYS נותנת לעיתים נתון מדויק יותר (למשל Silver Fox 73.4 מ׳).";
+loadLocal(); render(true); connect();
+</script>
