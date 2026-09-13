@@ -261,6 +261,12 @@
       const strip = new T.MeshBasicMaterial({ color: 0xfff0c8 });
       for (const side of [-1, 1]) { const st = new T.Mesh(new T.BoxGeometry(L * 0.82, 0.08, 0.08), strip); st.position.set(-L * 0.04, fbN + 0.95, side * (B / 2 * 0.96)); nightG.add(st); }
       if (type !== 'sailing') { const aft = new T.Mesh(new T.BoxGeometry(0.08, 0.08, B * 0.7), strip); aft.position.set(-L / 2 + 0.6, fbN + 0.95, 0); nightG.add(aft); }
+      // navigation lights: white stern light, white masthead/anchor light, red port / green starboard sidelights
+      const lamp = (c, x, y, z, r) => { const m = new T.Mesh(new T.SphereGeometry(r || 0.16, 6, 5), new T.MeshBasicMaterial({ color: c })); m.position.set(x, y, z); nightG.add(m); };
+      lamp(0xffffff, -L / 2 + 0.3, fbN + 1.3, 0, 0.14);
+      const mastY = type === 'sailing' ? fbN + L * 1.25 : fbN + clamp(L * 0.012 + 2.3, 2.4, 3.2) * Math.min(6, L < 26 ? 2 : L < 42 ? 3 : L < 70 ? 4 : 5) + clamp(L * 0.09, 3, 12);
+      lamp(0xffffff, L * 0.05, mastY, 0, 0.2);
+      lamp(0xff3030, L * 0.1, fbN + 2.2, -B / 2 * 0.9, 0.12); lamp(0x30ff60, L * 0.1, fbN + 2.2, B / 2 * 0.9, 0.12);
       g.add(nightG);
     }
     meshes.forEach(m => { m.castShadow = true; m.receiveShadow = true; m.userData.yacht = spec; });
