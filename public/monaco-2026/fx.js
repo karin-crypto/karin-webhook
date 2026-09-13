@@ -252,6 +252,28 @@
     return m;
   }
 
+  /* ---------- quay paving + concrete wall material ---------- */
+  function makeGroundMaterial() {
+    const mk = (w, h, draw) => { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new T.CanvasTexture(c); t.wrapS = t.wrapT = T.RepeatWrapping; t.colorSpace = T.SRGBColorSpace; t.anisotropy = 8; return t; };
+    // paving: 4 m tile = 4 x 4 slabs of 1 m with joints and grain
+    const pav = mk(512, 512, (x, w, h) => { x.fillStyle = '#d6cdbd'; x.fillRect(0, 0, w, h); for (let i = 0; i < 9000; i++) { x.fillStyle = `rgba(${90 + Math.random() * 80 | 0},${80 + Math.random() * 60 | 0},${60 + Math.random() * 50 | 0},${0.05 + Math.random() * 0.1})`; x.fillRect(Math.random() * w, Math.random() * h, 2, 2); } for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) { const k = 0.9 + Math.random() * 0.14; x.fillStyle = `rgba(255,255,255,${(k - 0.9) * 0.9})`; x.fillRect(c * 128 + 2, r * 128 + 2, 124, 124); } x.strokeStyle = 'rgba(70,60,50,0.55)'; x.lineWidth = 3; for (let i = 0; i <= 4; i++) { x.beginPath(); x.moveTo(i * 128, 0); x.lineTo(i * 128, h); x.stroke(); x.beginPath(); x.moveTo(0, i * 128); x.lineTo(w, i * 128); x.stroke(); } });
+    pav.repeat.set(1 / 4, 1 / 4);
+    const con = mk(256, 256, (x, w, h) => { x.fillStyle = '#b9b3a6'; x.fillRect(0, 0, w, h); for (let i = 0; i < 6000; i++) { x.fillStyle = `rgba(${60 + Math.random() * 60 | 0},${55 + Math.random() * 50 | 0},${50 + Math.random() * 40 | 0},${0.04 + Math.random() * 0.12})`; x.fillRect(Math.random() * w, Math.random() * h, 3, 1 + Math.random() * 3); } x.fillStyle = 'rgba(40,50,60,0.35)'; x.fillRect(0, h - 40, w, 40); x.fillStyle = 'rgba(30,60,50,0.35)'; x.fillRect(0, h - 22, w, 22); });
+    con.repeat.set(1 / 3, 1 / 3.7);
+    const m = new T.MeshStandardMaterial({ map: pav, vertexColors: true, roughness: 0.92, metalness: 0 });
+    m.onBeforeCompile = sh => {
+      sh.uniforms.tWall = { value: con };
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute float aWall; varying float vWall; varying vec3 vWp;').replace('#include <uv_vertex>', '#include <uv_vertex>\nvWall = aWall; vWp = (modelMatrix * vec4(position,1.0)).xyz;');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform sampler2D tWall; varying float vWall; varying vec3 vWp;')
+        .replace('#include <map_fragment>', `#ifdef USE_MAP
+          vec4 capC = texture2D( map, vWp.xz / 4.0 );
+          vec4 wallC = texture2D( tWall, vec2((vWp.x + vWp.z) / 3.0, vWp.y / 3.7) );
+          diffuseColor *= mix(capC, wallC, vWall);
+        #endif`);
+    };
+    return m;
+  }
+
   /* ---------- low-poly trees (instanced) ---------- */
   function makeTrees(positions) { // positions: [{x,y,z,s,k}] k: 0 pine, 1 round
     const n = positions.length; if (!n) return new T.Group();
@@ -275,5 +297,5 @@
     return g;
   }
 
-  global.MYSFX = { makeSky, makeWater, makePost, makeFacadeTextures, facadeMaterial, makeTrees };
+  global.MYSFX = { makeSky, makeWater, makePost, makeFacadeTextures, facadeMaterial, makeTrees, makeGroundMaterial };
 })(window);

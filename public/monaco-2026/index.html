@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="הדמיה תלת-ממדית אינטראקטיבית של תערוכת היאכטות מונקו 2026 בנמל הרקולס – 99 יאכטות מהרשימה הרשמית עם קודי עגינה ומראה אמיתי, טופוגרפיה אמיתית, רציפים מ-OpenStreetMap, השתקפויות, סיור קולנועי, יום ולילה. הדמיה: קרין קרן.">
+<meta name="description" content="הדמיה תלת-ממדית אינטראקטיבית של תערוכת היאכטות מונקו 2026 בנמל הרקולס – 99 יאכטות מהרשימה הרשמית עם קודי עגינה ומראה אמיתי, טופוגרפיה אמיתית, מצב הליכה בגובה עיניים, שעון שמש אמיתי, השתקפויות, צליל סביבה. הדמיה: קרין קרן.">
 <meta property="og:title" content="Monaco Yacht Show 2026 · 3D">
 <meta property="og:description" content="Interactive 3D model of the MYS 2026 fleet in Port Hercule, Monaco. Visualisation by Karin Keren.">
 <meta name="color-scheme" content="light dark">
@@ -65,6 +65,16 @@
   .views { position: fixed; z-index: 5; inset-inline-end: 18px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 6px; }
   .views .btn { padding: 7px 10px; font-size: 12.5px; }
   .views .btn small { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; opacity: .65; }
+
+  /* ---------- time bar / joystick / walk hint ---------- */
+  .timebar { position: fixed; z-index: 5; inset-inline-end: 18px; top: 74px; display: flex; align-items: center; gap: 10px; padding: 8px 12px; }
+  .timebar .lbl { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-2); }
+  .timebar input { width: 180px; accent-color: var(--brass); }
+  .timebar .val { font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums; min-width: 44px; text-align: end; }
+  .joystick { position: fixed; z-index: 8; inset-inline-start: 24px; bottom: 120px; width: 110px; height: 110px; border-radius: 50%; background: rgba(250,248,243,.35); border: 1px solid var(--line); backdrop-filter: blur(6px); touch-action: none; }
+  .joystick .knob { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; background: var(--brass); opacity: .85; }
+  .walkhint { position: fixed; z-index: 8; left: 50%; top: 150px; transform: translateX(-50%); padding: 8px 14px; font-size: 13px; }
+  @media (max-width: 760px) { .timebar { top: auto; bottom: 210px; inset-inline: 12px; } .timebar input { flex: 1; width: auto; } .walkhint { top: auto; bottom: 240px; width: calc(100vw - 24px); text-align: center; } }
 
   /* ---------- fleet drawer ---------- */
   .drawer { position: fixed; z-index: 6; inset-inline-start: 18px; top: 178px; bottom: 182px; width: min(360px, calc(100vw - 36px)); display: flex; flex-direction: column; overflow: hidden; transition: transform .28s ease, opacity .28s; }
@@ -194,6 +204,8 @@
   <div class="toolbar">
     <button class="btn" id="btnFleet" aria-pressed="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 5h12M2 8h12M2 11h8"/></svg><span class="t" data-i18n="fleet">Fleet</span></button>
     <button class="btn" id="btnLabels" aria-pressed="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 4h10v6H8l-3 3v-3H3z"/></svg><span class="t" data-i18n="labels">Names</span></button>
+    <button class="btn" id="btnWalk" aria-pressed="false"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="3" r="1.5"/><path d="M8 5v4l-2 5M8 9l2 5M6 7l-2 1M10 7l2 1"/></svg><span class="t" data-i18n="walk">Walk</span></button>
+    <button class="btn" id="btnSound" aria-pressed="false"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6h3l4-3v10l-4-3H3zM12 6a3 3 0 0 1 0 4"/></svg><span class="t" data-i18n="sound">Sound</span></button>
     <button class="btn" id="btnTour" aria-pressed="false"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 3l9 5-9 5z"/></svg><span class="t" data-i18n="tour">Tour</span></button>
     <button class="btn" id="btnFx" aria-pressed="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 2l1.6 3.6L13.5 6l-2.8 2.6.8 3.9L8 10.6l-3.5 1.9.8-3.9L2.5 6l3.9-.4z"/></svg><span class="t" data-i18n="fx">FX</span></button>
     <button class="btn" id="btnNight" aria-pressed="false"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 9.5A5.5 5.5 0 0 1 6.5 3a5.5 5.5 0 1 0 6.5 6.5z"/></svg><span class="t" data-i18n="night">Night</span></button>
@@ -203,6 +215,9 @@
 </div>
 
 <div class="views" id="views"></div>
+<div class="plate timebar" id="timebar"><span class="lbl" data-i18n="timeHint">Time on show day</span><input type="range" id="timeSlider" min="7" max="22.5" step="0.25" value="15" aria-label="Time of day"><span class="val" id="timeLabel">15:00</span></div>
+<div class="joystick" id="joystick" hidden><div class="knob"></div></div>
+<div class="plate walkhint" id="walkHint" hidden data-i18n="walkHint">Walk: W A S D or arrows · drag to look · Shift to run · Esc to leave</div>
 
 <aside class="plate drawer" id="drawer" aria-label="Fleet list">
   <header>

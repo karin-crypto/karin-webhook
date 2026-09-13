@@ -10,7 +10,7 @@
     en: {
       eyebrow: '35th edition · Port Hercule · 23–26 September 2026', h1: 'Monaco Yacht Show 2026', h1sub: 'A 3D model of the fleet in Port Hercule',
       sub: 'Drag to orbit · scroll to zoom · right-drag or two fingers to pan · click a yacht',
-      fleet: 'Fleet', labels: 'Names', night: 'Night', fx: 'FX', tour: 'Tour', aboutBtn: 'Sources', fleetTitle: 'The Fleet', search: 'Search yacht or builder…',
+      fleet: 'Fleet', labels: 'Names', night: 'Night', fx: 'FX', tour: 'Tour', walk: 'Walk', sound: 'Sound', aboutBtn: 'Sources', walkHint: 'Walk: W A S D or arrows · drag to look · Shift to run · Esc to leave', timeHint: 'Time on show day', fleetTitle: 'The Fleet', search: 'Search yacht or builder…',
       loa: 'Length', beam: 'Beam', year: 'Year', type: 'Type', close: 'Close', aboutTitle: 'About this model',
       sigRole: '3D visualisation · Monaco Yacht Show 2026', sigMeta: 'Fleet, berths and beams compiled 13 Sept 2026 from the official list, shipyards, brokers and trade press', sigLink: 'accuracy notes',
       all: 'All', debut: 'Debuts', motor: 'Motor', sailing: 'Sail', explorer: 'Explorer', catamaran: 'Multihull', big: '60 m +',
@@ -26,7 +26,7 @@
     he: {
       eyebrow: 'המהדורה ה-35 · נמל הרקולס · 23–26 בספטמבר 2026', h1: 'Monaco Yacht Show 2026', h1sub: 'הדמיה תלת-ממדית של הצי בנמל הרקולס',
       sub: 'גררו לסיבוב · גלגלו לזום · לחצן ימני או שתי אצבעות להזזה · לחצו על יאכטה',
-      fleet: 'הצי', labels: 'שמות', night: 'לילה', fx: 'אפקטים', tour: 'סיור', aboutBtn: 'מקורות', fleetTitle: 'הצי', search: 'חיפוש יאכטה או מספנה…',
+      fleet: 'הצי', labels: 'שמות', night: 'לילה', fx: 'אפקטים', tour: 'סיור', walk: 'הליכה', sound: 'צליל', aboutBtn: 'מקורות', walkHint: 'הליכה: W A S D או חצים · גרירה להסתכל · Shift לריצה · Esc ליציאה', timeHint: 'שעה ביום התערוכה', fleetTitle: 'הצי', search: 'חיפוש יאכטה או מספנה…',
       loa: 'אורך', beam: 'רוחב', year: 'שנה', type: 'סוג', close: 'סגירה', aboutTitle: 'על ההדמיה',
       sigRole: 'הדמיה תלת-ממדית · תערוכת היאכטות מונקו 2026', sigMeta: 'הצי, העגינות והמידות נאספו ב-13.9.2026 מהרשימה הרשמית, מספנות, ברוקרים ועיתונות המקצוע', sigLink: 'הערות דיוק',
       all: 'הכול', debut: 'בכורות', motor: 'מנוע', sailing: 'מפרש', explorer: 'אקספלורר', catamaran: 'רב-גופית', big: '60 מ׳ +',
@@ -136,7 +136,8 @@
   })();
 
   /* ---------- land slab, piers, structures ---------- */
-  const stone = new T.MeshStandardMaterial({ color: 0xd8cfbd, roughness: 0.95, vertexColors: true });
+  const stone = FX.makeGroundMaterial();
+  const tentGeoms = [];
   const landGeoms = [];
   landGeoms.push(E.paint(E.extrudeUp(E.planShape(landXZ), 3.7, -1.5), 0xd8cfbd));
   (H.piers || []).forEach(p => { const xz = E.llArr(p.pts); if (xz.length < 3) return; landGeoms.push(E.paint(E.extrudeUp(E.planShape(xz), p.height + 1.5, -1.5), p.color || 0xd8cfbd)); });
@@ -144,9 +145,10 @@
     const c = E.ll(s.lat, s.lon);
     const g = new T.BoxGeometry(s.length, s.height, s.width);
     g.rotateY(-s.bearing * Math.PI / 180 + Math.PI / 2); g.translate(c.x, (s.y || 0) + s.height / 2, c.z);
-    landGeoms.push(E.paint(g, s.color || 0xd8cfbd));
+    (s.color === 0xf4f2ee ? tentGeoms : landGeoms).push(E.paint(g, s.color || 0xd8cfbd));
   });
-  const land = new T.Mesh(E.mergeGeoms(landGeoms), stone); land.castShadow = true; land.receiveShadow = true; scene.add(land);
+  const land = new T.Mesh(E.mergeGeoms(landGeoms, true), stone); land.castShadow = true; land.receiveShadow = true; scene.add(land);
+  if (tentGeoms.length) { const tents = new T.Mesh(E.mergeGeoms(tentGeoms), new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.7 })); tents.castShadow = true; tents.receiveShadow = true; scene.add(tents); }
 
   const facadeMat = FX.facadeMaterial(FX.makeFacadeTextures());
   // buildings (merged, coloured by height band; base on terrain)
@@ -362,26 +364,48 @@
   })();
 
   /* ---------- day / night ---------- */
-  let night = false;
+  /* ---------- time of day: real sun path over Monaco on show day (23 Sept 2026, CEST) ---------- */
+  let hour = 15.0, night = false;
+  const LAT = 43.7355 * Math.PI / 180, DECL = -0.4 * Math.PI / 180, SOLAR_NOON = 13.38; // equinox declination, local solar noon (UTC+2, lon 7.43 E, EoT +7 min)
+  function sunVector(h) {
+    const H = (h - SOLAR_NOON) * 15 * Math.PI / 180;
+    const alt = Math.asin(Math.sin(LAT) * Math.sin(DECL) + Math.cos(LAT) * Math.cos(DECL) * Math.cos(H));
+    const az = Math.atan2(Math.sin(H), Math.cos(H) * Math.sin(LAT) - Math.tan(DECL) * Math.cos(LAT)); // from south, +west
+    return { alt, dir: new T.Vector3(-Math.sin(az) * Math.cos(alt), Math.sin(alt), Math.cos(az) * Math.cos(alt)) };
+  }
+  const C = (hex) => new T.Color(hex);
+  const PAL = { // day, golden, dusk, night
+    top: [C(0x2f6fb0), C(0x4a86c4), C(0x2a4d86), C(0x050b18)], hor: [C(0xdbe8f1), C(0xf8d09a), C(0xe08a55), C(0x1b2a45)],
+    deep: [C(0x0a3f5c), C(0x114a66), C(0x0f3552), C(0x03101e)], shallow: [C(0x1f7f9c), C(0x2f8aa0), C(0x245a78), C(0x0a2438)], wsky: [C(0xa9d1e6), C(0xf4d2a8), C(0xd0906a), C(0x223a5a)],
+    fog: [C(0xd7e6f0), C(0xf3d9bf), C(0xb9866e), C(0x0b1524)], sun: [C(0xfff1d8), C(0xffc987), C(0xff9a5a), C(0xb9c8ff)],
+  };
+  function mix4(arr, k) { // k in [0,3]
+    const i = Math.min(2, Math.floor(k)), t = k - i; return arr[i].clone().lerp(arr[i + 1], t);
+  }
+  let sunOffset = new T.Vector3(-320, 780, 720);
   function applyLighting() {
     const wu = water.userData.uniforms, su = sky.userData.uniforms;
-    if (!night) {
-      sun.position.set(-320, 780, 720); sun.intensity = 2.4; sun.color.set(0xfff1d8); hemi.intensity = 0.75;
-      su.uTop.value.set(0x2f6fb0); su.uHorizon.value.set(0xdbe8f1); su.uNight.value = 0;
-      wu.uDeep.value.set(0x0a3f5c); wu.uShallow.value.set(0x1f7f9c); wu.uSky.value.set(0xa9d1e6); wu.uNight.value = 0;
-      scene.fog.color.set(0xd7e6f0); renderer.toneMappingExposure = 1.05;
-    } else {
-      sun.position.set(900, 260, -600); sun.intensity = 0.4; sun.color.set(0xb9c8ff); hemi.intensity = 0.3;
-      su.uTop.value.set(0x050b18); su.uHorizon.value.set(0x1b2a45); su.uNight.value = 1;
-      wu.uDeep.value.set(0x03101e); wu.uShallow.value.set(0x0a2438); wu.uSky.value.set(0x223a5a); wu.uNight.value = 1;
-      scene.fog.color.set(0x0b1524); renderer.toneMappingExposure = 0.9;
-    }
-    const dir = sun.position.clone().normalize(); wu.uSun.value.copy(dir); su.uSun.value.copy(dir);
-    wu.fogColor.value.copy(scene.fog.color); facadeMat.emissiveIntensity = night ? 0.6 : 0;
-    nightGroup.visible = night; updateEnv();
+    const { alt, dir } = sunVector(hour); const altD = alt * 180 / Math.PI;
+    // palette key: day (alt>14) -> golden (alt 5) -> dusk (alt -2) -> night (alt < -9)
+    const k = altD > 14 ? 0 : altD > 5 ? (14 - altD) / 9 : altD > -2 ? 1 + (5 - altD) / 7 : altD > -9 ? 2 + (-2 - altD) / 7 : 3;
+    night = altD < -3;
+    const dayF = E.smooth(-3, 8, altD);
+    sun.intensity = 0.35 + 2.1 * dayF; sun.color.copy(mix4(PAL.sun, k)); hemi.intensity = 0.3 + 0.55 * E.smooth(-6, 3, altD);
+    su.uTop.value.copy(mix4(PAL.top, k)); su.uHorizon.value.copy(mix4(PAL.hor, k)); su.uNight.value = 1 - E.smooth(-9, -2, altD);
+    wu.uDeep.value.copy(mix4(PAL.deep, k)); wu.uShallow.value.copy(mix4(PAL.shallow, k)); wu.uSky.value.copy(mix4(PAL.wsky, k)); wu.uNight.value = su.uNight.value;
+    scene.fog.color.copy(mix4(PAL.fog, k)); renderer.toneMappingExposure = 0.92 + 0.13 * E.smooth(-6, 3, altD);
+    // light direction: real sun above ~4 deg; below that a moon from the east-north-east keeps shadows readable
+    const lightDir = altD > 4 ? dir.clone() : new T.Vector3(0.6, 0.35, -0.55).normalize().lerp(dir, E.clamp((altD + 2) / 6, 0, 1)).normalize();
+    sunOffset.copy(lightDir).multiplyScalar(1100);
+    wu.uSun.value.copy(altD > -1 ? dir : lightDir); su.uSun.value.copy(dir);
+    wu.fogColor.value.copy(scene.fog.color); facadeMat.emissiveIntensity = 0.6 * (1 - E.smooth(-4, 3, altD));
+    nightGroup.visible = altD < 1; updateEnv();
     document.getElementById('btnNight').setAttribute('aria-pressed', String(night));
+    const hh = Math.floor(hour), mm = Math.round((hour - hh) * 60); document.getElementById('timeLabel').textContent = `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+    const sl = document.getElementById('timeSlider'); if (+sl.value !== hour) sl.value = hour;
   }
   applyLighting();
+  document.getElementById('timeSlider').addEventListener('input', e => { hour = +e.target.value; applyLighting(); });
 
   /* ---------- camera presets ---------- */
   const VIEWS = H.views; // {key:{lat,lon,theta,phi,dist}}
@@ -419,7 +443,7 @@
     stopTour();
   }
   const btnTour = document.getElementById('btnTour');
-  function startTour() { tour = { t: 0 }; controls.setDamp(0.06); btnTour.setAttribute('aria-pressed', 'true'); select(null); }
+  function startTour() { if (walk.on) stopWalk(); tour = { t: 0 }; controls.setDamp(0.06); btnTour.setAttribute('aria-pressed', 'true'); select(null); }
   function stopTour() { tour = null; controls.setDamp(0.12); btnTour.setAttribute('aria-pressed', 'false'); }
   btnTour.addEventListener('click', () => tour ? stopTour() : startTour());
   canvas.addEventListener('pointerdown', () => { if (tour) stopTour(); });
@@ -547,6 +571,90 @@ void main(){
   }
   if (mm) mm.addEventListener('click', ev => { const r = mm.getBoundingClientRect(); const px = (ev.clientX - r.left) / r.width * MM.w, pz = (ev.clientY - r.top) / r.height * MM.h; const wx = MM.x0 + px / MM.w * (MM.x1 - MM.x0), wz = MM.z0 + pz / MM.h * (MM.z1 - MM.z0); if (tour) stopTour(); controls.flyTo(new T.Vector3(wx, 0, wz), undefined, undefined, Math.min(controls.goal.dist, 420)); });
 
+  /* ---------- walk mode: first person on the show quays ---------- */
+  const walk = { on: false, x: 0, z: 0, yaw: 0, pitch: -0.05, bob: 0, keys: {}, joy: { x: 0, y: 0 }, look: null };
+  const btnWalk = document.getElementById('btnWalk');
+  const quayPolys = quays.map(q => ({ q, segs: q.segs }));
+  function nearestQuay(x, z) {
+    let best = { d: 1e9, q: null, px: x, pz: z };
+    quayPolys.forEach(({ q, segs }) => segs.forEach(sg => { const dx = sg.b.x - sg.a.x, dz = sg.b.z - sg.a.z; const l2 = dx * dx + dz * dz || 1; const u = E.clamp(((x - sg.a.x) * dx + (z - sg.a.z) * dz) / l2, 0, 1); const px = sg.a.x + u * dx, pz = sg.a.z + u * dz; const d = Math.hypot(x - px, z - pz); if (d < best.d) best = { d, q, px, pz, n: sg.n }; }));
+    return best;
+  }
+  function walkGround(x, z) { const nq = nearestQuay(x, z); const deck = nq.q && /digue|cruise/.test(nq.q.zone) && nq.d < 30 ? 3.95 : 2.2; return Math.max(deck, elevation(x, z) - 0.3); }
+  function walkAllowed(x, z) { if (!pointInPoly(x, z, landXZ)) return false; const nq = nearestQuay(x, z); return nq.d < 70; }
+  function startWalk() {
+    if (tour) stopTour();
+    const t = controls.state.target; const nq = nearestQuay(t.x, t.z);
+    // stand on the quay 4 m inland from the nearest quay edge
+    walk.x = nq.px - nq.n.x * 4; walk.z = nq.pz - nq.n.z * 4;
+    if (!walkAllowed(walk.x, walk.z)) { const c = E.ll(43.7370, 7.4240); const q2 = nearestQuay(c.x, c.z); walk.x = q2.px - q2.n.x * 4; walk.z = q2.pz - q2.n.z * 4; }
+    walk.yaw = Math.atan2(nq.n.x, nq.n.z); walk.pitch = -0.04; walk.on = true; controls.state.enabled = false;
+    btnWalk.setAttribute('aria-pressed', 'true'); document.getElementById('joystick').hidden = !('ontouchstart' in window); document.getElementById('walkHint').hidden = false;
+    setTimeout(() => { document.getElementById('walkHint').hidden = true; }, 6000);
+  }
+  function stopWalk() {
+    walk.on = false; controls.state.enabled = true; btnWalk.setAttribute('aria-pressed', 'false'); document.getElementById('joystick').hidden = true; document.getElementById('walkHint').hidden = true;
+    controls.goal.target.set(walk.x, 2, walk.z); controls.goal.dist = 120; controls.goal.phi = 1.15; controls.goal.theta = walk.yaw + Math.PI; controls.snap();
+  }
+  btnWalk.addEventListener('click', () => walk.on ? stopWalk() : startWalk());
+  window.addEventListener('keydown', e => { if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return; walk.keys[e.code] = true; if (walk.on && e.code === 'Escape') stopWalk(); });
+  window.addEventListener('keyup', e => { walk.keys[e.code] = false; });
+  canvas.addEventListener('pointerdown', e => { if (!walk.on) return; walk.look = { id: e.pointerId, x: e.clientX, y: e.clientY }; });
+  canvas.addEventListener('pointermove', e => { if (!walk.on || !walk.look || walk.look.id !== e.pointerId) return; const dx = e.clientX - walk.look.x, dy = e.clientY - walk.look.y; walk.look.x = e.clientX; walk.look.y = e.clientY; walk.yaw -= dx * 0.0035; walk.pitch = E.clamp(walk.pitch - dy * 0.003, -1.2, 1.2); });
+  const endLook = e => { if (walk.look && walk.look.id === e.pointerId) walk.look = null; };
+  canvas.addEventListener('pointerup', endLook); canvas.addEventListener('pointercancel', endLook);
+  // touch joystick
+  (function joystick() {
+    const el = document.getElementById('joystick'), knob = el.querySelector('.knob'); let id = null, cx = 0, cy = 0;
+    el.addEventListener('pointerdown', e => { id = e.pointerId; const r = el.getBoundingClientRect(); cx = r.left + r.width / 2; cy = r.top + r.height / 2; el.setPointerCapture(id); });
+    el.addEventListener('pointermove', e => { if (e.pointerId !== id) return; const dx = E.clamp((e.clientX - cx) / 40, -1, 1), dy = E.clamp((e.clientY - cy) / 40, -1, 1); walk.joy.x = dx; walk.joy.y = -dy; knob.style.transform = `translate(${dx * 30}px, ${dy * 30}px)`; });
+    const up = e => { if (e.pointerId !== id) return; id = null; walk.joy.x = walk.joy.y = 0; knob.style.transform = ''; };
+    el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+  })();
+  function walkStep(dt) {
+    const k = walk.keys; let fwd = (k.KeyW || k.ArrowUp ? 1 : 0) - (k.KeyS || k.ArrowDown ? 1 : 0), side = (k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyA || k.ArrowLeft ? 1 : 0);
+    fwd += walk.joy.y; side += walk.joy.x;
+    const run = k.ShiftLeft || k.ShiftRight ? 2 : 1; const sp = 2.4 * run * dt;
+    const fx = Math.sin(walk.yaw), fz = Math.cos(walk.yaw); // forward vector (yaw 0 = +z)
+    const nx = walk.x + (fx * fwd + fz * side) * sp, nz = walk.z + (fz * fwd - fx * side) * sp;
+    if (walkAllowed(nx, nz)) { walk.x = nx; walk.z = nz; } else if (walkAllowed(nx, walk.z)) walk.x = nx; else if (walkAllowed(walk.x, nz)) walk.z = nz;
+    const moving = Math.abs(fwd) + Math.abs(side) > 0.05; walk.bob += (moving ? 7 : 0) * dt;
+    const gy = walkGround(walk.x, walk.z) + 1.68 + (moving ? Math.sin(walk.bob) * 0.035 : 0);
+    camera.position.set(walk.x, gy, walk.z);
+    camera.rotation.set(0, 0, 0, 'YXZ'); camera.rotation.y = walk.yaw + Math.PI; camera.rotation.x = walk.pitch;
+    controls.state.target.set(walk.x + fx * 30, gy, walk.z + fz * 30); controls.goal.target.copy(controls.state.target); controls.state.dist = 60;
+  }
+
+  /* ---------- ambient sound (procedural: surf, gulls, crowd) ---------- */
+  const snd = { ctx: null, on: false, master: null };
+  function startSound() {
+    if (!snd.ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return; const ctx = snd.ctx = new AC();
+      const master = snd.master = ctx.createGain(); master.gain.value = 0; master.connect(ctx.destination);
+      const noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 4, ctx.sampleRate); const d = noiseBuf.getChannelData(0); let b0 = 0, b1 = 0, b2 = 0;
+      for (let i = 0; i < d.length; i++) { const w = Math.random() * 2 - 1; b0 = 0.99765 * b0 + w * 0.099; b1 = 0.963 * b1 + w * 0.2965; b2 = 0.57 * b2 + w * 1.0526; d[i] = (b0 + b1 + b2 + w * 0.1848) * 0.12; }
+      // surf: pink noise through a low-pass, swelling slowly
+      const surf = ctx.createBufferSource(); surf.buffer = noiseBuf; surf.loop = true; const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 420; const sg = ctx.createGain(); sg.gain.value = 0.5;
+      surf.connect(lp); lp.connect(sg); sg.connect(master); surf.start();
+      const lfo = ctx.createOscillator(); lfo.frequency.value = 0.09; const lfoG = ctx.createGain(); lfoG.gain.value = 0.28; lfo.connect(lfoG); lfoG.connect(sg.gain); lfo.start();
+      const lfo2 = ctx.createOscillator(); lfo2.frequency.value = 0.053; const lfo2G = ctx.createGain(); lfo2G.gain.value = 0.16; lfo2.connect(lfo2G); lfo2G.connect(sg.gain); lfo2.start();
+      // crowd murmur: band-passed noise
+      const crowd = ctx.createBufferSource(); crowd.buffer = noiseBuf; crowd.loop = true; crowd.playbackRate.value = 0.7; const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 700; bp.Q.value = 0.7; const cg = ctx.createGain(); cg.gain.value = 0.12; crowd.connect(bp); bp.connect(cg); cg.connect(master); crowd.start();
+      snd.crowdGain = cg; snd.surfGain = sg;
+      // gulls
+      const gull = () => { if (!snd.on) return; const n = 2 + Math.floor(Math.random() * 3); const pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null; const out = pan || ctx.createGain(); if (pan) pan.pan.value = Math.random() * 2 - 1; out.connect(master);
+        for (let i = 0; i < n; i++) { const t0 = ctx.currentTime + i * 0.42; const o = ctx.createOscillator(); o.type = 'sawtooth'; const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 2600; const g = ctx.createGain(); g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(0.06, t0 + 0.05); g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.38);
+          o.frequency.setValueAtTime(1500 + Math.random() * 300, t0); o.frequency.exponentialRampToValueAtTime(900, t0 + 0.3); o.connect(f); f.connect(g); g.connect(out); o.start(t0); o.stop(t0 + 0.4); }
+        setTimeout(gull, 5000 + Math.random() * 12000); };
+      setTimeout(gull, 2500);
+    }
+    snd.ctx.resume(); snd.on = true; snd.master.gain.setTargetAtTime(0.9, snd.ctx.currentTime, 0.8);
+  }
+  function stopSound() { if (!snd.ctx) return; snd.on = false; snd.master.gain.setTargetAtTime(0, snd.ctx.currentTime, 0.4); }
+  const btnSound = document.getElementById('btnSound');
+  btnSound.addEventListener('click', () => { if (snd.on) { stopSound(); btnSound.setAttribute('aria-pressed', 'false'); } else { startSound(); btnSound.setAttribute('aria-pressed', 'true'); } });
+  function updateSound() { if (!snd.on || !snd.ctx) return; const h = camera.position.y; const near = E.clamp(1.3 - h / 400, 0.25, 1.1); snd.surfGain.gain.setTargetAtTime(0.5 * near, snd.ctx.currentTime, 0.5); snd.crowdGain.gain.setTargetAtTime(0.12 * E.clamp(1.4 - h / 120, 0.05, 1) * (night ? 0.5 : 1), snd.ctx.currentTime, 0.5); }
+
   /* ---------- labels ---------- */
   const labelsEl = document.getElementById('labels');
   let showLabels = true, hovered = null, selected = null;
@@ -605,7 +713,7 @@ void main(){
   let lastMove = 0;
   canvas.addEventListener('pointermove', ev => { if (ev.pointerType !== 'mouse') return; const now = performance.now(); if (now - lastMove < 40) return; lastMove = now; hovered = pick(ev); canvas.classList.toggle('hover', !!hovered); });
   canvas.addEventListener('pointerdown', () => canvas.classList.add('dragging'));
-  canvas.addEventListener('pointerup', ev => { canvas.classList.remove('dragging'); if (controls.wasDrag()) return; const y = pick(ev); if (y) select(y, true); else if (selected) select(null); });
+  canvas.addEventListener('pointerup', ev => { canvas.classList.remove('dragging'); if (controls.wasDrag()) return; const y = pick(ev); if (y) select(y, !walk.on); else if (selected) select(null); });
 
   /* ---------- selection / card ---------- */
   const card = document.getElementById('card');
@@ -704,7 +812,7 @@ void main(){
   applyDrawer();
   const btnLabels = document.getElementById('btnLabels');
   btnLabels.addEventListener('click', () => { showLabels = !showLabels; btnLabels.setAttribute('aria-pressed', String(showLabels)); });
-  document.getElementById('btnNight').addEventListener('click', () => { night = !night; applyLighting(); });
+  document.getElementById('btnNight').addEventListener('click', () => { hour = night ? 15 : 21.5; applyLighting(); });
   const btnFx = document.getElementById('btnFx'); btnFx.setAttribute('aria-pressed', String(fxOn));
   btnFx.addEventListener('click', () => { fxOn = !fxOn; btnFx.setAttribute('aria-pressed', String(fxOn)); water.userData.uniforms.uUseReflect.value = fxOn ? 1 : 0; });
   water.userData.uniforms.uUseReflect.value = fxOn ? 1 : 0;
@@ -732,12 +840,14 @@ void main(){
     if (!reduceMotion) water.userData.uniforms.uTime.value += dt;
     // idle: slow cinematic orbit after 30 s without input
     updateShuttles(dt); if (window.__flags) window.__flags.uniforms.uTime.value += dt;
-    if (tour) tourStep(dt);
+    if (walk.on) walkStep(dt);
+    else if (tour) tourStep(dt);
     else if (!reduceMotion && performance.now() - controls.lastInput() > 30000) controls.goal.theta += 0.00045;
-    controls.update(); camera.updateMatrixWorld();
+    if (!walk.on) controls.update(); camera.updateMatrixWorld();
+    if ((frame & 15) === 0) updateSound();
     sky.userData.uniforms.uTime.value = water.userData.uniforms.uTime.value;
     // keep the shadow frustum centred where the camera looks
-    sun.target.position.copy(controls.state.target); sun.position.copy(controls.state.target).add(night ? new T.Vector3(900, 260, -600) : new T.Vector3(-320, 780, 720));
+    sun.target.position.copy(controls.state.target); sun.position.copy(controls.state.target).add(sunOffset);
     if (fxOn) {
       if ((frame & 1) === 0 || controls.state.dist < 600) water.userData.renderReflection(renderer, scene, camera, [nightGroup]);
       post.render(scene, camera, night, water.userData.uniforms.uTime.value);
@@ -752,5 +862,5 @@ void main(){
   setTimeout(() => loading.classList.add('done'), 350);
   loop();
 
-  window.MYS_APP = { select, goView, yachts, quays, controls, startTour, stopTour };
+  window.MYS_APP = { select, goView, yachts, quays, controls, startTour, stopTour, startWalk, stopWalk, setHour: h => { hour = h; applyLighting(); } };
 })();
