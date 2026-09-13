@@ -12,7 +12,7 @@
       sub: 'Drag to orbit · scroll to zoom · right-drag or two fingers to pan · click a yacht',
       fleet: 'Fleet', labels: 'Names', night: 'Night', fx: 'FX', tour: 'Tour', aboutBtn: 'Sources', fleetTitle: 'The Fleet', search: 'Search yacht or builder…',
       loa: 'Length', beam: 'Beam', year: 'Year', type: 'Type', close: 'Close', aboutTitle: 'About this model',
-      sigRole: '3D visualisation · Monaco Yacht Show 2026', sigMeta: 'Fleet, berths and beams compiled 12 Sept 2026 from the official list, shipyards, brokers and trade press', sigLink: 'accuracy notes',
+      sigRole: '3D visualisation · Monaco Yacht Show 2026', sigMeta: 'Fleet, berths and beams compiled 13 Sept 2026 from the official list, shipyards, brokers and trade press', sigLink: 'accuracy notes',
       all: 'All', debut: 'Debuts', motor: 'Motor', sailing: 'Sail', explorer: 'Explorer', catamaran: 'Multihull', big: '60 m +',
       tDebut: 'World / show debut', tConfirmed: 'Official list', tReported: 'Reported', tMotor: 'Motor yacht', tSailing: 'Sailing yacht', tExplorer: 'Explorer', tCatamaran: 'Multihull',
       berth: 'Berth', est: 'est.', shownAt: 'Shown at', yachts: 'yachts', source: 'Source',
@@ -20,7 +20,7 @@
       about: [
         '<p>Every yacht in this model is drawn from its published length overall, beam and type, and moored where the show places it when a berth or quay was published. Berth codes follow the official scheme: D = Quai Rainier III (Digue), R = Quai Rainier 1er, E = Quai des États-Unis, C = Quai Chicane, S = Appontement Jules Soccal (the T-Central pier), H = Quai de l’Hirondelle, L = Jetée Lucciana, J = Quai Jarlan; numbered berths are placed in numeric order along their quay. Where no berth was published the yacht is placed on a quay of matching size following the show’s customary layout, largest hulls outboard on the Digue and Quai Rainier III.</p>',
         '<p>Quays, breakwaters and the surrounding buildings are traced from OpenStreetMap geometry of Port Hercule. Hull and superstructure shapes are parametric models driven by each yacht’s researched appearance (hull and superstructure colour, bow type, deck count, rig, helipad, pool, expedition deck) where the press or shipyard published it; they are not shipyard drawings. Terrain comes from the Mapzen / AWS terrarium elevation tiles (SRTM and EU-DEM, 25–30 m source resolution), flattened at the waterfront; Le Rocher’s plateau is restored to its published height inside the Monaco-Ville district boundary; the tallest Monte-Carlo towers carry their real heights.</p>',
-        '<p>The fleet list combines the official MYS 2026 superyacht list with shipyard, broker and trade-press announcements as of 12 September 2026. Confidence is marked on each card: <b>Official list</b> or <b>Reported</b>. About 40 further yachts, mostly brokerage boats under 55 m, had not been named publicly at compile time.</p>',
+        '<p>The fleet list combines the official MYS 2026 superyacht list with shipyard, broker and trade-press announcements as of 13 September 2026. Confidence is marked on each card: <b>Official list</b> or <b>Reported</b>. About 25 further yachts, mostly brokerage boats under 55 m, had not been named publicly at compile time; 31 published berth codes are used.</p>',
       ],
     },
     he: {
@@ -28,7 +28,7 @@
       sub: 'גררו לסיבוב · גלגלו לזום · לחצן ימני או שתי אצבעות להזזה · לחצו על יאכטה',
       fleet: 'הצי', labels: 'שמות', night: 'לילה', fx: 'אפקטים', tour: 'סיור', aboutBtn: 'מקורות', fleetTitle: 'הצי', search: 'חיפוש יאכטה או מספנה…',
       loa: 'אורך', beam: 'רוחב', year: 'שנה', type: 'סוג', close: 'סגירה', aboutTitle: 'על ההדמיה',
-      sigRole: 'הדמיה תלת-ממדית · תערוכת היאכטות מונקו 2026', sigMeta: 'הצי, העגינות והמידות נאספו ב-12.9.2026 מהרשימה הרשמית, מספנות, ברוקרים ועיתונות המקצוע', sigLink: 'הערות דיוק',
+      sigRole: 'הדמיה תלת-ממדית · תערוכת היאכטות מונקו 2026', sigMeta: 'הצי, העגינות והמידות נאספו ב-13.9.2026 מהרשימה הרשמית, מספנות, ברוקרים ועיתונות המקצוע', sigLink: 'הערות דיוק',
       all: 'הכול', debut: 'בכורות', motor: 'מנוע', sailing: 'מפרש', explorer: 'אקספלורר', catamaran: 'רב-גופית', big: '60 מ׳ +',
       tDebut: 'בכורה עולמית / בתערוכה', tConfirmed: 'ברשימה הרשמית', tReported: 'דווח', tMotor: 'יאכטת מנוע', tSailing: 'יאכטת מפרש', tExplorer: 'אקספלורר', tCatamaran: 'רב-גופית',
       berth: 'עגינה', est: 'משוער', shownAt: 'מוצגת ב', yachts: 'יאכטות', source: 'מקור',
@@ -36,7 +36,7 @@
       about: [
         '<p>כל יאכטה במודל בנויה לפי האורך הכולל, הרוחב והסוג שפורסמו לגביה, ומעוגנת במקום שבו התערוכה מציבה אותה כאשר פורסם רציף או קוד עגינה. קודי העגינה לפי הסכמה הרשמית: D = רציף רנייה השלישי (הדיג), R = רציף רנייה הראשון, E = רציף ארצות הברית, C = רציף השיקאן, S = מזח ז׳ול סוקאל (מזח ה-T המרכזי), H = רציף לירונדל, L = מזח לוצ׳יאנה, J = רציף ז׳רלן; עגינות ממוספרות מוצבות לפי הסדר המספרי לאורך הרציף. כשלא פורסם מיקום, היאכטה הוצבה ברציף התואם לגודלה לפי הפריסה המקובלת של התערוכה: הגופים הגדולים ביותר על הדיג ועל רציף רנייה השלישי.</p>',
         '<p>הרציפים, שוברי הגלים והבניינים שמסביב משורטטים מגיאומטריית OpenStreetMap של נמל הרקולס. צורות הגוף והמבנה העילי הן מודלים פרמטריים המונעים מהמראה האמיתי שנחקר לכל יאכטה (צבע גוף ומבנה עילי, סוג חרטום, מספר סיפונים, ריג, מנחת מסוקים, בריכה, סיפון משלחות) היכן שפורסם; אלה אינם שרטוטי מספנה. הטופוגרפיה מגיעה מאריחי גובה אמיתיים (Mapzen / AWS terrarium, מקור SRTM ו-EU-DEM ברזולוציה של 25–30 מ׳), מיושרת בקו המים; רמת הסלע הוחזרה לגובהה המפורסם בתוך גבול רובע מונקו-ויל; המגדלים הגבוהים של מונטה קרלו בגובהם האמיתי.</p>',
-        '<p>רשימת הצי משלבת את הרשימה הרשמית של MYS 2026 עם הודעות מספנות, ברוקרים ועיתונות מקצועית נכון ל-12 בספטמבר 2026. רמת הוודאות מסומנת בכל כרטיס: <b>ברשימה הרשמית</b> או <b>דווח</b>. כ-40 יאכטות נוספות, רובן סירות ברוקראז׳ מתחת ל-55 מ׳, טרם פורסמו בשמן.</p>',
+        '<p>רשימת הצי משלבת את הרשימה הרשמית של MYS 2026 עם הודעות מספנות, ברוקרים ועיתונות מקצועית נכון ל-13 בספטמבר 2026. רמת הוודאות מסומנת בכל כרטיס: <b>ברשימה הרשמית</b> או <b>דווח</b>. כ-25 יאכטות נוספות, רובן סירות ברוקראז׳ מתחת ל-55 מ׳, טרם פורסמו בשמן; 31 קודי עגינה שפורסמו בשימוש.</p>',
       ],
     },
   };
@@ -541,7 +541,7 @@
   function select(y, fly) {
     selected = y;
     document.querySelectorAll('.item').forEach(el => el.setAttribute('aria-current', String(y && +el.dataset.id === y.id)));
-    if (!y) { card.hidden = true; return; }
+    if (!y) { card.hidden = true; try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { } return; }
     card.hidden = false;
     document.getElementById('cardTags').innerHTML =
       (y.debut ? `<span class="tag debut">${t('tDebut')}</span>` : '') +
@@ -555,7 +555,14 @@
     document.getElementById('cardType').textContent = (y.typeText || y.type).split('(')[0].trim();
     const qn = y.quayName ? (lang === 'he' && y.quayName.he ? y.quayName.he : y.quayName.en || y.quayName) : '';
     document.getElementById('cardZone').innerHTML = `${t('berth')}: <b>${qn}</b>${y.zone ? ` · <span dir="ltr">${y.zone}</span>` : ''}`;
+    const lk = y.look || {}; const bits = [];
+    if (lk.hull && lk.hull !== 'unknown') bits.push((lang === 'he' ? 'גוף: ' : 'Hull: ') + lk.hull.replace(/^other:/, ''));
+    if (lk.style && lk.style.length) bits.push((lang === 'he' ? 'עיצוב: ' : 'Design: ') + lk.style.slice(0, 2).join(', '));
+    if (lk.features && lk.features.length) bits.push(lk.features.slice(0, 3).join(' · '));
+    if (lk.rig) bits.push((lang === 'he' ? 'ריג: ' : 'Rig: ') + lk.rig + (lk.mastHeight_m ? ' · ' + lk.mastHeight_m + ' m' : ''));
+    document.getElementById('cardLook').innerHTML = bits.map(b => `<span dir="ltr">${b}</span>`).join('<span class="sep"> · </span>');
     document.getElementById('cardNote').textContent = y.notes || '';
+    try { history.replaceState(null, '', '#yacht=' + encodeURIComponent(shortName(y))); } catch (e) { }
     const src = (y.source || '').split(/[;,\s]+/).find(s => /^https?:/.test(s));
     document.getElementById('cardSrc').innerHTML = src ? `<a href="${src}" target="_blank" rel="noopener">${t('source')} ↗</a>` : '';
     if (fly && y.obj) {
@@ -639,6 +646,8 @@
     renderViews(); renderChips(); renderList(); renderLegend(); renderAbout(); if (selected) select(selected, false);
   }
   applyLang();
+  // deep link: #yacht=Name
+  try { const m = /yacht=([^&]+)/.exec(location.hash); if (m) { const nm = decodeURIComponent(m[1]).toLowerCase(); const y = yachts.find(q => shortName(q).toLowerCase() === nm); if (y) setTimeout(() => select(y, true), 1500); } } catch (e) { }
 
   /* ---------- resize + loop ---------- */
   const dbs = new T.Vector2();

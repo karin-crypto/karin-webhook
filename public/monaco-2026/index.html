@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="הדמיה תלת-ממדית אינטראקטיבית של תערוכת היאכטות מונקו 2026 בנמל הרקולס – 84 יאכטות מהרשימה הרשמית עם קודי עגינה ומראה אמיתי, טופוגרפיה אמיתית, רציפים מ-OpenStreetMap, השתקפויות, סיור קולנועי, יום ולילה. הדמיה: קרין קרן.">
+<meta name="description" content="הדמיה תלת-ממדית אינטראקטיבית של תערוכת היאכטות מונקו 2026 בנמל הרקולס – 93 יאכטות מהרשימה הרשמית עם קודי עגינה ומראה אמיתי, טופוגרפיה אמיתית, רציפים מ-OpenStreetMap, השתקפויות, סיור קולנועי, יום ולילה. הדמיה: קרין קרן.">
 <meta property="og:title" content="Monaco Yacht Show 2026 · 3D">
 <meta property="og:description" content="Interactive 3D model of the MYS 2026 fleet in Port Hercule, Monaco. Visualisation by Karin Keren.">
 <meta name="color-scheme" content="light dark">
@@ -110,6 +110,7 @@
   .specs dd small { font-size: 11px; opacity: .7; }
   .card .zone { font-size: 13.5px; color: var(--text-2); }
   .card .zone b { color: var(--text); font-weight: 600; }
+  .card .look { font-size: 12.5px; color: var(--text); } .card .look .sep { color: var(--brass); }
   .card .note { font-size: 12.5px; color: var(--text-2); }
   .card .src a { color: var(--brass); font-size: 12px; text-decoration: none; border-bottom: 1px dotted var(--brass); }
 
@@ -224,6 +225,7 @@
     <div><dt data-i18n="type">Type</dt><dd id="cardType"></dd></div>
   </dl>
   <div class="zone" id="cardZone"></div>
+  <div class="look" id="cardLook"></div>
   <div class="note" id="cardNote"></div>
   <div class="src" id="cardSrc"></div>
 </section>
