@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="הדמיה תלת-ממדית אינטראקטיבית של תערוכת היאכטות מונקו 2026 בנמל הרקולס – 84 יאכטות מהרשימה הרשמית עם קודי עגינה ומראה אמיתי, טופוגרפיה אמיתית, רציפים מ-OpenStreetMap, השתקפויות, יום ולילה. הדמיה: קרין קרן.">
+<meta name="description" content="הדמיה תלת-ממדית אינטראקטיבית של תערוכת היאכטות מונקו 2026 בנמל הרקולס – 84 יאכטות מהרשימה הרשמית עם קודי עגינה ומראה אמיתי, טופוגרפיה אמיתית, רציפים מ-OpenStreetMap, השתקפויות, סיור קולנועי, יום ולילה. הדמיה: קרין קרן.">
 <meta property="og:title" content="Monaco Yacht Show 2026 · 3D">
 <meta property="og:description" content="Interactive 3D model of the MYS 2026 fleet in Port Hercule, Monaco. Visualisation by Karin Keren.">
 <meta name="color-scheme" content="light dark">
@@ -67,7 +67,7 @@
   .views .btn small { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; opacity: .65; }
 
   /* ---------- fleet drawer ---------- */
-  .drawer { position: fixed; z-index: 6; inset-inline-start: 18px; top: 178px; bottom: 96px; width: min(360px, calc(100vw - 36px)); display: flex; flex-direction: column; overflow: hidden; transition: transform .28s ease, opacity .28s; }
+  .drawer { position: fixed; z-index: 6; inset-inline-start: 18px; top: 178px; bottom: 182px; width: min(360px, calc(100vw - 36px)); display: flex; flex-direction: column; overflow: hidden; transition: transform .28s ease, opacity .28s; }
   .drawer[hidden] { display: flex; opacity: 0; pointer-events: none; transform: translateX(-16px); }
   [dir="rtl"] .drawer[hidden] { transform: translateX(16px); }
   .drawer header { padding: 12px 14px 10px; border-bottom: 1px solid var(--line); display: grid; gap: 8px; }
@@ -116,6 +116,9 @@
   /* ---------- legend + footer ---------- */
   .bottom { position: fixed; z-index: 5; inset-inline: 0; bottom: 0; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 0 18px 14px; pointer-events: none; }
   .bottom > * { pointer-events: auto; }
+  .bottom-start { display: flex; align-items: flex-end; gap: 10px; }
+  .minimap { padding: 4px; line-height: 0; }
+  .minimap canvas { width: 220px; height: 150px; border-radius: 2px; cursor: crosshair; display: block; }
   .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; padding: 9px 14px; font-size: 12.5px; max-width: 640px; }
   .legend span { display: inline-flex; align-items: center; gap: 6px; }
   .legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
@@ -166,7 +169,7 @@
     .card { inset-inline: 12px; bottom: 74px; width: auto; }
     .specs { grid-template-columns: repeat(2, 1fr); }
     .bottom { padding: 0 12px 10px; }
-    .legend { display: none; }
+    .legend, .minimap { display: none; }
     .sig { padding: 8px 12px 7px; }
     .sig .name { font-size: 18px; }
     .sig .meta { display: none; }
@@ -190,6 +193,7 @@
   <div class="toolbar">
     <button class="btn" id="btnFleet" aria-pressed="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 5h12M2 8h12M2 11h8"/></svg><span class="t" data-i18n="fleet">Fleet</span></button>
     <button class="btn" id="btnLabels" aria-pressed="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 4h10v6H8l-3 3v-3H3z"/></svg><span class="t" data-i18n="labels">Names</span></button>
+    <button class="btn" id="btnTour" aria-pressed="false"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 3l9 5-9 5z"/></svg><span class="t" data-i18n="tour">Tour</span></button>
     <button class="btn" id="btnFx" aria-pressed="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 2l1.6 3.6L13.5 6l-2.8 2.6.8 3.9L8 10.6l-3.5 1.9.8-3.9L2.5 6l3.9-.4z"/></svg><span class="t" data-i18n="fx">FX</span></button>
     <button class="btn" id="btnNight" aria-pressed="false"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 9.5A5.5 5.5 0 0 1 6.5 3a5.5 5.5 0 1 0 6.5 6.5z"/></svg><span class="t" data-i18n="night">Night</span></button>
     <button class="btn" id="btnLang"><span class="t">EN / עב</span></button>
@@ -225,7 +229,7 @@
 </section>
 
 <div class="bottom">
-  <div class="plate legend" id="legend"></div>
+  <div class="bottom-start"><div class="plate minimap"><canvas id="minimap" width="220" height="150" aria-label="Harbour map"></canvas></div><div class="plate legend" id="legend"></div></div>
   <div class="plate sig">
     <div class="name"><span class="he">קרין קרן</span> · Karin Keren</div>
     <div class="role" data-i18n="sigRole">3D visualisation · Monaco Yacht Show 2026</div>

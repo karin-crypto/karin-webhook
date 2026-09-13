@@ -10,7 +10,7 @@
     en: {
       eyebrow: '35th edition · Port Hercule · 23–26 September 2026', h1: 'Monaco Yacht Show 2026', h1sub: 'A 3D model of the fleet in Port Hercule',
       sub: 'Drag to orbit · scroll to zoom · right-drag or two fingers to pan · click a yacht',
-      fleet: 'Fleet', labels: 'Names', night: 'Night', fx: 'FX', aboutBtn: 'Sources', fleetTitle: 'The Fleet', search: 'Search yacht or builder…',
+      fleet: 'Fleet', labels: 'Names', night: 'Night', fx: 'FX', tour: 'Tour', aboutBtn: 'Sources', fleetTitle: 'The Fleet', search: 'Search yacht or builder…',
       loa: 'Length', beam: 'Beam', year: 'Year', type: 'Type', close: 'Close', aboutTitle: 'About this model',
       sigRole: '3D visualisation · Monaco Yacht Show 2026', sigMeta: 'Fleet, berths and beams compiled 12 Sept 2026 from the official list, shipyards, brokers and trade press', sigLink: 'accuracy notes',
       all: 'All', debut: 'Debuts', motor: 'Motor', sailing: 'Sail', explorer: 'Explorer', catamaran: 'Multihull', big: '60 m +',
@@ -26,7 +26,7 @@
     he: {
       eyebrow: 'המהדורה ה-35 · נמל הרקולס · 23–26 בספטמבר 2026', h1: 'Monaco Yacht Show 2026', h1sub: 'הדמיה תלת-ממדית של הצי בנמל הרקולס',
       sub: 'גררו לסיבוב · גלגלו לזום · לחצן ימני או שתי אצבעות להזזה · לחצו על יאכטה',
-      fleet: 'הצי', labels: 'שמות', night: 'לילה', fx: 'אפקטים', aboutBtn: 'מקורות', fleetTitle: 'הצי', search: 'חיפוש יאכטה או מספנה…',
+      fleet: 'הצי', labels: 'שמות', night: 'לילה', fx: 'אפקטים', tour: 'סיור', aboutBtn: 'מקורות', fleetTitle: 'הצי', search: 'חיפוש יאכטה או מספנה…',
       loa: 'אורך', beam: 'רוחב', year: 'שנה', type: 'סוג', close: 'סגירה', aboutTitle: 'על ההדמיה',
       sigRole: 'הדמיה תלת-ממדית · תערוכת היאכטות מונקו 2026', sigMeta: 'הצי, העגינות והמידות נאספו ב-12.9.2026 מהרשימה הרשמית, מספנות, ברוקרים ועיתונות המקצוע', sigLink: 'הערות דיוק',
       all: 'הכול', debut: 'בכורות', motor: 'מנוע', sailing: 'מפרש', explorer: 'אקספלורר', catamaran: 'רב-גופית', big: '60 מ׳ +',
@@ -307,7 +307,9 @@
     }
     if (!spot) return;
     y.spot = spot; y.placedZone = spot.quay.zone || 'anchor'; y.quayName = spot.quay.name;
-    const g = E.buildYacht(y);
+    const hi = E.buildYacht(y), lo = E.buildYacht(y, true);
+    const g = new T.LOD(); g.addLevel(hi, 0); g.addLevel(lo, isMobile ? 420 : 760);
+    g.userData = { spec: y, meshes: hi.userData.meshes.concat(lo.userData.meshes) };
     g.position.set(spot.x, 0, spot.z); g.rotation.y = spot.heading;
     if (spot.quay.mode === 'stern') { // stern lines to the quay bollards
       const bw = (y.beam || E.estBeam(y.loa, y.type)) / 2;
@@ -394,6 +396,84 @@
   }
   goView('aerial'); controls.snap();
   if (!reduceMotion) { controls.goal.dist = 2600; controls.goal.theta += 0.9; controls.goal.phi = 1.25; controls.snap(); controls.setDamp(0.022); goView('aerial'); setTimeout(() => controls.setDamp(0.12), 4200); }
+
+  /* ---------- cinematic tour ---------- */
+  const TOUR_EXTRA = { soccal: { lat: 43.7348, lon: 7.4238, theta: 1.9, phi: 1.2, dist: 230 }, hirondelle: { lat: 43.7365, lon: 7.4270, theta: -0.6, phi: 1.2, dist: 230 }, chicane: { lat: 43.7369, lon: 7.4258, theta: 0.2, phi: 1.18, dist: 200 } };
+  const TOUR = [['aerial', 5], ['entrance', 7], ['digue', 8], ['hirondelle', 7], ['chicane', 7], ['etats', 7], ['soccal', 7], ['antoine', 7], ['rocher', 8], ['aerial', 6]];
+  let tour = null; // {t, start}
+  function viewOf(k) { return VIEWS[k] || TOUR_EXTRA[k]; }
+  function lerpAngle(a, b, t) { let d = b - a; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return a + d * t; }
+  function tourStep(dt) {
+    tour.t += dt; let acc = 0;
+    for (let i = 0; i < TOUR.length - 1; i++) {
+      const [ka, da] = TOUR[i]; const kb = TOUR[i + 1][0];
+      if (tour.t < acc + da) {
+        const u = E.smooth(0, 1, (tour.t - acc) / da); const a = viewOf(ka), b = viewOf(kb);
+        const ca = E.ll(a.lat, a.lon), cb = E.ll(b.lat, b.lon);
+        controls.goal.target.set(E.lerp(ca.x, cb.x, u), E.lerp(a.y || 0, b.y || 0, u), E.lerp(ca.z, cb.z, u));
+        controls.goal.theta = lerpAngle(a.theta, b.theta, u); controls.goal.phi = E.lerp(a.phi, b.phi, u); controls.goal.dist = E.lerp(a.dist, b.dist, u);
+        return;
+      }
+      acc += da;
+    }
+    stopTour();
+  }
+  const btnTour = document.getElementById('btnTour');
+  function startTour() { tour = { t: 0 }; controls.setDamp(0.06); btnTour.setAttribute('aria-pressed', 'true'); select(null); }
+  function stopTour() { tour = null; controls.setDamp(0.12); btnTour.setAttribute('aria-pressed', 'false'); }
+  btnTour.addEventListener('click', () => tour ? stopTour() : startTour());
+  canvas.addEventListener('pointerdown', () => { if (tour) stopTour(); });
+  canvas.addEventListener('wheel', () => { if (tour) stopTour(); }, { passive: true });
+
+  /* ---------- visitors on the quays ---------- */
+  (function buildCrowd() {
+    const pts = []; let seed = 3;
+    const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    const want = isMobile ? 500 : 1700;
+    quays.forEach(q => q.segs.forEach(sg => {
+      const yq = q.zone === 'digue' ? 3.95 : q.zone === 'cruise' ? 3.95 : 2.2;
+      for (let d = 2; d < sg.len; d += 2.4) {
+        if (rnd() < 0.45) continue;
+        const off = 2.5 + rnd() * 5.5; const along = d + (rnd() - 0.5) * 1.5;
+        pts.push({ x: sg.a.x + sg.d.x * along - sg.n.x * off, z: sg.a.z + sg.d.z * along - sg.n.z * off, y: yq, r: rnd() * 6.28 });
+      }
+    }));
+    // tents & pavilions forecourts
+    (H.structures || []).forEach(st => { if (!/tent|Pavilion|Gallery|Lounge/.test(st.name)) return; const c = E.ll(st.lat, st.lon); for (let i = 0; i < 40; i++) { const a = rnd() * 6.28, r = st.width * 0.6 + rnd() * 10; pts.push({ x: c.x + Math.cos(a) * (st.length / 2 + 4) * (rnd() - 0.5) * 2 + Math.cos(a) * 2, z: c.z + Math.sin(a) * r, y: 2.2, r: rnd() * 6.28 }); } });
+    const sel = pts.slice(0, want);
+    const body = new T.CapsuleGeometry(0.2, 0.95, 3, 6); body.translate(0, 0.9, 0);
+    const head = new T.SphereGeometry(0.13, 6, 5); head.translate(0, 1.62, 0);
+    const mb = new T.InstancedMesh(body, new T.MeshStandardMaterial({ roughness: 0.9 }), sel.length);
+    const mh = new T.InstancedMesh(head, new T.MeshStandardMaterial({ color: 0xd9b99b, roughness: 0.9 }), sel.length);
+    const o = new T.Object3D(); const col = new T.Color();
+    const palette = [0xf2f2f0, 0x1f2a3a, 0x9aa3ad, 0x223a5e, 0xd8c9b0, 0x2f2f33, 0x7a5c3a, 0xc9d3dc, 0x5a6b7c, 0xe8e0d0];
+    sel.forEach((p, i) => { o.position.set(p.x, p.y, p.z); o.rotation.set(0, p.r, 0); const sc = 0.92 + rnd() * 0.16; o.scale.set(sc, sc, sc); o.updateMatrix(); mb.setMatrixAt(i, o.matrix); mh.setMatrixAt(i, o.matrix); col.set(palette[Math.floor(rnd() * palette.length)]); mb.setColorAt(i, col); });
+    mb.castShadow = true; scene.add(mb); scene.add(mh);
+  })();
+
+  /* ---------- minimap ---------- */
+  const mm = document.getElementById('minimap');
+  const mmBase = document.createElement('canvas');
+  const MM = { w: mm ? mm.width : 220, h: mm ? mm.height : 150, x0: -600, x1: 600, z0: -400, z1: 400 };
+  const mmX = x => (x - MM.x0) / (MM.x1 - MM.x0) * MM.w, mmZ = z => (z - MM.z0) / (MM.z1 - MM.z0) * MM.h;
+  (function drawMinimapBase() {
+    if (!mm) return;
+    mmBase.width = MM.w; mmBase.height = MM.h; const x = mmBase.getContext('2d');
+    x.fillStyle = '#1f6f8f'; x.fillRect(0, 0, MM.w, MM.h);
+    x.fillStyle = '#d9d0c0'; x.beginPath(); landXZ.forEach((p, i) => i ? x.lineTo(mmX(p.x), mmZ(p.z)) : x.moveTo(mmX(p.x), mmZ(p.z))); x.closePath(); x.fill();
+    (H.piers || []).forEach(pp => { const xz = E.llArr(pp.pts); x.beginPath(); xz.forEach((p, i) => i ? x.lineTo(mmX(p.x), mmZ(p.z)) : x.moveTo(mmX(p.x), mmZ(p.z))); x.closePath(); x.fill(); });
+    x.lineWidth = 2.5; x.lineCap = 'round';
+    quays.forEach(q => { x.strokeStyle = '#' + (ZONE_COLORS[q.zone] || 0xffffff).toString(16).padStart(6, '0'); x.beginPath(); q.segs.forEach((sg, i) => { if (!i) x.moveTo(mmX(sg.a.x), mmZ(sg.a.z)); x.lineTo(mmX(sg.b.x), mmZ(sg.b.z)); }); x.stroke(); });
+  })();
+  function drawMinimap() {
+    if (!mm) return; const x = mm.getContext('2d');
+    x.drawImage(mmBase, 0, 0);
+    yachts.forEach(y => { if (!y.obj) return; const p = y.obj.position; x.fillStyle = y === selected ? '#ffe9b0' : y.debut ? '#e0405a' : '#ffffff'; const r = y === selected ? 3 : Math.max(1.2, y.loa / 40); x.beginPath(); x.arc(mmX(p.x), mmZ(p.z), r, 0, 6.283); x.fill(); });
+    const c = camera.position, tg = controls.state.target;
+    x.strokeStyle = 'rgba(255,233,176,0.9)'; x.lineWidth = 1.2; x.beginPath(); x.moveTo(mmX(c.x), mmZ(c.z)); x.lineTo(mmX(tg.x), mmZ(tg.z)); x.stroke();
+    x.fillStyle = '#ffe9b0'; x.beginPath(); x.arc(mmX(c.x), mmZ(c.z), 3.2, 0, 6.283); x.fill();
+  }
+  if (mm) mm.addEventListener('click', ev => { const r = mm.getBoundingClientRect(); const px = (ev.clientX - r.left) / r.width * MM.w, pz = (ev.clientY - r.top) / r.height * MM.h; const wx = MM.x0 + px / MM.w * (MM.x1 - MM.x0), wz = MM.z0 + pz / MM.h * (MM.z1 - MM.z0); if (tour) stopTour(); controls.flyTo(new T.Vector3(wx, 0, wz), undefined, undefined, Math.min(controls.goal.dist, 420)); });
 
   /* ---------- labels ---------- */
   const labelsEl = document.getElementById('labels');
@@ -570,7 +650,8 @@
     const dt = clock.getDelta();
     if (!reduceMotion) water.userData.uniforms.uTime.value += dt;
     // idle: slow cinematic orbit after 30 s without input
-    if (!reduceMotion && performance.now() - controls.lastInput() > 30000) controls.goal.theta += 0.00045;
+    if (tour) tourStep(dt);
+    else if (!reduceMotion && performance.now() - controls.lastInput() > 30000) controls.goal.theta += 0.00045;
     controls.update(); camera.updateMatrixWorld();
     sky.userData.uniforms.uTime.value = water.userData.uniforms.uTime.value;
     // keep the shadow frustum centred where the camera looks
@@ -581,12 +662,13 @@
     } else {
       renderer.setRenderTarget(null); renderer.render(scene, camera);
     }
-    if ((frame++ & 1) === 0) updateLabels();
+    if ((frame & 1) === 0) updateLabels();
+    if ((frame++ & 3) === 0) drawMinimap();
   }
   const loading = document.getElementById('loading');
   document.getElementById('loadbar').style.width = '100%';
   setTimeout(() => loading.classList.add('done'), 350);
   loop();
 
-  window.MYS_APP = { select, goView, yachts, quays, controls };
+  window.MYS_APP = { select, goView, yachts, quays, controls, startTour, stopTour };
 })();

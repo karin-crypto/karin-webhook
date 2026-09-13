@@ -75,11 +75,36 @@
   }
 
   /* ---------- materials ---------- */
+  /* ---------- procedural yacht textures ---------- */
+  const TEX = (function () {
+    const out = {};
+    const mk = (w, h, draw) => { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new T.CanvasTexture(c); t.wrapS = t.wrapT = T.RepeatWrapping; t.colorSpace = T.SRGBColorSpace; t.anisotropy = 8; return t; };
+    // window panes: dark glass with pale mullions every 1.6 m (u in metres via repeat)
+    out.panes = mk(256, 64, (x, w, h) => { x.fillStyle = '#0d1c2c'; x.fillRect(0, 0, w, h); const g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, 'rgba(120,160,200,0.35)'); g.addColorStop(0.5, 'rgba(20,40,60,0)'); g.addColorStop(1, 'rgba(0,0,0,0.25)'); x.fillStyle = g; x.fillRect(0, 0, w, h); x.fillStyle = '#e8e6e0'; for (let i = 0; i < 4; i++) x.fillRect(i * 64, 0, 4, h); x.fillRect(0, 0, w, 3); x.fillRect(0, h - 3, w, 3); });
+    // teak planking: seams every 0.15 m across (v), plank ends every 2 m (u)
+    out.teak = mk(256, 128, (x, w, h) => { x.fillStyle = '#c29a6b'; x.fillRect(0, 0, w, h); for (let i = 0; i < 1600; i++) { x.fillStyle = `rgba(${90 + Math.random() * 60 | 0},${60 + Math.random() * 40 | 0},${30 + Math.random() * 30 | 0},${0.06 + Math.random() * 0.1})`; x.fillRect(Math.random() * w, Math.random() * h, 12, 1); } x.fillStyle = '#f2ece2'; for (let r = 0; r < 8; r++) x.fillRect(0, r * 16, w, 1.5); x.fillStyle = 'rgba(80,50,30,0.5)'; for (let r = 0; r < 8; r++) x.fillRect((r % 2) * 128, r * 16, 1.5, 16); });
+    out.teak.repeat.set(1 / 2, 1 / 1.2);
+    out.panes.repeat.set(1 / 6.4, 1);
+    const plates = new Map();
+    out.nameplate = name => {
+      if (plates.has(name)) return plates.get(name);
+      const c = document.createElement('canvas'); c.width = 512; c.height = 128; const x = c.getContext('2d');
+      x.fillStyle = 'rgba(0,0,0,0)'; x.clearRect(0, 0, 512, 128);
+      x.fillStyle = '#1b2430'; x.textAlign = 'center'; x.textBaseline = 'middle';
+      let size = 64; x.font = `600 ${size}px "Bodoni Moda", Georgia, serif`; const txt = name.toUpperCase();
+      while (x.measureText(txt).width > 480 && size > 22) { size -= 4; x.font = `600 ${size}px "Bodoni Moda", Georgia, serif`; }
+      x.fillText(txt, 256, 52); x.font = '400 22px "IBM Plex Mono", monospace'; x.fillStyle = '#3b4756'; x.fillText('MONACO YACHT SHOW 2026', 256, 100);
+      const t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; t.anisotropy = 8; plates.set(name, t); return t;
+    };
+    return out;
+  })();
+
   const MAT = {
-    hull: (c) => new T.MeshStandardMaterial({ color: c, roughness: 0.22, metalness: 0.1, vertexColors: true, envMapIntensity: 1.0 }),
+    hull: (c) => new T.MeshPhysicalMaterial({ color: c, roughness: 0.28, metalness: 0.05, clearcoat: 0.9, clearcoatRoughness: 0.12, vertexColors: true, envMapIntensity: 1.0 }),
     super: (c) => new T.MeshStandardMaterial({ color: c, roughness: 0.38, metalness: 0.05 }),
     glass: new T.MeshStandardMaterial({ color: 0x0b1a2b, roughness: 0.08, metalness: 0.85 }),
-    teak: new T.MeshStandardMaterial({ color: 0xb98a5a, roughness: 0.8, metalness: 0.0 }),
+    panes: new T.MeshStandardMaterial({ map: TEX.panes, color: 0xffffff, roughness: 0.15, metalness: 0.6 }),
+    teak: new T.MeshStandardMaterial({ map: TEX.teak, color: 0xffffff, roughness: 0.8, metalness: 0.0 }),
     mast: new T.MeshStandardMaterial({ color: 0xd9dde2, roughness: 0.5, metalness: 0.3 }),
     dome: new T.MeshStandardMaterial({ color: 0xf2f2f2, roughness: 0.6 }),
     rope: new T.LineBasicMaterial({ color: 0x9aa4ad, transparent: true, opacity: 0.6 }),
@@ -101,8 +126,8 @@
 
   /* ---------- hull loft ---------- */
   const HULL_COLORS = { white: 0xf3f1ec, navy: 0x1e2b45, grey: 0x8d959c, gray: 0x8d959c, black: 0x1a1a1f, silver: 0xc9ced3, iceblue: 0xbfd0dc, green: 0x2f4f3e, blue: 0x2b4f8a, cream: 0xefe6d2, red: 0x8a1c1c, darkblue: 0x16223a, bronze: 0x7a6a52, champagne: 0xd8cbb0, darkgrey: 0x4a5058 };
-  function hullGeometry(L, B, type, bow) {
-    const N = 32, M = 11;
+  function hullGeometry(L, B, type, bow, low) {
+    const N = low ? 14 : 32, M = low ? 7 : 11;
     const sailing = type === 'sailing';
     const fb = sailing ? L * 0.022 + 0.9 : L * 0.026 + 1.25;   // freeboard at midship
     const draft = clamp(sailing ? L * 0.05 + 0.8 : L * 0.038 + 0.8, 1, 6.5);
@@ -145,6 +170,8 @@
     for (let i = 0; i < N; i++) { const a = d0 + i * 2; idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); }
     const g = new T.BufferGeometry();
     g.setAttribute('position', new T.Float32BufferAttribute(pos, 3));
+    const uvs = new Float32Array(pos.length / 3 * 2); for (let i = 0, k = 0; i < pos.length; i += 3, k += 2) { uvs[k] = pos[i]; uvs[k + 1] = pos[i + 2]; }
+    g.setAttribute('uv', new T.BufferAttribute(uvs, 2));
     const colors = new Float32Array(pos.length);
     for (let i = 0; i < pos.length; i += 3) {
       const y = pos[i + 1]; let r = 1, gg = 1, b = 1;
@@ -171,7 +198,7 @@
   }
 
   /* ---------- yacht builder (v3: per-yacht look parameters) ---------- */
-  function buildYacht(spec) {
+  function buildYacht(spec, low) {
     const type = spec.type || 'motor';
     const look = spec.look || {};
     const L = spec.loa, B = spec.beam || estBeam(L, type);
@@ -180,13 +207,13 @@
     const superColor = spec.superColor || (look.superstructure && look.superstructure !== 'white' && HULL_COLORS[look.superstructure]) || 0xf5f4f0;
     const glassy = (look.style || []).some(k => /rwd|sinot|winch|oino|nuvolari|glass|zuccon|espen|vripack|design unlimited|tim heywood/i.test(k)) || L > 70;
     const feats = (look.features || []).join(' ').toLowerCase();
-    const opts = { glassy, decks: look.decks || null, flybridge: look.flybridge, aftDeckOpen: look.aftDeckOpen, feats, bow: look.bow && look.bow !== 'unknown' ? look.bow : null };
+    const opts = { glassy, decks: look.decks || null, flybridge: look.flybridge, aftDeckOpen: look.aftDeckOpen, feats, bow: look.bow && look.bow !== 'unknown' ? look.bow : null, low: !!low };
     const meshes = [];
 
     if (type === 'catamaran') {
       const bh = B * 0.24;
       for (const side of [-1, 1]) {
-        const h = hullGeometry(L, bh, 'motor', 'plumb');
+        const h = hullGeometry(L, bh, 'motor', 'plumb', low);
         const m = new T.Mesh(h.geom, [MAT.hull(hullColor), MAT.teak]);
         m.position.z = side * (B / 2 - bh / 2);
         g.add(m); meshes.push(m);
@@ -197,7 +224,7 @@
       if (spec.sailCat) addRig(g, meshes, L, B * 0.5, fb + 0.3, superColor, { rig: 'sloop', masts: 1, mastHeight: look.mastHeight_m, house: false });
       else addDeckhouses(g, meshes, L * 0.9, B * 0.95, fb + 0.3, 'motor', superColor, spec.name, Object.assign({}, opts, { decks: look.flybridge === false ? 1 : (look.decks || 2) }));
     } else {
-      const h = hullGeometry(L, B, type, opts.bow);
+      const h = hullGeometry(L, B, type, opts.bow, low);
       const m = new T.Mesh(h.geom, [MAT.hull(hullColor), MAT.teak]);
       g.add(m); meshes.push(m);
       if (type === 'sailing') addRig(g, meshes, L, B, h.fb, superColor, { rig: look.rig, masts: look.masts, mastHeight: look.mastHeight_m, house: true });
@@ -214,6 +241,13 @@
     if (type !== 'sailing') {
       const plat = new T.Mesh(new T.BoxGeometry(Math.max(1.6, L * 0.035), 0.25, B * 0.72), MAT.teak);
       plat.position.set(-L / 2 - Math.max(0.8, L * 0.0175), 0.55, 0); g.add(plat); meshes.push(plat);
+    }
+    // stern nameplate
+    if (!low && L >= 24) {
+      const pw = Math.min(B * 0.55, 9), ph = pw / 4;
+      const plate = new T.Mesh(new T.PlaneGeometry(pw, ph), new T.MeshBasicMaterial({ map: TEX.nameplate((spec.name || '').replace(/\s*\(.*?\)\s*/g, '').replace(/\s*\/.*$/, '').trim()), transparent: true, depthWrite: false }));
+      const fbP = type === 'sailing' ? L * 0.022 + 0.9 : L * 0.026 + 1.25;
+      plate.position.set(-L / 2 - 0.06, fbP * 0.55, 0); plate.rotation.y = -Math.PI / 2; g.add(plate);
     }
     // foam ring at the waterline
     const foam = new T.Mesh(new T.PlaneGeometry(L * 1.3, B * 2.6), new T.MeshBasicMaterial({ map: getFoamTex(), transparent: true, depthWrite: false, opacity: 0.9 }));
@@ -245,13 +279,13 @@
         rail.position.set((slabAft + x1) / 2, y + 1.0, w / 2 + 0.3); g.add(rail);
         const rail2 = rail.clone(); rail2.position.z = -(w / 2 + 0.3); g.add(rail2);
         // stanchions
-        const nSt = Math.max(2, Math.round((x1 - slabAft) / 3));
-        for (let k = 0; k <= nSt; k++) for (const side of [-1, 1]) { const st = new T.Mesh(new T.BoxGeometry(0.06, 1.0, 0.06), MAT.mast); st.position.set(slabAft + (x1 - slabAft) * k / nSt, y + 0.5, side * (w / 2 + 0.3)); g.add(st); }
+        if (!o.low) { const nSt = Math.max(2, Math.round((x1 - slabAft) / 3));
+        for (let k = 0; k <= nSt; k++) for (const side of [-1, 1]) { const st = new T.Mesh(new T.BoxGeometry(0.06, 1.0, 0.06), MAT.mast); st.position.set(slabAft + (x1 - slabAft) * k / nSt, y + 0.5, side * (w / 2 + 0.3)); g.add(st); } }
       }
       const hH = last && !explorer ? dh * 0.85 : dh;
       const house = new T.Mesh(extrudeUp(roundedPlan(x0, x1, w / 2, w * (o.glassy ? 0.75 : 0.6), 0.9), hH, y), MAT.super(color));
       g.add(house); meshes.push(house);
-      const band = new T.Mesh(extrudeUp(roundedPlan(x0 + 0.3, x1 + 0.12, w / 2 + 0.06, w * (o.glassy ? 0.75 : 0.6), 0.9), hH * bandFrac, y + hH * bandY), MAT.glass);
+      const band = new T.Mesh(extrudeUp(roundedPlan(x0 + 0.3, x1 + 0.12, w / 2 + 0.06, w * (o.glassy ? 0.75 : 0.6), 0.9), hH * bandFrac, y + hH * bandY), o.low ? MAT.glass : MAT.panes);
       g.add(band); meshes.push(band);
       topX = (x0 + x1) / 2; topY = y + hH;
       y += hH;
