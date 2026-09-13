@@ -252,6 +252,17 @@
     // foam ring at the waterline
     const foam = new T.Mesh(new T.PlaneGeometry(L * 1.3, B * 2.6), new T.MeshBasicMaterial({ map: getFoamTex(), transparent: true, depthWrite: false, opacity: 0.9 }));
     foam.rotation.x = -Math.PI / 2; foam.position.y = 0.08; g.add(foam);
+    // night dressing: underwater LED glow on the water + warm deck-edge light strips (toggled by the app)
+    if (!low) {
+      const nightG = new T.Group(); nightG.visible = false; nightG.name = 'night';
+      const glow = new T.Mesh(new T.PlaneGeometry(L * 1.45, B * 3.2), new T.MeshBasicMaterial({ map: getFoamTex(), color: 0x7fd6ff, transparent: true, depthWrite: false, opacity: 1.0, blending: T.AdditiveBlending }));
+      glow.rotation.x = -Math.PI / 2; glow.position.y = 0.12; nightG.add(glow);
+      const fbN = type === 'sailing' ? L * 0.022 + 0.9 : L * 0.026 + 1.25;
+      const strip = new T.MeshBasicMaterial({ color: 0xfff0c8 });
+      for (const side of [-1, 1]) { const st = new T.Mesh(new T.BoxGeometry(L * 0.82, 0.08, 0.08), strip); st.position.set(-L * 0.04, fbN + 0.95, side * (B / 2 * 0.96)); nightG.add(st); }
+      if (type !== 'sailing') { const aft = new T.Mesh(new T.BoxGeometry(0.08, 0.08, B * 0.7), strip); aft.position.set(-L / 2 + 0.6, fbN + 0.95, 0); nightG.add(aft); }
+      g.add(nightG);
+    }
     meshes.forEach(m => { m.castShadow = true; m.receiveShadow = true; m.userData.yacht = spec; });
     g.userData = { spec, meshes };
     return g;

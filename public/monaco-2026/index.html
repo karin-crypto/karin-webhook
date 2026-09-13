@@ -3,19 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="הדמיה תלת-ממדית אינטראקטיבית של תערוכת היאכטות מונקו 2026 בנמל הרקולס – 99 יאכטות מהרשימה הרשמית עם קודי עגינה ומראה אמיתי, טופוגרפיה אמיתית, מצב הליכה בגובה עיניים, שעון שמש אמיתי, השתקפויות, צליל סביבה. הדמיה: קרין קרן.">
+<meta name="description" content="הדמיה תלת-ממדית אינטראקטיבית של תערוכת היאכטות מונקו 2026 בנמל הרקולס – 99 יאכטות מהרשימה הרשמית עם קודי עגינה ומראה אמיתי, טופוגרפיה אמיתית, מצב הליכה, שעון שמש אמיתי, תאורת לילה, השתקפויות, צליל סביבה. הדמיה: קרין קרן.">
 <meta property="og:title" content="Monaco Yacht Show 2026 · 3D">
 <meta property="og:description" content="Interactive 3D model of the MYS 2026 fleet in Port Hercule, Monaco. Visualisation by Karin Keren.">
 <meta name="color-scheme" content="light dark">
 <title>Monaco Yacht Show 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,600;1,6..96,400&family=Frank+Ruhl+Libre:wght@400;500;700&family=Assistant:wght@300;400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,600;1,6..96,400&family=Jost:wght@300;400;500&family=Frank+Ruhl+Libre:wght@400;500;700&family=Assistant:wght@300;400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
   :root {
     --ink: #0e1b2a; --ink-2: #1b2d40; --paper: #f6f3ec; --paper-2: #ebe6db;
     --text: #12202e; --text-2: #4c5c6b; --line: rgba(18, 32, 46, .14);
     --panel: rgba(250, 248, 243, .84); --panel-strong: rgba(250, 248, 243, .96);
-    --brass: #a8842f; --brass-2: #c8a24a; --sea: #0a3f5c; --aqua: #2e8ba8; --red: #c8102e;
+    --brass: #a8842f; --brass-2: #c8a24a; --sea: #0a3f5c; --aqua: #1a9fb3; --aqua-2: #6fd3df; --red: #c8102e;
+    --geo: 'Jost', 'Futura', 'Century Gothic', 'Assistant', sans-serif;
     --shadow: 0 18px 50px rgba(8, 24, 40, .22);
     --glass-blur: 14px;
     --display-lat: 'Bodoni Moda', 'Frank Ruhl Libre', Georgia, 'Times New Roman', serif;
@@ -57,7 +58,7 @@
   .toolbar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; flex: 0 0 auto; }
   .btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 12px; border-radius: 4px; border: 1px solid var(--line); background: var(--panel); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); cursor: pointer; font-weight: 600; font-size: 13.5px; transition: background .15s, border-color .15s; }
   .btn:hover { border-color: var(--brass-2); }
-  .btn[aria-pressed="true"] { background: var(--brass); color: #fff; border-color: var(--brass); }
+  .btn[aria-pressed="true"] { background: var(--aqua); color: #fff; border-color: var(--aqua); }
   .btn .k { font-family: var(--mono); font-size: 11px; opacity: .7; }
   .btn svg { width: 15px; height: 15px; }
 
@@ -69,7 +70,7 @@
   /* ---------- time bar / joystick / walk hint ---------- */
   .timebar { position: fixed; z-index: 5; inset-inline-end: 18px; top: 74px; display: flex; align-items: center; gap: 10px; padding: 8px 12px; }
   .timebar .lbl { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-2); }
-  .timebar input { width: 180px; accent-color: var(--brass); }
+  .timebar input { width: 180px; accent-color: var(--aqua); }
   .timebar .val { font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums; min-width: 44px; text-align: end; }
   .joystick { position: fixed; z-index: 8; inset-inline-start: 24px; bottom: 120px; width: 110px; height: 110px; border-radius: 50%; background: rgba(250,248,243,.35); border: 1px solid var(--line); backdrop-filter: blur(6px); touch-action: none; }
   .joystick .knob { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; background: var(--brass); opacity: .85; }
@@ -88,9 +89,7 @@
   .search { width: 100%; padding: 8px 10px; border-radius: 4px; border: 1px solid var(--line); background: var(--paper-2); color: var(--text); font: inherit; font-size: 14px; }
   .chips { display: flex; flex-wrap: wrap; gap: 5px; }
   .chip { padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); background: transparent; font-size: 12px; cursor: pointer; }
-  .chip[aria-pressed="true"] { background: var(--ink-2); color: #fff; border-color: var(--ink-2); }
-  :root[data-theme="dark"] .chip[aria-pressed="true"] { background: var(--brass-2); color: #0e1b2a; border-color: var(--brass-2); }
-  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .chip[aria-pressed="true"] { background: var(--brass-2); color: #0e1b2a; border-color: var(--brass-2); } }
+  .chip[aria-pressed="true"] { background: var(--aqua); color: #fff; border-color: var(--aqua); }
   .list { overflow-y: auto; flex: 1; padding: 6px 0 10px; scrollbar-width: thin; }
   .item { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: baseline; width: 100%; text-align: start; padding: 8px 14px; border: 0; background: transparent; cursor: pointer; border-inline-start: 3px solid transparent; }
   .item:hover { background: var(--paper-2); }
@@ -160,14 +159,35 @@
   .about .facts dd { margin: 0; font-family: var(--mono); font-size: 15px; }
   .about a { color: var(--brass); }
 
-  /* ---------- loading ---------- */
-  .loading { position: fixed; z-index: 10; inset: 0; display: grid; place-items: center; background: var(--paper); transition: opacity .5s; }
+  /* ---------- splash (show-poster style) ---------- */
+  .loading { position: fixed; z-index: 10; inset: 0; display: grid; place-items: center; overflow: hidden; color: #fff; background: radial-gradient(120% 80% at 20% 90%, #b78ac9 0%, rgba(183,138,201,0) 45%), radial-gradient(90% 60% at 60% 100%, #e9c46a 0%, rgba(233,196,106,0) 42%), radial-gradient(80% 60% at 85% 95%, #6fd3df 0%, rgba(111,211,223,0) 45%), linear-gradient(180deg, #5cb8c9 0%, #3aa3ba 45%, #4fb2c2 100%); transition: opacity .8s; }
   .loading.done { opacity: 0; pointer-events: none; }
-  .loading .in { text-align: center; display: grid; gap: 8px; }
-  .loading .in .t { font-family: var(--display-lat); font-size: 30px; }
-  .loading .in .s { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--brass); }
-  .loading .bar { width: 160px; height: 2px; background: var(--line); margin: 6px auto 0; overflow: hidden; }
-  .loading .bar i { display: block; height: 100%; width: 0; background: var(--brass-2); transition: width .3s; }
+  .loading canvas { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .8; }
+  .loading .in { position: relative; text-align: center; display: grid; gap: 10px; padding: 24px; max-width: 720px; }
+  .loading .in .s { font-family: var(--geo); font-weight: 400; font-size: 13px; letter-spacing: .38em; text-transform: uppercase; opacity: .92; }
+  .loading .in .t { font-family: var(--geo); font-weight: 300; font-size: clamp(38px, 8vw, 84px); line-height: .98; letter-spacing: .06em; text-transform: uppercase; text-wrap: balance; }
+  .loading .in .t b { font-weight: 300; display: block; padding-inline-start: 1.6em; }
+  .loading .in .t i { font-style: normal; display: block; padding-inline-end: 1.2em; }
+  .loading .dates { font-family: var(--geo); font-weight: 300; font-size: clamp(40px, 7vw, 76px); letter-spacing: .04em; line-height: 1; margin-top: 26px; }
+  .loading .dates span { display: inline-block; padding: 0 .28em; }
+  .loading .dates .sep { display: inline-block; width: 1px; height: .85em; background: rgba(255,255,255,.75); vertical-align: -.08em; margin: 0 .2em; padding: 0; }
+  .loading .month { font-family: var(--geo); font-weight: 400; font-size: 14px; letter-spacing: .5em; text-transform: uppercase; margin-top: 4px; }
+  .loading .year { font-family: var(--geo); font-weight: 400; font-size: 14px; letter-spacing: .5em; text-align: end; padding-inline-end: 2em; }
+  .loading .by { font-family: var(--geo); font-size: 13px; letter-spacing: .2em; text-transform: uppercase; margin-top: 30px; opacity: .95; }
+  .loading .by b { font-family: var(--display-he); font-weight: 500; font-size: 20px; letter-spacing: 0; text-transform: none; display: block; margin-top: 4px; }
+  .loading .bar { width: 160px; height: 2px; background: rgba(255,255,255,.25); margin: 10px auto 0; overflow: hidden; }
+  .loading .bar i { display: block; height: 100%; width: 0; background: #fff; transition: width .3s; }
+  .loading .enter { margin: 14px auto 0; padding: 12px 28px; border-radius: 999px; border: 1px solid rgba(255,255,255,.85); background: rgba(255,255,255,.14); color: #fff; font-family: var(--geo); font-weight: 400; letter-spacing: .22em; text-transform: uppercase; font-size: 13px; cursor: pointer; backdrop-filter: blur(6px); }
+  .loading .enter:hover { background: rgba(255,255,255,.28); }
+  .loading .opt { font-size: 13px; opacity: .9; display: flex; justify-content: center; gap: 8px; align-items: center; }
+  .loading .opt input { accent-color: #fff; }
+
+  /* ---------- photo mode ---------- */
+  body.photo .top, body.photo .views, body.photo .drawer, body.photo .card, body.photo .bottom, body.photo .timebar, body.photo #labels { display: none !important; }
+  body.photo::before, body.photo::after { content: ''; position: fixed; left: 0; right: 0; height: 7vh; background: #000; z-index: 9; }
+  body.photo::before { top: 0; } body.photo::after { bottom: 0; }
+  body.photo .photoexit { display: block; }
+  .photoexit { display: none; position: fixed; z-index: 11; top: 12px; inset-inline-end: 16px; color: #fff; font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; opacity: .7; }
 
   @media (max-width: 760px) {
     .top { padding: 10px 12px; flex-wrap: wrap; }
@@ -191,7 +211,18 @@
 </head>
 <body>
 
-<div class="loading" id="loading"><div class="in"><div class="s">Port Hercule · Monaco</div><div class="t">Monaco Yacht Show 2026</div><div class="bar"><i id="loadbar"></i></div><div class="s" id="loadmsg" style="opacity:.7">building the harbour…</div></div></div>
+<div class="loading" id="loading" dir="ltr"><canvas id="splashWaves" aria-hidden="true"></canvas><div class="in">
+  <div class="s">Port Hercule · Monaco · 35th edition</div>
+  <div class="t">Monaco<b>Yacht</b><i>Show</i></div>
+  <div class="dates"><span>23</span><span class="sep"></span><span>26</span></div>
+  <div class="month">September</div><div class="year">2026</div>
+  <div class="by"><span data-i18n="splashBy">3D visualisation by Karin Keren</span><b>קרין קרן · Karin Keren</b></div>
+  <div class="bar"><i id="loadbar"></i></div>
+  <div class="s" id="loadmsg" style="opacity:.7">building the harbour…</div>
+  <button class="enter" id="enter" hidden data-i18n="enter">Enter the show</button>
+  <label class="opt"><input type="checkbox" id="enterSound" checked><span data-i18n="enterSound">with ambient sound</span></label>
+</div></div>
+<div class="photoexit">Esc · exit photo mode</div>
 <canvas id="stage" aria-label="Interactive 3D model of Port Hercule with the Monaco Yacht Show 2026 fleet"></canvas>
 <div id="labels" aria-hidden="true"></div>
 
@@ -206,6 +237,7 @@
     <button class="btn" id="btnLabels" aria-pressed="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 4h10v6H8l-3 3v-3H3z"/></svg><span class="t" data-i18n="labels">Names</span></button>
     <button class="btn" id="btnWalk" aria-pressed="false"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="3" r="1.5"/><path d="M8 5v4l-2 5M8 9l2 5M6 7l-2 1M10 7l2 1"/></svg><span class="t" data-i18n="walk">Walk</span></button>
     <button class="btn" id="btnSound" aria-pressed="false"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6h3l4-3v10l-4-3H3zM12 6a3 3 0 0 1 0 4"/></svg><span class="t" data-i18n="sound">Sound</span></button>
+    <button class="btn" id="btnPhoto" aria-pressed="false"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 5h3l1-2h4l1 2h3v8H2z"/><circle cx="8" cy="9" r="2.5"/></svg><span class="t" data-i18n="photo">Photo</span></button>
     <button class="btn" id="btnTour" aria-pressed="false"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 3l9 5-9 5z"/></svg><span class="t" data-i18n="tour">Tour</span></button>
     <button class="btn" id="btnFx" aria-pressed="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 2l1.6 3.6L13.5 6l-2.8 2.6.8 3.9L8 10.6l-3.5 1.9.8-3.9L2.5 6l3.9-.4z"/></svg><span class="t" data-i18n="fx">FX</span></button>
     <button class="btn" id="btnNight" aria-pressed="false"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 9.5A5.5 5.5 0 0 1 6.5 3a5.5 5.5 0 1 0 6.5 6.5z"/></svg><span class="t" data-i18n="night">Night</span></button>

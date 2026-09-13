@@ -10,7 +10,7 @@
     en: {
       eyebrow: '35th edition · Port Hercule · 23–26 September 2026', h1: 'Monaco Yacht Show 2026', h1sub: 'A 3D model of the fleet in Port Hercule',
       sub: 'Drag to orbit · scroll to zoom · right-drag or two fingers to pan · click a yacht',
-      fleet: 'Fleet', labels: 'Names', night: 'Night', fx: 'FX', tour: 'Tour', walk: 'Walk', sound: 'Sound', aboutBtn: 'Sources', walkHint: 'Walk: W A S D or arrows · drag to look · Shift to run · Esc to leave', timeHint: 'Time on show day', fleetTitle: 'The Fleet', search: 'Search yacht or builder…',
+      fleet: 'Fleet', labels: 'Names', night: 'Night', fx: 'FX', tour: 'Tour', walk: 'Walk', sound: 'Sound', photo: 'Photo', enter: 'Enter the show', enterSound: 'with ambient sound', splashBy: '3D visualisation by Karin Keren', aboutBtn: 'Sources', walkHint: 'Walk: W A S D or arrows · drag to look · Shift to run · Esc to leave', timeHint: 'Time on show day', fleetTitle: 'The Fleet', search: 'Search yacht or builder…',
       loa: 'Length', beam: 'Beam', year: 'Year', type: 'Type', close: 'Close', aboutTitle: 'About this model',
       sigRole: '3D visualisation · Monaco Yacht Show 2026', sigMeta: 'Fleet, berths and beams compiled 13 Sept 2026 from the official list, shipyards, brokers and trade press', sigLink: 'accuracy notes',
       all: 'All', debut: 'Debuts', motor: 'Motor', sailing: 'Sail', explorer: 'Explorer', catamaran: 'Multihull', big: '60 m +',
@@ -26,7 +26,7 @@
     he: {
       eyebrow: 'המהדורה ה-35 · נמל הרקולס · 23–26 בספטמבר 2026', h1: 'Monaco Yacht Show 2026', h1sub: 'הדמיה תלת-ממדית של הצי בנמל הרקולס',
       sub: 'גררו לסיבוב · גלגלו לזום · לחצן ימני או שתי אצבעות להזזה · לחצו על יאכטה',
-      fleet: 'הצי', labels: 'שמות', night: 'לילה', fx: 'אפקטים', tour: 'סיור', walk: 'הליכה', sound: 'צליל', aboutBtn: 'מקורות', walkHint: 'הליכה: W A S D או חצים · גרירה להסתכל · Shift לריצה · Esc ליציאה', timeHint: 'שעה ביום התערוכה', fleetTitle: 'הצי', search: 'חיפוש יאכטה או מספנה…',
+      fleet: 'הצי', labels: 'שמות', night: 'לילה', fx: 'אפקטים', tour: 'סיור', walk: 'הליכה', sound: 'צליל', photo: 'צילום', enter: 'כניסה לתערוכה', enterSound: 'עם צליל סביבה', splashBy: 'הדמיה תלת-ממדית: קרין קרן', aboutBtn: 'מקורות', walkHint: 'הליכה: W A S D או חצים · גרירה להסתכל · Shift לריצה · Esc ליציאה', timeHint: 'שעה ביום התערוכה', fleetTitle: 'הצי', search: 'חיפוש יאכטה או מספנה…',
       loa: 'אורך', beam: 'רוחב', year: 'שנה', type: 'סוג', close: 'סגירה', aboutTitle: 'על ההדמיה',
       sigRole: 'הדמיה תלת-ממדית · תערוכת היאכטות מונקו 2026', sigMeta: 'הצי, העגינות והמידות נאספו ב-13.9.2026 מהרשימה הרשמית, מספנות, ברוקרים ועיתונות המקצוע', sigLink: 'הערות דיוק',
       all: 'הכול', debut: 'בכורות', motor: 'מנוע', sailing: 'מפרש', explorer: 'אקספלורר', catamaran: 'רב-גופית', big: '60 מ׳ +',
@@ -365,7 +365,7 @@
 
   /* ---------- day / night ---------- */
   /* ---------- time of day: real sun path over Monaco on show day (23 Sept 2026, CEST) ---------- */
-  let hour = 15.0, night = false;
+  let hour = 15.0, night = false, lastYachtNight = false;
   const LAT = 43.7355 * Math.PI / 180, DECL = -0.4 * Math.PI / 180, SOLAR_NOON = 13.38; // equinox declination, local solar noon (UTC+2, lon 7.43 E, EoT +7 min)
   function sunVector(h) {
     const H = (h - SOLAR_NOON) * 15 * Math.PI / 180;
@@ -376,7 +376,7 @@
   const C = (hex) => new T.Color(hex);
   const PAL = { // day, golden, dusk, night
     top: [C(0x2f6fb0), C(0x4a86c4), C(0x2a4d86), C(0x050b18)], hor: [C(0xdbe8f1), C(0xf8d09a), C(0xe08a55), C(0x1b2a45)],
-    deep: [C(0x0a3f5c), C(0x114a66), C(0x0f3552), C(0x03101e)], shallow: [C(0x1f7f9c), C(0x2f8aa0), C(0x245a78), C(0x0a2438)], wsky: [C(0xa9d1e6), C(0xf4d2a8), C(0xd0906a), C(0x223a5a)],
+    deep: [C(0x0b4a76), C(0x12507a), C(0x0f3a5e), C(0x03101e)], shallow: [C(0x2596ad), C(0x3096ac), C(0x266485), C(0x0a2438)], wsky: [C(0xa9d1e6), C(0xf4d2a8), C(0xd0906a), C(0x223a5a)],
     fog: [C(0xd7e6f0), C(0xf3d9bf), C(0xb9866e), C(0x0b1524)], sun: [C(0xfff1d8), C(0xffc987), C(0xff9a5a), C(0xb9c8ff)],
   };
   function mix4(arr, k) { // k in [0,3]
@@ -400,6 +400,7 @@
     wu.uSun.value.copy(altD > -1 ? dir : lightDir); su.uSun.value.copy(dir);
     wu.fogColor.value.copy(scene.fog.color); facadeMat.emissiveIntensity = 0.6 * (1 - E.smooth(-4, 3, altD));
     nightGroup.visible = altD < 1; updateEnv();
+    const yachtNight = altD < 0; if (yachtNight !== lastYachtNight) { lastYachtNight = yachtNight; yachts.forEach(y => { if (y.obj) y.obj.traverse(o => { if (o.name === 'night') o.visible = yachtNight; }); }); }
     document.getElementById('btnNight').setAttribute('aria-pressed', String(night));
     const hh = Math.floor(hour), mm = Math.round((hour - hh) * 60); document.getElementById('timeLabel').textContent = `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
     const sl = document.getElementById('timeSlider'); if (+sl.value !== hour) sl.value = hour;
@@ -859,7 +860,19 @@ void main(){
   }
   const loading = document.getElementById('loading');
   document.getElementById('loadbar').style.width = '100%';
-  setTimeout(() => loading.classList.add('done'), 350);
+  document.getElementById('loadmsg').hidden = true; document.getElementById('enter').hidden = false;
+  (function splashWaves() { // dotted contour waves, like the show's poster
+    const c = document.getElementById('splashWaves'); if (!c) return; const x = c.getContext('2d'); let t = 0;
+    function draw() { if (loading.classList.contains('done')) return; const W = c.width = c.clientWidth, H = c.height = c.clientHeight; x.clearRect(0, 0, W, H); x.fillStyle = 'rgba(255,255,255,0.55)';
+      for (let j = 0; j < 26; j++) { const yb = H * 0.12 + j * H * 0.03; for (let i = 0; i < W; i += 7) { const y = yb + Math.sin(i * 0.012 + j * 0.35 + t) * 22 * Math.sin(i * 0.0025 + t * 0.3) + Math.sin(i * 0.03 - t * 0.7) * 6; x.globalAlpha = 0.15 + 0.35 * (0.5 + 0.5 * Math.sin(i * 0.01 + j * 0.5 + t)); x.fillRect(i, y, 1.6, 1.6); } }
+      t += reduceMotion ? 0 : 0.012; requestAnimationFrame(draw); }
+    draw();
+  })();
+  document.getElementById('enter').addEventListener('click', () => { loading.classList.add('done'); if (document.getElementById('enterSound').checked) { startSound(); btnSound.setAttribute('aria-pressed', 'true'); } controls.lastInput(); });
+  // photo mode: hide the interface, letterbox, no labels
+  const btnPhoto = document.getElementById('btnPhoto'); let photo = false;
+  btnPhoto.addEventListener('click', () => { photo = !photo; document.body.classList.toggle('photo', photo); btnPhoto.setAttribute('aria-pressed', String(photo)); if (photo) { showLabels = false; } else { showLabels = btnLabels.getAttribute('aria-pressed') === 'true'; } });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && photo) btnPhoto.click(); });
   loop();
 
   window.MYS_APP = { select, goView, yachts, quays, controls, startTour, stopTour, startWalk, stopWalk, setHour: h => { hour = h; applyLighting(); } };

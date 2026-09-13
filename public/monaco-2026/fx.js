@@ -35,8 +35,8 @@
             vec2 suv = d.xz / (d.y + 0.2) * 260.0;
             float s = step(0.9975, hash21(floor(suv))) * pow(h, 0.5);
             c += vec3(s)*0.9*(0.6+0.4*vnoise(suv*0.5+uTime));
-            float m = smoothstep(0.9982, 0.9992, dot(d, normalize(vec3(-0.5,0.45,-0.6))));
-            c += vec3(0.95,0.95,0.85)*m*1.0;
+            float m = smoothstep(0.99935, 0.99975, dot(d, normalize(vec3(-0.5,0.45,-0.6))));
+            c += vec3(0.95,0.95,0.85)*m*0.7;
           }
           gl_FragColor = vec4(c,1.0);
           #include <tonemapping_fragment>
