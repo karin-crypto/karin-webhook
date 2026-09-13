@@ -425,6 +425,78 @@
   canvas.addEventListener('pointerdown', () => { if (tour) stopTour(); });
   canvas.addEventListener('wheel', () => { if (tour) stopTour(); }, { passive: true });
 
+  /* ---------- shuttle boats (Only Yacht service between the show pontoons) ---------- */
+  const shuttles = [];
+  (function buildShuttles() {
+    const routes = [
+      [[43.7363, 7.4262], [43.7356, 7.4254], [43.7346, 7.4262], [43.7350, 7.4250], [43.7356, 7.4254]],            // Chicane – Hirondelle – Antoine – Jules Soccal
+      [[43.7359, 7.4271], [43.7352, 7.4280], [43.7365, 7.4291], [43.7369, 7.4284], [43.7359, 7.4271]],            // Hirondelle – Rainier 1er – Lucciana
+      [[43.7346, 7.4262], [43.7351, 7.4274], [43.7358, 7.4285], [43.7351, 7.4274]],                                // Antoine – Rainier 1er – entrance
+    ];
+    routes.forEach((r, i) => {
+      const pts = r.map(p => { const c = E.ll(p[0], p[1]); return new T.Vector3(c.x, 0, c.z); });
+      const curve = new T.CatmullRomCurve3(pts, true, 'centripetal', 0.5);
+      const boat = E.buildTender(9 + i); boat.traverse(o => { if (o.isMesh) { o.castShadow = true; } });
+      const wake = new T.Mesh(new T.PlaneGeometry(18, 5), new T.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.3, depthWrite: false }));
+      wake.rotation.x = -Math.PI / 2; wake.position.set(-11, 0.1, 0); boat.add(wake);
+      scene.add(boat);
+      shuttles.push({ boat, curve, t: i / routes.length, speed: 3.2 / curve.getLength() });
+    });
+  })();
+  function updateShuttles(dt) {
+    if (reduceMotion) return;
+    shuttles.forEach(s => {
+      s.t = (s.t + dt * s.speed) % 1;
+      const p = s.curve.getPointAt(s.t), tg = s.curve.getTangentAt(s.t);
+      s.boat.position.set(p.x, 0.05 + Math.sin(performance.now() * 0.003 + s.t * 40) * 0.08, p.z);
+      s.boat.rotation.y = Math.atan2(-tg.z, tg.x);
+    });
+  }
+
+  /* ---------- show flags along the quays ---------- */
+  (function buildFlags() {
+    const poles = []; const flagPos = [], flagCol = [], flagPhase = [], flagUv = []; const idx = [];
+    const colours = [new T.Color(0x1e2b45), new T.Color(0xf3f1ec), new T.Color(0xc8a24a)];
+    quays.filter(q => /etats|chicane|louis|digue|hirondelle|antoine|soccal/.test(q.zone)).forEach(q => q.segs.forEach(sg => {
+      for (let d = 5; d < sg.len; d += 11) {
+        const x = sg.a.x + sg.d.x * d - sg.n.x * 1.4, z = sg.a.z + sg.d.z * d - sg.n.z * 1.4; const y0 = q.zone === 'digue' ? 3.95 : 2.2;
+        poles.push([x, y0, z]);
+        const c = colours[poles.length % 3]; const ph = Math.random() * 6.28; const base = flagPos.length / 3;
+        // flag: 2x2 quad strip, hoisted along -n direction, top at y0+6
+        const nx = -sg.d.x, nz = -sg.d.z; // flag streams along the quay direction
+        for (let j = 0; j <= 2; j++) for (let i = 0; i <= 3; i++) { const u = i / 3, v = j / 2; flagPos.push(x + nx * u * 1.6, y0 + 6 - v * 1.0, z + nz * u * 1.6); flagCol.push(c.r, c.g, c.b); flagPhase.push(ph); flagUv.push(u, v); }
+        for (let j = 0; j < 2; j++) for (let i = 0; i < 3; i++) { const a = base + j * 4 + i; idx.push(a, a + 1, a + 4, a + 1, a + 5, a + 4); }
+      }
+    }));
+    if (!poles.length) return;
+    const pg = new T.CylinderGeometry(0.05, 0.07, 6, 6); pg.translate(0, 3, 0);
+    const pm = new T.InstancedMesh(pg, new T.MeshStandardMaterial({ color: 0xd9dde2, metalness: 0.5, roughness: 0.4 }), poles.length);
+    const o = new T.Object3D(); poles.forEach((p, i) => { o.position.set(p[0], p[1], p[2]); o.updateMatrix(); pm.setMatrixAt(i, o.matrix); }); scene.add(pm);
+    const fg = new T.BufferGeometry();
+    fg.setAttribute('position', new T.Float32BufferAttribute(flagPos, 3)); fg.setAttribute('color', new T.Float32BufferAttribute(flagCol, 3)); fg.setAttribute('phase', new T.Float32BufferAttribute(flagPhase, 1)); fg.setAttribute('uv', new T.Float32BufferAttribute(flagUv, 2)); fg.setIndex(idx);
+    const fm = new T.ShaderMaterial({ side: T.DoubleSide, uniforms: { uTime: { value: 0 } }, vertexColors: true,
+      vertexShader: `uniform float uTime; attribute float phase; varying vec3 vC; varying float vU; void main(){ vC = color; vU = uv.x; vec3 p = position; float w = sin(uTime*4.0 + phase + uv.x*6.0) * 0.18 * uv.x; p.y += w * 0.5; p.x += w * 0.3; p.z += w * 0.3; gl_Position = projectionMatrix*modelViewMatrix*vec4(p,1.0); }`,
+      fragmentShader: `varying vec3 vC; varying float vU;
+void main(){
+  gl_FragColor = vec4(vC * (0.85 + 0.15*sin(vU*6.0)), 1.0);
+#include <tonemapping_fragment>
+#include <colorspace_fragment>
+}` });
+    const flags = new T.Mesh(fg, fm); scene.add(flags); flags.userData.mat = fm; window.__flags = fm;
+  })();
+
+  /* ---------- tenders & toys display on the Jetée Lucciana deck ---------- */
+  (function buildTenderDisplay() {
+    const a = E.ll(43.737255, 7.429276), b = E.ll(43.736330, 7.429798);
+    const dx = b.x - a.x, dz = b.z - a.z, len = Math.hypot(dx, dz); const ux = dx / len, uz = dz / len; const nx = -uz, nz = ux;
+    let k = 0;
+    for (let d = 10; d < len - 6; d += 9) for (const side of [-1, 1]) {
+      const L = 7 + ((k * 37) % 11) * 0.6; k++;
+      const t = E.buildTender(L); const x = a.x + ux * d + nx * side * 7.5, z = a.z + uz * d + nz * side * 7.5;
+      t.position.set(x, 1.9 + Math.min(1.2, L * 0.05 + 0.6), z); t.rotation.y = Math.atan2(-uz, ux) + Math.PI / 2 * side; t.traverse(o => { if (o.isMesh) o.castShadow = true; }); scene.add(t);
+    }
+  })();
+
   /* ---------- visitors on the quays ---------- */
   (function buildCrowd() {
     const pts = []; let seed = 3;
@@ -659,6 +731,7 @@
     const dt = clock.getDelta();
     if (!reduceMotion) water.userData.uniforms.uTime.value += dt;
     // idle: slow cinematic orbit after 30 s without input
+    updateShuttles(dt); if (window.__flags) window.__flags.uniforms.uTime.value += dt;
     if (tour) tourStep(dt);
     else if (!reduceMotion && performance.now() - controls.lastInput() > 30000) controls.goal.theta += 0.00045;
     controls.update(); camera.updateMatrixWorld();

@@ -513,5 +513,5 @@
     return api;
   }
 
-  global.MYS3D = { HULL_COLORS, T, ll, llArr, clamp, lerp, smooth, hash, planShape, roundedPlan, extrudeUp, mergeGeoms, paint, MAT, buildYacht, estBeam, makeWater, makeSky, OrbitControls, ORIGIN };
+  global.MYS3D = { buildTender, HULL_COLORS, T, ll, llArr, clamp, lerp, smooth, hash, planShape, roundedPlan, extrudeUp, mergeGeoms, paint, MAT, buildYacht, estBeam, makeWater, makeSky, OrbitControls, ORIGIN };
 })(window);
