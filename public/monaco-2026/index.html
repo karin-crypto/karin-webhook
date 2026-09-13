@@ -159,28 +159,30 @@
   .about .facts dd { margin: 0; font-family: var(--mono); font-size: 15px; }
   .about a { color: var(--brass); }
 
-  /* ---------- splash (show-poster style) ---------- */
-  .loading { position: fixed; z-index: 10; inset: 0; display: grid; place-items: center; overflow: hidden; color: #fff; background: radial-gradient(120% 80% at 20% 90%, #b78ac9 0%, rgba(183,138,201,0) 45%), radial-gradient(90% 60% at 60% 100%, #e9c46a 0%, rgba(233,196,106,0) 42%), radial-gradient(80% 60% at 85% 95%, #6fd3df 0%, rgba(111,211,223,0) 45%), linear-gradient(180deg, #5cb8c9 0%, #3aa3ba 45%, #4fb2c2 100%); transition: opacity .8s; }
+  /* ---------- splash: nautical chart plate ---------- */
+  .loading { position: fixed; z-index: 10; inset: 0; overflow: hidden; color: #efe7d3; background: radial-gradient(120% 90% at 70% 40%, #143a5a 0%, #0b2238 45%, #071523 100%); transition: opacity .8s; }
   .loading.done { opacity: 0; pointer-events: none; }
-  .loading canvas { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .8; }
-  .loading .in { position: relative; text-align: center; display: grid; gap: 10px; padding: 24px; max-width: 720px; }
-  .loading .in .s { font-family: var(--geo); font-weight: 400; font-size: 13px; letter-spacing: .38em; text-transform: uppercase; opacity: .92; }
-  .loading .in .t { font-family: var(--geo); font-weight: 300; font-size: clamp(38px, 8vw, 84px); line-height: .98; letter-spacing: .06em; text-transform: uppercase; text-wrap: balance; }
-  .loading .in .t b { font-weight: 300; display: block; padding-inline-start: 1.6em; }
-  .loading .in .t i { font-style: normal; display: block; padding-inline-end: 1.2em; }
-  .loading .dates { font-family: var(--geo); font-weight: 300; font-size: clamp(40px, 7vw, 76px); letter-spacing: .04em; line-height: 1; margin-top: 26px; }
-  .loading .dates span { display: inline-block; padding: 0 .28em; }
-  .loading .dates .sep { display: inline-block; width: 1px; height: .85em; background: rgba(255,255,255,.75); vertical-align: -.08em; margin: 0 .2em; padding: 0; }
-  .loading .month { font-family: var(--geo); font-weight: 400; font-size: 14px; letter-spacing: .5em; text-transform: uppercase; margin-top: 4px; }
-  .loading .year { font-family: var(--geo); font-weight: 400; font-size: 14px; letter-spacing: .5em; text-align: end; padding-inline-end: 2em; }
-  .loading .by { font-family: var(--geo); font-size: 13px; letter-spacing: .2em; text-transform: uppercase; margin-top: 30px; opacity: .95; }
-  .loading .by b { font-family: var(--display-he); font-weight: 500; font-size: 20px; letter-spacing: 0; text-transform: none; display: block; margin-top: 4px; }
-  .loading .bar { width: 160px; height: 2px; background: rgba(255,255,255,.25); margin: 10px auto 0; overflow: hidden; }
-  .loading .bar i { display: block; height: 100%; width: 0; background: #fff; transition: width .3s; }
-  .loading .enter { margin: 14px auto 0; padding: 12px 28px; border-radius: 999px; border: 1px solid rgba(255,255,255,.85); background: rgba(255,255,255,.14); color: #fff; font-family: var(--geo); font-weight: 400; letter-spacing: .22em; text-transform: uppercase; font-size: 13px; cursor: pointer; backdrop-filter: blur(6px); }
-  .loading .enter:hover { background: rgba(255,255,255,.28); }
-  .loading .opt { font-size: 13px; opacity: .9; display: flex; justify-content: center; gap: 8px; align-items: center; }
-  .loading .opt input { accent-color: #fff; }
+  .loading canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .loading .in { position: absolute; inset-inline-start: clamp(20px, 6vw, 96px); bottom: clamp(24px, 8vh, 90px); max-width: 560px; display: grid; gap: 10px; text-align: start; }
+  .loading .in .s { font-family: var(--mono); font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: #c8a24a; }
+  .loading .in .t { font-family: var(--display-lat); font-weight: 400; font-size: clamp(38px, 6.4vw, 78px); line-height: .98; letter-spacing: .005em; color: #f6efdc; text-wrap: balance; }
+  .loading .in .t em { font-style: italic; font-weight: 400; color: #c8a24a; }
+  .loading .in .he { font-family: var(--display-he); font-weight: 500; font-size: clamp(16px, 2vw, 22px); color: #b9c7d3; }
+  .loading .meta { font-family: var(--mono); font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase; color: #9fb2c2; display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 4px; }
+  .loading .by { margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(200,162,74,.4); display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .loading .by .name { font-family: var(--display-lat); font-style: italic; font-size: 30px; color: #f6efdc; }
+  .loading .by .name b { font-family: var(--display-he); font-style: normal; font-weight: 500; font-size: 24px; }
+  .loading .by .role { font-family: var(--mono); font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; color: #c8a24a; }
+  .loading .actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 8px; }
+  .loading .enter { padding: 12px 26px; border-radius: 3px; border: 1px solid #c8a24a; background: transparent; color: #f6efdc; font-family: var(--mono); letter-spacing: .2em; text-transform: uppercase; font-size: 12px; cursor: pointer; transition: background .2s; }
+  .loading .enter:hover { background: rgba(200,162,74,.18); }
+  .loading .opt { font-size: 13px; color: #b9c7d3; display: flex; gap: 8px; align-items: center; }
+  .loading .opt input { accent-color: #c8a24a; }
+  .loading .bar { width: 120px; height: 1px; background: rgba(239,231,211,.2); overflow: hidden; }
+  .loading .bar i { display: block; height: 100%; width: 0; background: #c8a24a; transition: width .3s; }
+  .loading .corner { position: absolute; top: 22px; inset-inline-end: 26px; text-align: end; font-family: var(--mono); font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; color: #9fb2c2; line-height: 1.8; }
+  .loading .corner b { display: block; color: #c8a24a; font-weight: 500; }
+  @media (max-width: 760px) { .loading .in { inset-inline: 18px; bottom: 22px; max-width: none; } .loading .in .t { font-size: 34px; } .loading .by .name { font-size: 22px; } .loading .corner { display: none; } }
 
   /* ---------- photo mode ---------- */
   body.photo .top, body.photo .views, body.photo .drawer, body.photo .card, body.photo .bottom, body.photo .timebar, body.photo #labels { display: none !important; }
@@ -211,16 +213,15 @@
 </head>
 <body>
 
-<div class="loading" id="loading" dir="ltr"><canvas id="splashWaves" aria-hidden="true"></canvas><div class="in">
-  <div class="s">Port Hercule · Monaco · 35th edition</div>
-  <div class="t">Monaco<b>Yacht</b><i>Show</i></div>
-  <div class="dates"><span>23</span><span class="sep"></span><span>26</span></div>
-  <div class="month">September</div><div class="year">2026</div>
-  <div class="by"><span data-i18n="splashBy">3D visualisation by Karin Keren</span><b>קרין קרן · Karin Keren</b></div>
-  <div class="bar"><i id="loadbar"></i></div>
-  <div class="s" id="loadmsg" style="opacity:.7">building the harbour…</div>
-  <button class="enter" id="enter" hidden data-i18n="enter">Enter the show</button>
-  <label class="opt"><input type="checkbox" id="enterSound" checked><span data-i18n="enterSound">with ambient sound</span></label>
+<div class="loading" id="loading" dir="ltr"><canvas id="splashChart" aria-hidden="true"></canvas>
+<div class="corner"><b>Port Hercule · Monaco</b>43°44′07″ N · 7°25′35″ E<br>Chart drawn from the model’s own geometry</div>
+<div class="in">
+  <div class="s">Interactive 3D model · 35th edition</div>
+  <div class="t">Monaco <em>Yacht</em> Show 2026</div>
+  <div class="he">תערוכת היאכטות מונקו · 23–26 בספטמבר 2026</div>
+  <div class="meta"><span>23 – 26 September 2026</span><span id="splashCount">99 superyachts</span><span>Real terrain · official berths</span></div>
+  <div class="by"><span class="name"><b>קרין קרן</b> · Karin Keren</span><span class="role" data-i18n="sigRole">3D visualisation · Monaco Yacht Show 2026</span></div>
+  <div class="actions"><button class="enter" id="enter" hidden data-i18n="enter">Enter the show</button><label class="opt"><input type="checkbox" id="enterSound" checked><span data-i18n="enterSound">with ambient sound</span></label><div class="bar"><i id="loadbar"></i></div><span class="s" id="loadmsg" style="letter-spacing:.1em">building the harbour…</span></div>
 </div></div>
 <div class="photoexit">Esc · exit photo mode</div>
 <canvas id="stage" aria-label="Interactive 3D model of Port Hercule with the Monaco Yacht Show 2026 fleet"></canvas>

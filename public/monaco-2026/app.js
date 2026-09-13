@@ -88,6 +88,7 @@
     return best;
   }
   const landXZ = E.llArr(H.landPoly);
+  const H_PIERS = (H.piers || []).map(pp => E.llArr(pp.pts));
   const rockXZ = E.llArr(H.rockPoly);
   const rockRidge = { a: E.ll(43.7313, 7.4200), b: E.ll(43.7331, 7.4280) };
   // real terrain: Mapzen terrarium heightmap (SRTM / EU-DEM source) decoded from terrain.js; spot-height IDW as fallback
@@ -861,11 +862,39 @@ void main(){
   const loading = document.getElementById('loading');
   document.getElementById('loadbar').style.width = '100%';
   document.getElementById('loadmsg').hidden = true; document.getElementById('enter').hidden = false;
-  (function splashWaves() { // dotted contour waves, like the show's poster
-    const c = document.getElementById('splashWaves'); if (!c) return; const x = c.getContext('2d'); let t = 0;
-    function draw() { if (loading.classList.contains('done')) return; const W = c.width = c.clientWidth, H = c.height = c.clientHeight; x.clearRect(0, 0, W, H); x.fillStyle = 'rgba(255,255,255,0.55)';
-      for (let j = 0; j < 26; j++) { const yb = H * 0.12 + j * H * 0.03; for (let i = 0; i < W; i += 7) { const y = yb + Math.sin(i * 0.012 + j * 0.35 + t) * 22 * Math.sin(i * 0.0025 + t * 0.3) + Math.sin(i * 0.03 - t * 0.7) * 6; x.globalAlpha = 0.15 + 0.35 * (0.5 + 0.5 * Math.sin(i * 0.01 + j * 0.5 + t)); x.fillRect(i, y, 1.6, 1.6); } }
-      t += reduceMotion ? 0 : 0.012; requestAnimationFrame(draw); }
+  (function splashChart() { // nautical-chart plate of Port Hercule, drawn from the model's real quay geometry
+    const c = document.getElementById('splashChart'); if (!c) return; const x = c.getContext('2d'); let t = 0;
+    const cnt = document.getElementById('splashCount'); if (cnt) cnt.textContent = yachts.length + ' superyachts';
+    const pts = yachts.filter(y => y.obj).map(y => ({ x: y.obj.position.x, z: y.obj.position.z, big: y.loa > 60 }));
+    function draw() {
+      if (loading.classList.contains('done')) return;
+      const W = c.width = c.clientWidth * (window.devicePixelRatio > 1 ? 2 : 1), H = c.height = c.clientHeight * (window.devicePixelRatio > 1 ? 2 : 1);
+      const sc = Math.min(W / 1500, H / 1000) * 0.98, ox = W * 0.62, oy = H * 0.44; const M = (px, pz) => [ox + px * sc, oy + pz * sc];
+      x.clearRect(0, 0, W, H);
+      // chart grid: faint graticule + soundings dots
+      x.strokeStyle = 'rgba(200,162,74,0.10)'; x.lineWidth = 1; for (let i = -1000; i <= 1000; i += 100) { const [gx] = M(i, 0); x.beginPath(); x.moveTo(gx, 0); x.lineTo(gx, H); x.stroke(); const [, gz] = M(0, i); x.beginPath(); x.moveTo(0, gz); x.lineTo(W, gz); x.stroke(); }
+      x.fillStyle = 'rgba(159,178,194,0.35)'; x.font = `${10 * (W / 1400)}px IBM Plex Mono, monospace`;
+      for (let i = 0; i < 260; i++) { const a = i * 2.399, r = 120 + (i * 37) % 900; const px = Math.cos(a) * r, pz = Math.sin(a) * r * 0.75 + 120; if (pointInPoly(px, pz, landXZ)) continue; const [sx, sz] = M(px, pz); x.fillText(String(6 + (i * 7) % 34), sx, sz); }
+      // land + piers
+      x.fillStyle = 'rgba(20,52,82,0.95)'; x.strokeStyle = 'rgba(200,162,74,0.85)'; x.lineWidth = 1.2 * (W / 1400);
+      x.beginPath(); landXZ.forEach((p, i) => { const [sx, sz] = M(p.x, p.z); i ? x.lineTo(sx, sz) : x.moveTo(sx, sz); }); x.closePath(); x.fill(); x.stroke();
+      (H_PIERS || []).forEach(pp => { x.beginPath(); pp.forEach((p, i) => { const [sx, sz] = M(p.x, p.z); i ? x.lineTo(sx, sz) : x.moveTo(sx, sz); }); x.closePath(); x.fill(); x.stroke(); });
+      // show quays
+      x.lineWidth = 3 * (W / 1400); x.lineCap = 'round';
+      quays.forEach(q => { x.strokeStyle = '#' + (ZONE_COLORS[q.zone] || 0xffffff).toString(16).padStart(6, '0'); x.globalAlpha = 0.9; x.beginPath(); q.segs.forEach((sg, i) => { const [ax, az] = M(sg.a.x, sg.a.z), [bx, bz] = M(sg.b.x, sg.b.z); if (!i) x.moveTo(ax, az); x.lineTo(bx, bz); }); x.stroke(); });
+      x.globalAlpha = 1;
+      // yachts as chart symbols, pulsing softly
+      pts.forEach((p, i) => { const [sx, sz] = M(p.x, p.z); const r = (p.big ? 3.2 : 2) * (W / 1400) * (1 + 0.12 * Math.sin(t * 2 + i)); x.fillStyle = p.big ? '#f6efdc' : 'rgba(246,239,220,0.75)'; x.beginPath(); x.arc(sx, sz, r, 0, 6.283); x.fill(); });
+      // sweeping range ring (radar) from the harbour entrance
+      const [ex, ez] = M(E.ll(43.7365, 7.4309).x, E.ll(43.7365, 7.4309).z); const rr = ((t * 60) % 700) * sc;
+      x.strokeStyle = `rgba(200,162,74,${0.5 * (1 - rr / (700 * sc))})`; x.lineWidth = 1.5; x.beginPath(); x.arc(ex, ez, rr, 0, 6.283); x.stroke();
+      // compass rose
+      const cx = W * 0.9, cy = H * 0.3, R = 42 * (W / 1400);
+      x.strokeStyle = 'rgba(200,162,74,0.8)'; x.lineWidth = 1; x.beginPath(); x.arc(cx, cy, R, 0, 6.283); x.stroke(); x.beginPath(); x.arc(cx, cy, R * 0.62, 0, 6.283); x.stroke();
+      for (let k = 0; k < 16; k++) { const a = k * Math.PI / 8; const len = k % 4 === 0 ? R : k % 2 === 0 ? R * 0.75 : R * 0.55; x.beginPath(); x.moveTo(cx + Math.cos(a) * R * 0.15, cy + Math.sin(a) * R * 0.15); x.lineTo(cx + Math.cos(a) * len, cy + Math.sin(a) * len); x.stroke(); }
+      x.fillStyle = '#c8a24a'; x.font = `${12 * (W / 1400)}px Bodoni Moda, Georgia, serif`; x.textAlign = 'center'; x.fillText('N', cx, cy - R - 6 * (W / 1400)); x.textAlign = 'start';
+      t += reduceMotion ? 0 : 0.016; requestAnimationFrame(draw);
+    }
     draw();
   })();
   document.getElementById('enter').addEventListener('click', () => { loading.classList.add('done'); if (document.getElementById('enterSound').checked) { startSound(); btnSound.setAttribute('aria-pressed', 'true'); } controls.lastInput(); });
