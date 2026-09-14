@@ -138,6 +138,12 @@
 
   /* ---------- land slab, piers, structures ---------- */
   const stone = FX.makeGroundMaterial();
+  // shore mask shared by the water (shallows, foam) and the ground (paving by the quays, city ground inland)
+  (function buildShore() {
+    const sm = FX.makeShoreMask([landXZ, ...H_PIERS], 2600, isMobile ? 512 : 1024);
+    const wu = water.userData.uniforms; wu.uShore.value = sm.tex; wu.uShoreSize.value = sm.size; wu.uHasShore.value = 1;
+    const gu = stone.userData.uniforms; gu.tShore.value = sm.tex; gu.uShoreSize.value = sm.size; gu.uHasShore.value = 1;
+  })();
   const tentGeoms = [];
   const landGeoms = [];
   landGeoms.push(E.paint(E.extrudeUp(E.planShape(landXZ), 3.7, -1.5), 0xd8cfbd));
@@ -148,7 +154,7 @@
     g.rotateY(-s.bearing * Math.PI / 180 + Math.PI / 2); g.translate(c.x, (s.y || 0) + s.height / 2, c.z);
     (s.color === 0xf4f2ee ? tentGeoms : landGeoms).push(E.paint(g, s.color || 0xd8cfbd));
   });
-  const land = new T.Mesh(E.mergeGeoms(landGeoms, true), stone); land.castShadow = true; land.receiveShadow = true; scene.add(land);
+  const land = new T.Mesh(E.mergeGeoms(landGeoms, true), stone); land.name = 'land'; land.castShadow = true; land.receiveShadow = true; scene.add(land);
   if (tentGeoms.length) { const tents = new T.Mesh(E.mergeGeoms(tentGeoms), new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.7 })); tents.castShadow = true; tents.receiveShadow = true; scene.add(tents); }
 
   const facadeMat = FX.facadeMaterial(FX.makeFacadeTextures());
@@ -163,7 +169,7 @@
       const base = elevation(cx, cz);
       const h = b.height || 16;
       const r = E.hash('b' + i);
-      const st = pointInPoly(cx, cz, rockXZ) ? 3 : h >= 55 ? (r < 0.4 ? 2 : 1) : h >= 22 ? (r < 0.6 ? 1 : 0) : (r < 0.75 ? 0 : 1);
+      const st = pointInPoly(cx, cz, rockXZ) ? 3 : h >= 70 ? (r < 0.35 ? 2 : 1) : h >= 22 ? (r < 0.6 ? 1 : 0) : (r < 0.75 ? 0 : 1);
       const g = E.extrudeUp(E.planShape(xz), h + 3, base - 3);
       const pal = PALETTES[st];
       geoms.push(E.paint(g, st === 2 ? pal[i % pal.length] : (b.color || pal[i % pal.length])));
@@ -172,7 +178,7 @@
     if (!geoms.length) return;
     const merged = E.mergeGeoms(geoms, true);
     const sa = new Float32Array(merged.attributes.position.count); let o = 0; geoms.forEach((g, k) => { const n = g.attributes.position.count; sa.fill(styles[k], o, o + n); o += n; }); merged.setAttribute('aStyle', new T.BufferAttribute(sa, 1));
-    const m = new T.Mesh(merged, facadeMat);
+    const m = new T.Mesh(merged, facadeMat); m.name = 'buildings';
     m.castShadow = true; m.receiveShadow = true; scene.add(m);
   })();
 
@@ -260,6 +266,56 @@
     return { ...q, segs, total, used: q.margin ?? 0, endMargin: q.endMargin ?? 6, placed: [] };
   });
   const quayById = Object.fromEntries(quays.map(q => [q.id, q]));
+
+  /* ---------- show dressing: exhibitor tents and red carpet along the show quays ---------- */
+  const tentMat = new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.75, emissive: new T.Color(0xfff1d6), emissiveIntensity: 0 });
+  (function buildTents() {
+    const tent = (() => { const walls = new T.BoxGeometry(3.2, 2.7, 3.2); walls.translate(0, 1.35, 0); const roof = new T.ConeGeometry(2.55, 1.5, 4); roof.rotateY(Math.PI / 4); roof.translate(0, 2.7 + 0.75, 0); return E.mergeGeoms([E.paint(walls, 0xf6f4ef), E.paint(roof, 0xe9e6df)]); })();
+    const carpet = [], tents = [];
+    let seed = 11; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    quays.forEach(q => {
+      if (q.mode !== 'stern' || q.zone === 'cruise' || /^chicane-p/.test(q.id)) return;
+      const yq = q.zone === 'digue' ? 3.95 : 2.2;
+      q.segs.forEach(sg => {
+        if (sg.len < 14) return;
+        // red carpet strip just inland of the quay edge
+        const g = new T.BoxGeometry(sg.len - 2, 0.05, 2.0); g.rotateY(-Math.atan2(sg.d.z, sg.d.x)); g.translate((sg.a.x + sg.b.x) / 2 - sg.n.x * 2.4, yq + 0.03, (sg.a.z + sg.b.z) / 2 - sg.n.z * 2.4); carpet.push(E.paint(g, 0x8e1b2c));
+        for (let d = 7; d < sg.len - 7; d += 9.5) {
+          if (rnd() < 0.28) continue;
+          const off = q.zone === 'digue' ? 9.5 : 7.5 + rnd() * 2;
+          tents.push({ x: sg.a.x + sg.d.x * d - sg.n.x * off, z: sg.a.z + sg.d.z * d - sg.n.z * off, y: yq, r: -Math.atan2(sg.d.z, sg.d.x) });
+        }
+      });
+    });
+    if (carpet.length) { const m = new T.Mesh(E.mergeGeoms(carpet), new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.9 })); m.receiveShadow = true; scene.add(m); }
+    if (!tents.length) return;
+    const im = new T.InstancedMesh(tent, tentMat, tents.length); const o = new T.Object3D();
+    tents.forEach((t, i) => { o.position.set(t.x, t.y, t.z); o.rotation.set(0, t.r, 0); o.updateMatrix(); im.setMatrixAt(i, o.matrix); });
+    im.castShadow = true; im.receiveShadow = true; scene.add(im);
+  })();
+
+  /* ---------- traffic on the main roads ---------- */
+  const traffic = (function buildTraffic() {
+    const roads = (H.roads || []).filter(r => r.f1).map(r => { const xz = E.llArr(r.pts); const cum = [0]; for (let i = 1; i < xz.length; i++) cum.push(cum[i - 1] + Math.hypot(xz[i].x - xz[i - 1].x, xz[i].z - xz[i - 1].z)); return { xz, cum, len: cum[cum.length - 1], w: r.w || 8 }; }).filter(r => r.len > 40);
+    if (!roads.length) return null;
+    const cars = []; const maxCars = isMobile ? 40 : 130;
+    roads.forEach((r, ri) => { const n = Math.min(12, Math.max(1, Math.round(r.len / 70))); for (let i = 0; i < n && cars.length < maxCars; i++) cars.push({ r, s: E.hash('car' + ri + ':' + i) * r.len, dir: i % 2 ? 1 : -1, v: 7 + E.hash('v' + ri + ':' + i) * 6 }); });
+    const body = new T.BoxGeometry(4.3, 1.1, 1.9); body.translate(0, 0.55, 0); const cabin = new T.BoxGeometry(2.3, 0.7, 1.7); cabin.translate(-0.2, 1.4, 0);
+    const geo = E.mergeGeoms([E.paint(body, 0xffffff), E.paint(cabin, 0x2a3540)]);
+    const im = new T.InstancedMesh(geo, new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.35, metalness: 0.4 }), cars.length);
+    const palette = [0xf2f2f0, 0x1c1f24, 0x8b9096, 0xc9c9c9, 0x2b3a6b, 0x7a1d24, 0xf2f2f0, 0x3b3f44];
+    const col = new T.Color(); cars.forEach((c, i) => { col.setHex(palette[i % palette.length]); im.setColorAt(i, col); });
+    im.castShadow = true; im.frustumCulled = false; scene.add(im);
+    const o = new T.Object3D();
+    function at(r, s) { let i = 1; while (i < r.cum.length - 1 && r.cum[i] < s) i++; const a = r.xz[i - 1], b = r.xz[i]; const t = (s - r.cum[i - 1]) / Math.max(0.001, r.cum[i] - r.cum[i - 1]); return { x: a.x + (b.x - a.x) * t, z: a.z + (b.z - a.z) * t, hx: b.x - a.x, hz: b.z - a.z }; }
+    return { update(dt) {
+      cars.forEach((c, i) => { c.s += c.dir * c.v * dt; if (c.s > c.r.len) { c.s = c.r.len; c.dir = -1; } else if (c.s < 0) { c.s = 0; c.dir = 1; }
+        const p = at(c.r, c.s); const hd = Math.atan2(-(p.hz * c.dir), p.hx * c.dir); const lane = Math.min(2.2, c.r.w * 0.22);
+        const px = p.x + (-p.hz) / Math.hypot(p.hx, p.hz) * lane * c.dir, pz = p.z + (p.hx) / Math.hypot(p.hx, p.hz) * lane * c.dir;
+        o.position.set(px, Math.max(elevation(px, pz), 0) + 0.4, pz); o.rotation.set(0, hd, 0); o.updateMatrix(); im.setMatrixAt(i, o.matrix); });
+      im.instanceMatrix.needsUpdate = true;
+    } };
+  })();
   function zoneFor(y) {
     const z = (y.zone || '').toLowerCase();
     if (/cruise terminal/.test(z)) return 'cruise';
@@ -407,7 +463,7 @@
     const lightDir = altD > 4 ? dir.clone() : new T.Vector3(0.6, 0.35, -0.55).normalize().lerp(dir, E.clamp((altD + 2) / 6, 0, 1)).normalize();
     sunOffset.copy(lightDir).multiplyScalar(1100);
     wu.uSun.value.copy(altD > -1 ? dir : lightDir); su.uSun.value.copy(dir); sunWorld.dir.copy(dir); sunWorld.altD = altD; sunWorld.col.copy(sun.color);
-    wu.fogColor.value.copy(scene.fog.color); facadeMat.emissiveIntensity = 0.6 * (1 - E.smooth(-4, 3, altD));
+    wu.fogColor.value.copy(scene.fog.color); facadeMat.emissiveIntensity = 0.5 * (1 - E.smooth(-4, 3, altD)); tentMat.emissiveIntensity = 0.45 * (1 - E.smooth(-4, 2, altD));
     nightGroup.visible = altD < 1; updateEnv();
     const yachtNight = altD < 0; if (yachtNight !== lastYachtNight) { lastYachtNight = yachtNight; yachts.forEach(y => { if (y.obj) y.obj.traverse(o => { if (o.name === 'night') o.visible = yachtNight; }); }); }
     document.getElementById('btnNight').setAttribute('aria-pressed', String(night));
@@ -850,7 +906,7 @@ void main(){
     const dt = clock.getDelta();
     if (!reduceMotion) water.userData.uniforms.uTime.value += dt;
     // idle: slow cinematic orbit after 30 s without input
-    updateShuttles(dt); if (window.__flags) window.__flags.uniforms.uTime.value += dt;
+    updateShuttles(dt); if (traffic && !reduceMotion) traffic.update(Math.min(dt, 0.1)); if (window.__flags) window.__flags.uniforms.uTime.value += dt;
     if (walk.on) walkStep(dt);
     else if (tour) tourStep(dt);
     else if (!reduceMotion && performance.now() - controls.lastInput() > 30000) controls.goal.theta += 0.00045;
@@ -919,5 +975,5 @@ void main(){
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && photo) btnPhoto.click(); });
   loop();
 
-  window.MYS_APP = { select, goView, yachts, quays, controls, startTour, stopTour, startWalk, stopWalk, setHour: h => { hour = h; applyLighting(); } };
+  window.MYS_APP = { scene, select, goView, yachts, quays, controls, startTour, stopTour, startWalk, stopWalk, setHour: h => { hour = h; applyLighting(); } };
 })();

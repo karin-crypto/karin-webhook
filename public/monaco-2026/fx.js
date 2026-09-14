@@ -55,6 +55,21 @@
     return m;
   }
 
+  /* ---------- shore mask: land (1) to open water (0), soft over the last ~40 m, in world XZ ----------
+     used by the water for shallows and foam and by the ground for quayside paving vs. city blocks */
+  const BLACK1 = new T.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1); BLACK1.needsUpdate = true;
+  function makeShoreMask(polys, size, px) {
+    px = px || 1024; const c = document.createElement('canvas'); c.width = c.height = px; const x = c.getContext('2d');
+    const o = document.createElement('canvas'); o.width = o.height = px; const ox = o.getContext('2d');
+    ox.fillStyle = '#fff'; polys.forEach(p => { ox.beginPath(); p.forEach((q, i) => { const u = (q.x / size + 0.5) * px, v = (q.z / size + 0.5) * px; if (i) ox.lineTo(u, v); else ox.moveTo(u, v); }); ox.closePath(); ox.fill(); });
+    x.fillStyle = '#000'; x.fillRect(0, 0, px, px);
+    const blurs = [3, 9, 18]; x.globalAlpha = 1 / blurs.length;
+    blurs.forEach(b => { try { x.filter = 'blur(' + b + 'px)'; } catch (e) { } x.drawImage(o, 0, 0); });
+    x.filter = 'none'; x.globalAlpha = 1;
+    const t = new T.CanvasTexture(c); t.wrapS = t.wrapT = T.ClampToEdgeWrapping; t.flipY = false; t.minFilter = T.LinearFilter; t.generateMipmaps = false;
+    return { tex: t, size };
+  }
+
   /* ---------- water with planar reflection ---------- */
   function makeWater(size, opts) {
     opts = Object.assign({ reflectSize: 1024 }, opts || {});
@@ -65,6 +80,7 @@
       uSky: { value: new T.Color(0x9ecbe4) }, uSunCol: { value: new T.Color(0xfff2d0) }, uNight: { value: 0 },
       uReflect: { value: reflectRT.texture }, uTexMat: { value: new T.Matrix4() }, uUseReflect: { value: 1 },
       fogColor: { value: new T.Color(0xd7e6f0) }, fogNear: { value: 1400 }, fogFar: { value: 5200 },
+      uShore: { value: BLACK1 }, uShoreSize: { value: 1.0 }, uHasShore: { value: 0 },
     };
     const mat = new T.ShaderMaterial({
       uniforms, transparent: false,
@@ -83,18 +99,25 @@
         }`,
       fragmentShader: `
         uniform vec3 uSun, uDeep, uShallow, uSky, uSunCol, fogColor; uniform float uTime, uNight, uUseReflect, fogNear, fogFar;
-        uniform sampler2D uReflect;
+        uniform sampler2D uReflect, uShore; uniform float uShoreSize, uHasShore;
         varying vec3 vPos; varying vec3 vNorm; varying vec4 vRef; ${NOISE}
         void main(){
           vec3 V = normalize(cameraPosition - vPos);
           float dCam = length(cameraPosition - vPos);
           float detail = clamp(1.0 - dCam/1800.0, 0.0, 1.0);
+          // shore proximity: 0 open water .. 1 land
+          vec2 suv = vPos.xz / uShoreSize + 0.5; float shore = 0.0;
+          if (uHasShore > 0.5 && suv.x > 0.0 && suv.x < 1.0 && suv.y > 0.0 && suv.y < 1.0) shore = texture2D(uShore, suv).r;
+          float near = smoothstep(0.08, 0.6, shore);
           vec2 n1 = vec2(vnoise(vPos.xz*0.45 + uTime*0.18), vnoise(vPos.zx*0.45 - uTime*0.15)) - 0.5;
           vec2 n2 = vec2(vnoise(vPos.xz*1.8 - uTime*0.35), vnoise(vPos.zx*1.7 + uTime*0.3)) - 0.5;
-          vec3 N = normalize(vNorm + vec3(n1.x, 0.0, n1.y)*0.45*detail + vec3(n2.x,0.0,n2.y)*0.18*detail);
-          float fres = pow(1.0 - max(dot(N, V), 0.0), 3.5);
+          float calm = 1.0 - near * 0.55;
+          vec3 N = normalize(vNorm + vec3(n1.x, 0.0, n1.y)*0.45*detail*calm + vec3(n2.x,0.0,n2.y)*0.18*detail*calm);
+          float fres = 0.02 + 0.98 * pow(1.0 - max(dot(N, V), 0.0), 4.0);
           float d = clamp(length(vPos.xz)/900.0, 0.0, 1.0);
           vec3 base = mix(uShallow, uDeep, d);
+          // shallows along the quays: greener, lighter water over the harbour bed
+          base = mix(base, uShallow * vec3(1.05, 1.22, 1.15) + vec3(0.02, 0.06, 0.04), near * 0.75 * (1.0 - uNight*0.7));
           vec3 skyRef = uSky;
           if (uUseReflect > 0.5) {
             vec2 ruv = vRef.xy / vRef.w;
@@ -102,11 +125,18 @@
             ruv = clamp(ruv, 0.001, 0.999);
             skyRef = texture2D(uReflect, ruv).rgb;
           }
-          vec3 col = mix(base, skyRef, 0.18 + fres*0.72);
+          vec3 col = mix(base, skyRef, clamp(0.16 + fres*0.74, 0.0, 0.92));
           vec3 H = normalize(normalize(uSun) + V);
           float spec = pow(max(dot(N,H),0.0), 320.0) * 3.0 + pow(max(dot(N,H),0.0), 48.0)*0.22;
           col += uSunCol * spec * (1.0 - uNight*0.55);
+          // sun glitter: sparse sparkles where the small facets catch the sun
+          float glit = pow(max(dot(N,H),0.0), 900.0) * step(0.62, vnoise(vPos.xz*38.0 + uTime*2.5)) * 5.0 * detail;
+          col += uSunCol * glit * (1.0 - uNight*0.7);
           col += vec3(0.03)*vnoise(vPos.xz*0.9 + uTime*0.3)*(1.0-uNight);
+          // foam lines washing against the quays and the breakwater
+          float fm = vnoise(vPos.xz*0.55 + uTime*0.35)*0.55 + vnoise(vPos.xz*2.6 - uTime*0.9)*0.45;
+          float foam = smoothstep(0.22, 0.5, shore) * (1.0 - smoothstep(0.72, 0.95, shore)) * smoothstep(0.5, 0.78, fm);
+          col = mix(col, vec3(0.92, 0.95, 0.96), foam * 0.55 * (1.0 - uNight*0.9));
           float fogF = smoothstep(fogNear, fogFar, dCam);
           col = mix(col, fogColor, fogF);
           gl_FragColor = vec4(col, 1.0);
@@ -268,16 +298,16 @@
     { const [c, x] = mk(), [e, ex] = mk(); x.fillStyle = '#f1efe9'; x.fillRect(0, 0, S, S); grain(x, 900, 0.05); ex.fillStyle = '#000'; ex.fillRect(0, 0, S, S);
       for (let f = 0; f < 2; f++) { const y0 = f * fh; const slab = fh * 0.24;
         x.fillStyle = '#5a6b78'; x.fillRect(0, y0 + slab, S, fh - slab); // recessed glazing behind the balcony
-        for (let k = 0; k < 3; k++) { const wx = k * cw + 6, ww = cw - 12; glass(x, wx, y0 + slab + 2, ww, fh - slab - 2, '#6d8290'); x.fillStyle = 'rgba(255,255,255,0.35)'; x.fillRect(wx + ww * 0.5, y0 + slab, 2, fh - slab); lit(ex, wx, y0 + slab + 2, ww, fh - slab - 4, 0.28); }
+        for (let k = 0; k < 3; k++) { const wx = k * cw + 6, ww = cw - 12; glass(x, wx, y0 + slab + 2, ww, fh - slab - 2, '#6d8290'); x.fillStyle = 'rgba(255,255,255,0.35)'; x.fillRect(wx + ww * 0.5, y0 + slab, 2, fh - slab); lit(ex, wx + ww * 0.18, y0 + slab + (fh - slab) * 0.12, ww * 0.64, (fh - slab) * 0.55, 0.3); }
         x.fillStyle = 'rgba(232,234,238,0.78)'; x.fillRect(0, y0 + slab + fh * 0.3, S, fh * 0.42); // glass balustrade
         x.fillStyle = 'rgba(255,255,255,0.75)'; x.fillRect(0, y0 + slab + fh * 0.72, S, 2); // handrail
         x.fillStyle = '#f7f5f0'; x.fillRect(0, y0, S, slab); x.fillStyle = 'rgba(0,0,0,0.18)'; x.fillRect(0, y0 + slab, S, 5); // white slab and shadow under it
         x.fillStyle = 'rgba(0,0,0,0.08)'; x.fillRect(0, y0 + slab - 3, S, 3); }
       finish(c, e); }
     // 2 · Glass tower
-    { const [c, x] = mk(), [e, ex] = mk(); x.fillStyle = '#4f6a82'; x.fillRect(0, 0, S, S); ex.fillStyle = '#000'; ex.fillRect(0, 0, S, S);
-      for (let f = 0; f < 2; f++) { const y0 = f * fh; const g = x.createLinearGradient(0, y0, 0, y0 + fh); g.addColorStop(0, '#9dbdd4'); g.addColorStop(0.45, '#6d8fa9'); g.addColorStop(1, '#4f6a82'); x.fillStyle = g; x.fillRect(0, y0, S, fh);
-        x.fillStyle = '#3d4d5b'; x.fillRect(0, y0 + fh * 0.78, S, fh * 0.22); // spandrel
+    { const [c, x] = mk(), [e, ex] = mk(); x.fillStyle = '#8fa8bc'; x.fillRect(0, 0, S, S); ex.fillStyle = '#000'; ex.fillRect(0, 0, S, S);
+      for (let f = 0; f < 2; f++) { const y0 = f * fh; const g = x.createLinearGradient(0, y0, 0, y0 + fh); g.addColorStop(0, '#c3d7e6'); g.addColorStop(0.45, '#98b3c8'); g.addColorStop(1, '#7c95aa'); x.fillStyle = g; x.fillRect(0, y0, S, fh);
+        x.fillStyle = '#6b7c8a'; x.fillRect(0, y0 + fh * 0.78, S, fh * 0.22); // spandrel
         x.fillStyle = 'rgba(220,230,240,0.55)'; x.fillRect(0, y0 + fh * 0.78, S, 2); x.fillRect(0, y0, S, 2);
         for (let k = 0; k <= 3; k++) x.fillRect(Math.min(S - 2, k * cw), y0, 2, fh); for (let k = 0; k < 3; k++) x.fillRect(k * cw + cw / 2, y0, 1, fh);
         for (let k = 0; k < 3; k++) lit(ex, k * cw + 3, y0 + 3, cw - 6, fh * 0.74, 0.38, true); }
@@ -381,14 +411,26 @@
     const con = mk(256, 256, (x, w, h) => { x.fillStyle = '#b9b3a6'; x.fillRect(0, 0, w, h); for (let i = 0; i < 6000; i++) { x.fillStyle = `rgba(${60 + Math.random() * 60 | 0},${55 + Math.random() * 50 | 0},${50 + Math.random() * 40 | 0},${0.04 + Math.random() * 0.12})`; x.fillRect(Math.random() * w, Math.random() * h, 3, 1 + Math.random() * 3); } x.fillStyle = 'rgba(40,50,60,0.35)'; x.fillRect(0, h - 40, w, 40); x.fillStyle = 'rgba(30,60,50,0.35)'; x.fillRect(0, h - 22, w, 22); });
     con.repeat.set(1 / 3, 1 / 3.7);
     const m = new T.MeshStandardMaterial({ map: pav, vertexColors: true, roughness: 0.92, metalness: 0 });
+    const groundU = { tShore: { value: BLACK1 }, uShoreSize: { value: 1.0 }, uHasShore: { value: 0 } }; m.userData.uniforms = groundU;
     m.onBeforeCompile = sh => {
-      sh.uniforms.tWall = { value: con };
+      sh.uniforms.tWall = { value: con }; sh.uniforms.tShore = groundU.tShore; sh.uniforms.uShoreSize = groundU.uShoreSize; sh.uniforms.uHasShore = groundU.uHasShore;
       sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute float aWall; varying float vWall; varying vec3 vWp;').replace('#include <uv_vertex>', '#include <uv_vertex>\nvWall = aWall; vWp = (modelMatrix * vec4(position,1.0)).xyz;');
-      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform sampler2D tWall; varying float vWall; varying vec3 vWp;')
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform sampler2D tWall, tShore; uniform float uShoreSize, uHasShore; varying float vWall; varying vec3 vWp;\n' + NOISE)
         .replace('#include <map_fragment>', `#ifdef USE_MAP
           vec4 capC = texture2D( map, vWp.xz / 4.0 );
           vec4 wallC = texture2D( tWall, vec2((vWp.x + vWp.z) / 3.0, vWp.y / 3.7) );
-          diffuseColor *= mix(capC, wallC, vWall);
+          // inland the slab reads as city ground: asphalt courtyards, plazas and pockets of green, not one endless paving
+          float shore = 1.0; vec2 suv = vWp.xz / uShoreSize + 0.5;
+          if (uHasShore > 0.5 && suv.x > 0.0 && suv.x < 1.0 && suv.y > 0.0 && suv.y < 1.0) shore = texture2D(tShore, suv).r;
+          float inland = smoothstep(0.86, 0.985, shore);
+          float nb = fbm(vWp.xz * 0.045); float nf = vnoise(vWp.xz * 0.9);
+          vec3 asphalt = vec3(0.40, 0.40, 0.39) * (0.85 + 0.3 * nf);
+          vec3 plaza = vec3(0.66, 0.63, 0.57) * (0.9 + 0.2 * nf);
+          vec3 green = vec3(0.33, 0.44, 0.24) * (0.8 + 0.4 * nf);
+          vec3 city = mix(asphalt, plaza, smoothstep(0.42, 0.55, nb)); city = mix(city, green, smoothstep(0.58, 0.68, nb));
+          vec3 cap = mix(diffuseColor.rgb * capC.rgb, city, inland);
+          vec3 wall = diffuseColor.rgb * wallC.rgb;
+          diffuseColor.rgb = mix(cap, wall, vWall);
         #endif`);
     };
     return m;
@@ -417,5 +459,5 @@
     return g;
   }
 
-  global.MYSFX = { makeSky, makeWater, makePost, makeFacadeTextures, facadeMaterial, makeTrees, makeGroundMaterial, makeTerrainMaterial, makeBirds };
+  global.MYSFX = { makeSky, makeWater, makePost, makeFacadeTextures, facadeMaterial, makeTrees, makeGroundMaterial, makeTerrainMaterial, makeBirds, makeShoreMask };
 })(window);
