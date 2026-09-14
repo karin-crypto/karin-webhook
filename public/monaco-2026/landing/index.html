@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="Karin Keren · Monaco Yacht Show 2026 in 3D">
+<meta property="og:description" content="קרין קרן בנתה מודל תלת־ממדי אינטראקטיבי של תערוכת היאכטות במונקו 2026 · 99 יאכטות־על בנמל הרקול">
+<meta property="og:image" content="img/aerial.jpg">
+<meta name="theme-color" content="#0b1c31">
+<title>Karin Keren · Port Hercule 2026</title>
+<meta name="description" content="קרין קרן בנתה מודל תלת־ממדי אינטראקטיבי של תערוכת היאכטות במונקו 2026 · 99 יאכטות־על בנמל הרקול">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Frank+Ruhl+Libre:wght@300;400;500&family=Assistant:wght@300;400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ink: #0b1c31; --ink-2: #102743; --ink-3: #16324f;
+    --paper: #efe6d2; --paper-2: #cdbf9f; --paper-3: #8f8770;
+    --brass: #c8a24a; --brass-2: #a8842f; --aqua: #3fb6c9; --coral: #e0574a;
+    --line: rgba(239, 230, 210, .14); --line-2: rgba(239, 230, 210, .28);
+    --display-lat: "Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
+    --display-he: "Frank Ruhl Libre", "David", "Times New Roman", serif;
+    --body: "Assistant", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+    --max: 1180px;
+  }
+  html { color-scheme: dark; scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation: none !important; transition: none !important; } }
+  body {
+    margin: 0; background: var(--ink); color: var(--paper); font-family: var(--body); font-size: 17px; line-height: 1.6; font-weight: 300;
+    padding-inline: clamp(16px, 4vw, 48px); padding-block: 0;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px),
+      radial-gradient(ellipse at 70% 0%, rgba(63, 182, 201, .10), transparent 55%);
+    background-size: 96px 96px, 96px 96px, 100% 100%;
+    background-attachment: fixed;
+  }
+  /* language switching: both texts live in the markup, the html[lang] decides */
+  html:not([lang="en"]) .en, html[lang="en"] .he { display: none !important; }
+  html:not([lang="en"]) body { direction: rtl; }
+  html[lang="en"] body { direction: ltr; }
+  .wrap { max-width: var(--max); margin-inline: auto; }
+  a { color: var(--brass); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--aqua); outline-offset: 3px; }
+  h1, h2, h3 { font-weight: 400; margin: 0; text-wrap: balance; line-height: 1.05; }
+  html:not([lang="en"]) h1, html:not([lang="en"]) h2, html:not([lang="en"]) h3 { font-family: var(--display-he); }
+  html[lang="en"] h1, html[lang="en"] h2, html[lang="en"] h3 { font-family: var(--display-lat); }
+  .lat { font-family: var(--display-lat); }
+  .mono { font-family: var(--mono); }
+  .eyebrow { font-family: var(--mono); font-size: 11.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--brass); }
+  p { margin: 0; max-width: 62ch; }
+
+  /* ---------- top bar ---------- */
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 18px; border-bottom: 1px solid var(--line); }
+  .top .name { font-family: var(--display-lat); font-size: 20px; letter-spacing: .01em; color: var(--paper); text-decoration: none; }
+  .top .name .he-name { font-family: var(--display-he); }
+  .lang { display: flex; gap: 0; border: 1px solid var(--line-2); border-radius: 2px; overflow: hidden; }
+  .lang button { background: transparent; color: var(--paper-2); border: 0; font: 500 12px var(--mono); letter-spacing: .1em; padding: 7px 12px; cursor: pointer; }
+  .lang button[aria-pressed="true"] { background: var(--brass); color: var(--ink); }
+
+  /* ---------- hero: the chart's title cartouche ---------- */
+  .hero { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(24px, 4vw, 56px); align-items: end; padding-block: clamp(40px, 7vw, 88px) 40px; }
+  .hero .text { display: grid; gap: 22px; }
+  .hero h1 { font-size: clamp(38px, 5.4vw, 66px); }
+  .hero h1 em { font-style: italic; color: var(--brass); }
+  html:not([lang="en"]) .hero h1 em { font-style: normal; }
+  .hero .lead { font-size: clamp(18px, 1.5vw, 21px); line-height: 1.55; color: var(--paper); }
+  .hero .who { display: grid; gap: 4px; padding-top: 18px; border-top: 1px solid var(--line-2); max-width: 420px; }
+  .hero .who .sig { font-family: var(--display-lat); font-size: 30px; line-height: 1.1; }
+  .hero .who .sig .he-name { font-family: var(--display-he); }
+  .hero .who .role { font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--brass); }
+  .cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .btn { display: inline-flex; align-items: center; gap: 10px; padding: 14px 22px; border-radius: 2px; text-decoration: none; font: 500 13px var(--mono); letter-spacing: .14em; text-transform: uppercase; transition: transform .15s ease, background .15s ease; }
+  .btn.primary { background: var(--brass); color: var(--ink); border: 1px solid var(--brass); }
+  .btn.primary:hover { background: #d9b45d; transform: translateY(-1px); }
+  .btn.ghost { color: var(--paper); border: 1px solid var(--line-2); }
+  .btn.ghost:hover { border-color: var(--brass); color: var(--brass); }
+  .btn svg { width: 14px; height: 14px; }
+  html:not([lang="en"]) .btn svg { transform: scaleX(-1); }
+
+  /* the plate: a chart sheet with corner coordinates */
+  .plate { position: relative; border: 1px solid var(--line-2); padding: 12px; background: var(--ink-2); }
+  .plate::before, .plate::after { content: ""; position: absolute; inset: 5px; border: 1px solid var(--line); pointer-events: none; }
+  .plate::after { inset: 5px; border-color: transparent; }
+  .plate img { display: block; width: 100%; height: auto; max-width: 100%; aspect-ratio: 1280 / 694; object-fit: cover; }
+  .plate .corner { position: absolute; font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em; color: var(--brass); text-transform: uppercase; background: var(--ink-2); padding: 2px 6px; }
+  .plate .c-tl { top: -8px; inset-inline-start: 18px; } .plate .c-br { bottom: -8px; inset-inline-end: 18px; }
+  .plate figcaption { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 4px 2px; font-family: var(--mono); font-size: 11.5px; letter-spacing: .08em; color: var(--paper-2); }
+  .plate figcaption b { font-weight: 500; color: var(--paper); }
+  figure { margin: 0; }
+
+  /* ---------- soundings strip (figures) ---------- */
+  .soundings { display: grid; grid-template-columns: repeat(6, 1fr); border-block: 1px solid var(--line-2); margin-block: 40px 0; }
+  .soundings div { padding: 22px 6px; border-inline-end: 1px solid var(--line); display: grid; gap: 4px; align-content: start; }
+  html:not([lang="en"]) .soundings div:first-child, html[lang="en"] .soundings div:last-child { border-inline-end: 0; }
+  .soundings .n { font-family: var(--display-lat); font-size: clamp(30px, 3.6vw, 44px); line-height: 1; font-variant-numeric: tabular-nums; color: var(--paper); }
+  .soundings .n small { font-size: .5em; color: var(--brass); font-style: italic; }
+  .soundings .l { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--paper-2); line-height: 1.4; }
+
+  /* ---------- sections ---------- */
+  section { padding-block: clamp(48px, 7vw, 96px); border-bottom: 1px solid var(--line); }
+  .sec-head { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: 24px 48px; align-items: start; margin-bottom: 36px; }
+  .sec-head h2 { font-size: clamp(30px, 3.6vw, 44px); }
+  .sec-head .eyebrow { margin-bottom: 10px; }
+  .sec-head p { font-size: 18px; color: var(--paper-2); max-width: 60ch; }
+
+  /* story: what she built */
+  .story { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 40px 56px; align-items: start; }
+  .story .col { display: grid; gap: 18px; }
+  .story p { color: var(--paper); }
+  .story p strong { font-weight: 600; color: var(--brass); }
+  .story .col p:first-child { font-size: 19px; }
+  .story aside { display: grid; gap: 0; border: 1px solid var(--line-2); background: var(--ink-2); }
+  .story aside h3 { font-size: 14px; font-family: var(--mono) !important; letter-spacing: .16em; text-transform: uppercase; color: var(--brass); padding: 14px 18px; border-bottom: 1px solid var(--line); }
+  .story dl { margin: 0; display: grid; grid-template-columns: auto 1fr; }
+  .story dt, .story dd { margin: 0; padding: 10px 18px; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .story dt { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--paper-2); padding-top: 13px; white-space: nowrap; }
+  .story dd { color: var(--paper); }
+  .story dd .mono { font-size: 13px; color: var(--paper-2); }
+  .story dt:nth-last-of-type(1), .story dd:last-child { border-bottom: 0; }
+
+  /* gallery of plates */
+  .gallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
+  .gallery .plate img { aspect-ratio: 1280 / 694; }
+  .gallery .plate.wide { grid-column: 1 / -1; }
+  .gallery .plate.wide img { aspect-ratio: 1440 / 900; }
+
+  /* features: how it works, as a chart legend */
+  .legend { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line-2); }
+  .legend article { padding: 26px 24px; border-inline-end: 1px solid var(--line); border-bottom: 1px solid var(--line); display: grid; gap: 10px; align-content: start; }
+  .legend article:nth-child(3n) { border-inline-end: 0; }
+  .legend article:nth-last-child(-n+3) { border-bottom: 0; }
+  .legend .sym { width: 34px; height: 34px; color: var(--brass); }
+  .legend .sym svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
+  .legend h3 { font-size: 22px; }
+  .legend p { font-size: 15px; color: var(--paper-2); }
+
+  /* controls: how to use */
+  .howto { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px 28px; }
+  .howto div { display: grid; gap: 6px; padding-top: 14px; border-top: 1px solid var(--line-2); }
+  .howto .k { font-family: var(--mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--brass); }
+  .howto p { font-size: 15px; color: var(--paper-2); }
+
+  /* honesty note */
+  .note { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: 24px 48px; }
+  .note p { font-size: 15.5px; color: var(--paper-2); }
+  .note p + p { margin-top: 12px; }
+
+  /* footer signature */
+  footer { padding-block: 48px 40px; display: grid; gap: 22px; }
+  footer .sigblock { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 20px; }
+  footer .sig { font-family: var(--display-lat); font-size: clamp(34px, 5vw, 56px); line-height: 1; }
+  footer .sig .he-name { font-family: var(--display-he); }
+  footer .meta { font-family: var(--mono); font-size: 11.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--brass); display: grid; gap: 6px; }
+  footer .fine { font-size: 13px; color: var(--paper-3); max-width: 70ch; }
+  .rule { height: 1px; background: linear-gradient(90deg, var(--brass), transparent 60%); }
+  html:not([lang="en"]) .rule { background: linear-gradient(270deg, var(--brass), transparent 60%); }
+
+  /* compass rose, drawn once */
+  .rose { position: absolute; width: 92px; height: 92px; inset-inline-end: 22px; top: 22px; color: var(--brass); opacity: .9; pointer-events: none; }
+  .rose svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1; }
+
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; align-items: start; }
+    .soundings { grid-template-columns: repeat(3, 1fr); }
+    .soundings div:nth-child(3n) { border-inline-end: 0; }
+    .soundings div:nth-child(-n+3) { border-bottom: 1px solid var(--line); }
+    .sec-head, .story, .note { grid-template-columns: 1fr; }
+    .legend { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .legend article:nth-child(3n) { border-inline-end: 1px solid var(--line); }
+    .legend article:nth-child(2n) { border-inline-end: 0; }
+    .legend article:nth-last-child(-n+3) { border-bottom: 1px solid var(--line); }
+    .legend article:nth-last-child(-n+2) { border-bottom: 0; }
+    .howto { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .rose { width: 64px; height: 64px; }
+  }
+  @media (max-width: 560px) {
+    body { font-size: 16px; }
+    .gallery { grid-template-columns: 1fr; }
+    .legend { grid-template-columns: 1fr; }
+    .legend article { border-inline-end: 0 !important; border-bottom: 1px solid var(--line) !important; }
+    .legend article:last-child { border-bottom: 0 !important; }
+    .howto { grid-template-columns: 1fr; }
+    .soundings { grid-template-columns: repeat(2, 1fr); }
+    .soundings div { border-inline-end: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .soundings div:nth-child(2n) { border-inline-end: 0; }
+    .soundings div:nth-last-child(-n+2) { border-bottom: 0; }
+    .story dl { grid-template-columns: 1fr; }
+    .story dt { border-bottom: 0; padding-bottom: 0; }
+  }
+</style>
+</head>
+<body>
+
+<header class="wrap top">
+  <a class="name" href="#top"><span class="he-name">קרין קרן</span> · Karin Keren</a>
+  <div class="lang" role="group" aria-label="Language">
+    <button type="button" id="langHe" aria-pressed="true">עברית</button>
+    <button type="button" id="langEn" aria-pressed="false">EN</button>
+  </div>
+</header>
+
+<main class="wrap" id="top">
+  <div class="hero">
+    <div class="text">
+      <div class="eyebrow">
+        <span class="he">מודל תלת־ממדי אינטראקטיבי · נמל הרקול · מונקו</span>
+        <span class="en">Interactive 3D model · Port Hercule · Monaco</span>
+      </div>
+      <h1>
+        <span class="he">בניתי את תערוכת היאכטות של מונקו 2026 <em>בתלת־ממד</em></span>
+        <span class="en">I built the Monaco Yacht Show 2026 <em>in 3D</em></span>
+      </h1>
+      <p class="lead">
+        <span class="he">99 יאכטות־על, כל אחת באורך ובמקום העגינה שפורסמו לה, על גבי הטופוגרפיה והבניינים האמיתיים של מונקו. אפשר לטוס מעל הנמל, לרדת לרציף וללכת בין הסירות, ולהזיז את השעה מהבוקר ועד הלילה.</span>
+        <span class="en">99 superyachts, each at its published length and berth, laid over the real terrain and buildings of Monaco. Fly over the harbour, step down to the quay and walk between the boats, and move the clock from morning to night.</span>
+      </p>
+      <div class="cta">
+        <a class="btn primary" href="../">
+          <span class="he">פתחו את המודל</span><span class="en">Open the model</span>
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8h11M9 3l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <a class="btn ghost" href="#gallery"><span class="he">לצפות בתמונות</span><span class="en">See the views</span></a>
+      </div>
+      <div class="who">
+        <div class="sig"><span class="he-name">קרין קרן</span> · Karin Keren</div>
+        <div class="role"><span class="he">תכנון, מחקר ובנייה של המודל · ספטמבר 2026</span><span class="en">Concept, research and build · September 2026</span></div>
+      </div>
+    </div>
+    <figure class="plate">
+      <span class="corner c-tl">Port Hercule · 43°44′N 7°25′E</span>
+      <span class="corner c-br"><span class="he">לוח 1 · מבט על</span><span class="en">Plate 1 · Overview</span></span>
+      <div class="rose" aria-hidden="true"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46"/><circle cx="50" cy="50" r="30" stroke-dasharray="2 3"/><path d="M50 4v92M4 50h92" stroke-opacity=".5"/><path d="M50 8l6 42-6 42-6-42z" fill="currentColor" fill-opacity=".35"/><path d="M8 50l42-6 42 6-42 6z" fill="currentColor" fill-opacity=".2"/><text x="50" y="4" font-size="9" text-anchor="middle" fill="currentColor" stroke="none" font-family="IBM Plex Mono, monospace">N</text></svg></div>
+      <img src="img/aerial.jpg" width="1280" height="694" alt="Aerial view of the 3D model: Port Hercule filled with yachts, Monte-Carlo behind, Le Rocher to the left">
+      <figcaption>
+        <span><span class="he">נמל הרקול מהאוויר · 15:30 ביום התערוכה</span><span class="en">Port Hercule from the air · 15:30 on show day</span></span>
+        <b><span class="he">רינדור מתוך המודל</span><span class="en">Rendered from the model</span></b>
+      </figcaption>
+    </figure>
+  </div>
+
+  <div class="soundings" aria-label="Key figures">
+    <div><div class="n">99</div><div class="l"><span class="he">יאכטות־על במודל</span><span class="en">superyachts modelled</span></div></div>
+    <div><div class="n">85</div><div class="l"><span class="he">מהרשימה הרשמית של התערוכה</span><span class="en">from the official show list</span></div></div>
+    <div><div class="n">111<small> m</small></div><div class="l"><span class="he">הגדולה ביותר · Leviathan</span><span class="en">largest hull · Leviathan</span></div></div>
+    <div><div class="n">28</div><div class="l"><span class="he">קודי עגינה רשמיים</span><span class="en">official berth codes placed</span></div></div>
+    <div><div class="n">863</div><div class="l"><span class="he">בניינים אמיתיים של מונקו</span><span class="en">real Monaco buildings</span></div></div>
+    <div><div class="n">10<small> m</small></div><div class="l"><span class="he">רזולוציית הטופוגרפיה</span><span class="en">terrain resolution</span></div></div>
+  </div>
+
+  <section id="what">
+    <div class="sec-head">
+      <div>
+        <div class="eyebrow"><span class="he">מה זה</span><span class="en">What it is</span></div>
+        <h2><span class="he">הנמל, הסירות והשעה, כפי שהם באמת</span><span class="en">The harbour, the boats and the hour, as they really are</span></h2>
+      </div>
+      <p>
+        <span class="he">תערוכת היאכטות של מונקו נפתחת ב־23 בספטמבר 2026 בנמל הרקול, למשך ארבעה ימים. המודל הזה מציג את התערוכה לפני שהיא מתחילה: איפה כל יאכטה תעמוד, כמה היא גדולה לעומת שכנותיה, ואיך נראה הנמל מהרציף ומהאוויר.</span>
+        <span class="en">The Monaco Yacht Show opens on 23 September 2026 in Port Hercule and runs four days. This model shows the show before it starts: where each yacht will lie, how big she is against her neighbours, and how the harbour looks from the quay and from the air.</span>
+      </p>
+    </div>
+    <div class="story">
+      <div class="col">
+        <p><span class="he">כל מה שרואים כאן נבנה מנתונים אמיתיים. <strong>קו החוף, הרציפים והבניינים</strong> נלקחו ממפת OpenStreetMap של מונקו, ו<strong>הטופוגרפיה</strong> מנתוני גובה לווייניים ברזולוציה של 10 מטרים, כך שהסלע של מונקו־ויל, המדרונות של מונטה־קרלו והדיג רנייה השלישי יושבים במקומם ובגובהם.</span>
+           <span class="en">Everything here is built from real data. <strong>The coastline, quays and buildings</strong> come from the OpenStreetMap map of Monaco, and <strong>the terrain</strong> from satellite elevation data at 10-metre resolution, so Le Rocher, the slopes of Monte-Carlo and the Digue Rainier III sit where they are and at their true height.</span></p>
+        <p><span class="he"><strong>הצי</strong> הורכב מהרשימה הרשמית של התערוכה ומהודעות של מספנות, ברוקרים ועיתונות מקצועית, נכון ל־13 בספטמבר 2026. כל יאכטה משורטטת לפי האורך הכולל, הרוחב והסוג שפורסמו לה, ומעוגנת לפי קוד העגינה הרשמי כשהוא פורסם: D לרציף רנייה השלישי, E לרציף ארצות־הברית, C לרציף השיקאן, S למזח ז׳ול סוקאל ועוד.</span>
+           <span class="en"><strong>The fleet</strong> is compiled from the official show list plus shipyard, broker and trade-press announcements as of 13 September 2026. Every yacht is drawn to her published length overall, beam and type, and moored by her official berth code where one was published: D for Quai Rainier III, E for Quai des États-Unis, C for Quai Chicane, S for the Jules Soccal pier, and so on.</span></p>
+        <p><span class="he"><strong>האור</strong> עוקב אחרי השמש האמיתית של מונקו בסוף ספטמבר. מזיזים את השעון ורואים את הנמל בבוקר, בשעת הזהב, בדמדומים ובלילה, כשהחלונות של מונטה־קרלו נדלקים והיאכטות מאירות את המים מתחתן.</span>
+           <span class="en"><strong>The light</strong> follows Monaco's real sun path for late September. Move the clock and see the harbour at morning, golden hour, dusk and night, when the windows of Monte-Carlo come on and the yachts light the water beneath them.</span></p>
+      </div>
+      <aside>
+        <h3><span class="he">נתוני המפה</span><span class="en">Chart data</span></h3>
+        <dl>
+          <dt><span class="he">מקום</span><span class="en">Place</span></dt><dd>Port Hercule, Monaco <span class="mono">· 43°44′07″ N · 7°25′35″ E</span></dd>
+          <dt><span class="he">אירוע</span><span class="en">Event</span></dt><dd><span class="he">תערוכת היאכטות של מונקו, המהדורה ה־35 · 23–26.9.2026</span><span class="en">Monaco Yacht Show, 35th edition · 23–26 Sept 2026</span></dd>
+          <dt><span class="he">גיאומטריה</span><span class="en">Geometry</span></dt><dd><span class="he">OpenStreetMap · 863 בניינים, 24 רציפים ומזחים, 442 קטעי כביש</span><span class="en">OpenStreetMap · 863 buildings, 24 quays and piers, 442 road segments</span></dd>
+          <dt><span class="he">טופוגרפיה</span><span class="en">Terrain</span></dt><dd><span class="he">מודל גובה לווייני, רשת 381×381 בצעד של 10 מ׳</span><span class="en">Satellite elevation model, 381×381 grid at 10 m</span></dd>
+          <dt><span class="he">הצי</span><span class="en">Fleet</span></dt><dd><span class="he">99 יאכטות · 85 מהרשימה הרשמית · 14 מדיווחים · 6 בעגינה במפרץ</span><span class="en">99 yachts · 85 official list · 14 reported · 6 at anchor in the bay</span></dd>
+          <dt><span class="he">עדכון</span><span class="en">Compiled</span></dt><dd><span class="he">13 בספטמבר 2026</span><span class="en">13 September 2026</span></dd>
+          <dt><span class="he">בנייה</span><span class="en">Built with</span></dt><dd>WebGL · three.js <span class="mono">· <span class="he">ללא מנוע משחק, הכול נכתב ידנית</span><span class="en">no game engine, all hand-written</span></span></dd>
+        </dl>
+      </aside>
+    </div>
+  </section>
+
+  <section id="gallery">
+    <div class="sec-head">
+      <div>
+        <div class="eyebrow"><span class="he">לוחות</span><span class="en">Plates</span></div>
+        <h2><span class="he">שש נקודות מבט, שעות שונות ביום</span><span class="en">Six viewpoints, different hours of the day</span></h2>
+      </div>
+      <p><span class="he">כל התמונות רונדרו ישירות מתוך המודל, במצב צילום. במודל עצמו אפשר להסתובב חופשי, להתקרב לכל יאכטה וללחוץ עליה כדי לקרוא עליה.</span><span class="en">All images are rendered straight from the model in photo mode. In the model itself you orbit freely, zoom to any yacht and click her to read her card.</span></p>
+    </div>
+    <div class="gallery">
+      <figure class="plate">
+        <span class="corner c-tl">Quai Rainier III · 18:36</span>
+        <img loading="lazy" src="img/digue.jpg" width="1280" height="694" alt="The Digue Rainier III at golden hour with the largest yachts moored stern-to">
+        <figcaption><span><span class="he">הדיג רנייה השלישי בשעת הזהב · היאכטות הגדולות ביותר</span><span class="en">Digue Rainier III at golden hour · the flagship berths</span></span><b><span class="he">לוח 2</span><span class="en">Plate 2</span></b></figcaption>
+      </figure>
+      <figure class="plate">
+        <span class="corner c-tl">Quai Rainier III · 21:24</span>
+        <img loading="lazy" src="img/night.jpg" width="1280" height="694" alt="The same quay at night: Monte-Carlo windows lit, yachts glowing on the water">
+        <figcaption><span><span class="he">אותו רציף בלילה · חלונות מונטה־קרלו ואורות הסיפון</span><span class="en">The same quay at night · Monte-Carlo windows and deck lights</span></span><b><span class="he">לוח 3</span><span class="en">Plate 3</span></b></figcaption>
+      </figure>
+      <figure class="plate">
+        <span class="corner c-tl">Harbour entrance · 19:12</span>
+        <img loading="lazy" src="img/entrance.jpg" width="1280" height="694" alt="Dusk view from the sea into the harbour entrance with the Digue lit">
+        <figcaption><span><span class="he">פתח הנמל בדמדומים · מהים פנימה</span><span class="en">The harbour entrance at dusk · looking in from the sea</span></span><b><span class="he">לוח 4</span><span class="en">Plate 4</span></b></figcaption>
+      </figure>
+      <figure class="plate">
+        <span class="corner c-tl">Quai des États-Unis · 12:30</span>
+        <img loading="lazy" src="img/etats.jpg" width="1280" height="694" alt="Midday view along the Quai des États-Unis with yachts moored stern-to under the town">
+        <figcaption><span><span class="he">רציף ארצות־הברית בצהריים · עגינה בירכתיים אל הרציף</span><span class="en">Quai des États-Unis at noon · stern-to along the quay</span></span><b><span class="he">לוח 5</span><span class="en">Plate 5</span></b></figcaption>
+      </figure>
+      <figure class="plate">
+        <span class="corner c-tl">Le Rocher · 17:48</span>
+        <img loading="lazy" src="img/rocher.jpg" width="1280" height="694" alt="View from the Rock of Monaco-Ville over the rooftops down to the harbour">
+        <figcaption><span><span class="he">מהסלע של מונקו־ויל · מעל הגגות אל הנמל</span><span class="en">From Le Rocher · over the rooftops to the harbour</span></span><b><span class="he">לוח 6</span><span class="en">Plate 6</span></b></figcaption>
+      </figure>
+      <figure class="plate">
+        <span class="corner c-tl"><span class="he">מסך הפתיחה</span><span class="en">Opening screen</span></span>
+        <img loading="lazy" src="img/chart.jpg" width="1280" height="800" alt="The model's opening screen: a nautical chart of Port Hercule drawn from the model's own geometry">
+        <figcaption><span><span class="he">מסך הפתיחה · מפה ימית שמשורטטת מהגיאומטריה של המודל עצמו</span><span class="en">Opening screen · a chart drawn from the model's own geometry</span></span><b><span class="he">לוח 7</span><span class="en">Plate 7</span></b></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="sec-head">
+      <div>
+        <div class="eyebrow"><span class="he">מקרא</span><span class="en">Legend</span></div>
+        <h2><span class="he">מה יש בתוך המודל</span><span class="en">What the model does</span></h2>
+      </div>
+      <p><span class="he">כל רכיב נכתב במיוחד לפרויקט הזה: מחולל היאכטות, המים, השמיים, האור, הסאונד והממשק. אין כאן מנוע משחק מוכן.</span><span class="en">Every part was written for this project: the yacht generator, the water, the sky, the lighting, the sound and the interface. There is no off-the-shelf game engine underneath.</span></p>
+    </div>
+    <div class="legend">
+      <article>
+        <div class="sym"><svg viewBox="0 0 34 34"><path d="M4 22h26l-4 6H8zM8 22l3-8h12l3 8M12 14V9h6v5"/></svg></div>
+        <h3><span class="he">מחולל יאכטות</span><span class="en">Yacht generator</span></h3>
+        <p><span class="he">כל גוף נבנה מהמידות שפורסמו: אורך, רוחב, סוג, מספר סיפונים, צבע גוף, מנחת מסוקים, בריכה או תורן. מנועית, מפרשית, אקספלורר וקטמרן.</span><span class="en">Each hull is lofted from published figures: length, beam, type, deck count, hull colour, helipad, pool or rig. Motor, sail, explorer and catamaran.</span></p>
+      </article>
+      <article>
+        <div class="sym"><svg viewBox="0 0 34 34"><path d="M3 20c4-3 8-3 12 0s8 3 12 0M3 26c4-3 8-3 12 0s8 3 12 0M17 4v10M11 10l6 4 6-4"/></svg></div>
+        <h3><span class="he">מים והשתקפויות</span><span class="en">Water and reflections</span></h3>
+        <p><span class="he">המים משקפים את היאכטות, הבניינים והשמיים בזמן אמת, עם גלים קטנים, קצף סביב הגופים ואור שנשבר על פני השטח.</span><span class="en">The water reflects yachts, buildings and sky in real time, with small waves, foam around the hulls and light breaking on the surface.</span></p>
+      </article>
+      <article>
+        <div class="sym"><svg viewBox="0 0 34 34"><circle cx="17" cy="19" r="6"/><path d="M17 5v4M31 19h-4M7 19H3M27 9l-3 3M7 9l3 3M3 29h28"/></svg></div>
+        <h3><span class="he">שעון שמש</span><span class="en">Sun clock</span></h3>
+        <p><span class="he">מסלול השמש מחושב לקו הרוחב של מונקו ולתאריך התערוכה. גוררים את השעון מ־07:00 עד 22:30 והאור, הצללים, הערפל והשמיים משתנים איתו.</span><span class="en">The sun path is computed for Monaco's latitude and the show date. Drag the clock from 07:00 to 22:30 and the light, shadows, haze and sky follow.</span></p>
+      </article>
+      <article>
+        <div class="sym"><svg viewBox="0 0 34 34"><path d="M17 5v6M17 11l-5 12M17 11l5 12M12 23h10M9 17h16"/><circle cx="17" cy="3.5" r="1.5"/></svg></div>
+        <h3><span class="he">הליכה על הרציף</span><span class="en">Walk the quay</span></h3>
+        <p><span class="he">במצב הליכה יורדים לגובה העיניים וצועדים לאורך הרציפים, בין הירכתיים של היאכטות, עם מקלדת או ג׳ויסטיק על המסך.</span><span class="en">Walk mode drops you to eye level on the quays, between the sterns of the yachts, with keyboard or on-screen joystick.</span></p>
+      </article>
+      <article>
+        <div class="sym"><svg viewBox="0 0 34 34"><path d="M4 8h26v18H4zM4 8l13 9 13-9"/><circle cx="17" cy="17" r="3"/></svg></div>
+        <h3><span class="he">כרטיס לכל יאכטה</span><span class="en">A card for every yacht</span></h3>
+        <p><span class="he">לחיצה על יאכטה פותחת את הכרטיס שלה: מספנה, שנה, אורך, רוחב, רציף, קוד עגינה ומקור המידע. חיפוש וסינון לפי גודל, סוג ובכורות.</span><span class="en">Click a yacht for her card: builder, year, length, beam, quay, berth code and the source. Search and filter by size, type and debuts.</span></p>
+      </article>
+      <article>
+        <div class="sym"><svg viewBox="0 0 34 34"><path d="M4 12h8l7-6v22l-7-6H4zM23 12c2 2 2 8 0 10M27 8c4 4 4 14 0 18"/></svg></div>
+        <h3><span class="he">סאונד, סיור וצילום</span><span class="en">Sound, tour and photo</span></h3>
+        <p><span class="he">רחש מים ורוח שנוצרים בזמן אמת, סיור מצולם שעובר בין נקודות המבט, ומצב צילום שמסתיר את הממשק לתמונה נקייה.</span><span class="en">Ambient water and wind generated live, a guided tour between viewpoints, and a photo mode that hides the interface for a clean frame.</span></p>
+      </article>
+    </div>
+  </section>
+
+  <section id="use">
+    <div class="sec-head">
+      <div>
+        <div class="eyebrow"><span class="he">איך משתמשים</span><span class="en">How to use it</span></div>
+        <h2><span class="he">פותחים בדפדפן, בלי התקנה</span><span class="en">Opens in the browser, nothing to install</span></h2>
+      </div>
+      <p><span class="he">עובד במחשב ובטלפון. במחשב חוויה מלאה עם השתקפויות; בטלפון מומלץ לסובב לרוחב. הטעינה הראשונה לוקחת כמה שניות כי הנמל כולו נבנה על המכשיר שלכם.</span><span class="en">Works on desktop and phone. Desktop gets the full experience with reflections; on a phone, landscape is best. The first load takes a few seconds because the whole harbour is built on your device.</span></p>
+    </div>
+    <div class="howto">
+      <div><div class="k"><span class="he">סיבוב וזום</span><span class="en">Orbit and zoom</span></div><p><span class="he">גוררים כדי להסתובב, גלגלת או צביטה כדי להתקרב, לחיצה ימנית או שתי אצבעות כדי להזיז.</span><span class="en">Drag to orbit, scroll or pinch to zoom, right-drag or two fingers to pan.</span></p></div>
+      <div><div class="k"><span class="he">נקודות מבט</span><span class="en">Viewpoints</span></div><p><span class="he">כפתורי המבט בצד קופצים לדיג, לרציף ארצות־הברית, לסלע ולפתח הנמל.</span><span class="en">The view buttons jump to the Digue, Quai des États-Unis, Le Rocher and the harbour entrance.</span></p></div>
+      <div><div class="k"><span class="he">שעה</span><span class="en">Hour</span></div><p><span class="he">הסליידר למעלה מזיז את השעה ביום התערוכה. כפתור Night קופץ ישר ללילה.</span><span class="en">The slider at the top moves the hour on show day. The Night button jumps straight to night.</span></p></div>
+      <div><div class="k"><span class="he">קישור ליאכטה</span><span class="en">Link to a yacht</span></div><p><span class="he">כל יאכטה מקבלת קישור משלה, למשל <span class="mono" dir="ltr">#yacht=Nixie</span>, שאפשר לשלוח הלאה.</span><span class="en">Every yacht has her own link, for example <span class="mono">#yacht=Nixie</span>, that you can pass on.</span></p></div>
+    </div>
+  </section>
+
+  <section id="accuracy">
+    <div class="note">
+      <div>
+        <div class="eyebrow"><span class="he">הערת דיוק</span><span class="en">A note on accuracy</span></div>
+        <h2 style="font-size:clamp(26px,3vw,34px)"><span class="he">מה מדויק ומה משוער</span><span class="en">What is exact and what is estimated</span></h2>
+      </div>
+      <div>
+        <p><span class="he">הטופוגרפיה, קו החוף, הרציפים והבניינים מדויקים למקור. אורכי היאכטות ורוחבן הם הנתונים שפורסמו. 28 יאכטות עומדות בקוד העגינה הרשמי שלהן; השאר הונחו על רציף בגודל מתאים לפי סידור התערוכה בשנים קודמות, והכרטיס של כל אחת מציין אם מיקומה רשמי או משוער.</span>
+           <span class="en">Terrain, coastline, quays and buildings are exact to their sources. Yacht lengths and beams are the published figures. 28 yachts sit at their official berth code; the rest are placed on a quay of matching size following the show's customary layout, and each card says whether her position is official or estimated.</span></p>
+        <p><span class="he">המספנות אינן מפרסמות מודלים תלת־ממדיים של יאכטות, ולכן כל יאכטה נבנית מחדש מהמידות והמראה שפורסמו לה, ולא ממודל של היצרן. כ־20 יאכטות נוספות, רובן סירות ברוקראז׳ מתחת ל־55 מטר, טרם נקראו בשמן במועד הכתיבה.</span>
+           <span class="en">Shipyards do not publish 3D models of their yachts, so each one is rebuilt from her published dimensions and appearance rather than from a manufacturer model. About 20 further yachts, mostly brokerage boats under 55 m, had not been named publicly at the time of writing.</span></p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap">
+  <div class="rule"></div>
+  <div class="sigblock">
+    <div>
+      <div class="sig"><span class="he-name">קרין קרן</span> · Karin Keren</div>
+      <div class="meta" style="margin-top:12px">
+        <span><span class="he">הדמיה תלת־ממדית · תערוכת היאכטות של מונקו 2026</span><span class="en">3D visualisation · Monaco Yacht Show 2026</span></span>
+        <span>Port Hercule · 43°44′N 7°25′E · September 2026</span>
+      </div>
+    </div>
+    <a class="btn primary" href="../">
+      <span class="he">פתחו את המודל</span><span class="en">Open the model</span>
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8h11M9 3l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+  </div>
+  <p class="fine"><span class="he">פרויקט עצמאי. אינו קשור למארגני תערוכת היאכטות של מונקו ואינו מייצג אותם. נתוני הצי מהרשימה הרשמית, מספנות, ברוקרים ועיתונות מקצועית; גיאומטריה © תורמי OpenStreetMap.</span><span class="en">An independent project, not affiliated with or endorsed by the organisers of the Monaco Yacht Show. Fleet data from the official list, shipyards, brokers and trade press; geometry © OpenStreetMap contributors.</span></p>
+</footer>
+
+<script>
+  (function () {
+    const root = document.documentElement;
+    const he = document.getElementById('langHe'), en = document.getElementById('langEn');
+    function setLang(l) {
+      root.lang = l; root.dir = l === 'he' ? 'rtl' : 'ltr';
+      he.setAttribute('aria-pressed', String(l === 'he')); en.setAttribute('aria-pressed', String(l === 'en'));
+      document.title = l === 'he' ? 'Karin Keren · Port Hercule 2026' : 'Karin Keren · Port Hercule 2026';
+      try { localStorage.setItem('kk-lang', l); } catch (e) {}
+    }
+    he.addEventListener('click', () => setLang('he')); en.addEventListener('click', () => setLang('en'));
+    let l = 'he';
+    try { l = localStorage.getItem('kk-lang') || l; } catch (e) {}
+    if (location.hash === '#en') l = 'en';
+    setLang(l);
+  })();
+</script>
+
+</body>
+</html>

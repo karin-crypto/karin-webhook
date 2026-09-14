@@ -23,6 +23,7 @@ npm start
 - <http://localhost:3000> — the business website (client portal at `/portal.html`)
 - <http://localhost:3000/mia.html> — Mia's chat page
 - <http://localhost:3000/monaco-2026/> — Monaco Yacht Show 2026: הדמיה תלת-ממדית אינטראקטיבית של הצי בנמל הרקולס (Three.js, נתוני OSM)
+- `/monaco-2026/landing/` — landing page presenting the model (Karin Keren), shareable link
 
 ## ה־API
 
