@@ -132,7 +132,7 @@
     const p = g.attributes.position;
     for (let i = 0; i < p.count; i++) p.setY(i, elevation(p.getX(i), p.getZ(i)) - 0.6);
     g.computeVertexNormals();
-    const m = new T.Mesh(g, new T.MeshStandardMaterial({ color: 0x7a8560, roughness: 1 }));
+    const m = new T.Mesh(g, FX.makeTerrainMaterial());
     m.receiveShadow = true; scene.add(m);
   })();
 
@@ -154,18 +154,25 @@
   const facadeMat = FX.facadeMaterial(FX.makeFacadeTextures());
   // buildings (merged, coloured by height band; base on terrain)
   (function buildBuildings() {
-    const geoms = [];
-    const palette = [0xe9dfcc, 0xe3d6c2, 0xf0e8d8, 0xd9c9b3, 0xe6dccb, 0xcfc3b0];
+    const geoms = [], styles = [];
+    // facade styles: 0 Belle Époque plaster · 1 modern white slabs with balcony bands · 2 glass tower · 3 Monaco-Ville ochre with terracotta roofs
+    const PALETTES = [[0xead9b9, 0xe6ccaa, 0xecdcc8, 0xdfc6a4, 0xe9d0c2, 0xf1e6d2], [0xf4f2ec, 0xefece4, 0xf7f5f0, 0xe9e6de, 0xf2efe9], [0xb9c8d6, 0xa9bccd, 0xc4d0da], [0xe6c28f, 0xdcaa7a, 0xe9cc9d, 0xd9a88e, 0xefd6ae]];
     (H.buildings || []).forEach((b, i) => {
       const xz = E.llArr(b.pts); if (xz.length < 3) return;
       let cx = 0, cz = 0; xz.forEach(p => { cx += p.x; cz += p.z; }); cx /= xz.length; cz /= xz.length;
       const base = elevation(cx, cz);
       const h = b.height || 16;
+      const r = E.hash('b' + i);
+      const st = pointInPoly(cx, cz, rockXZ) ? 3 : h >= 55 ? (r < 0.4 ? 2 : 1) : h >= 22 ? (r < 0.6 ? 1 : 0) : (r < 0.75 ? 0 : 1);
       const g = E.extrudeUp(E.planShape(xz), h + 3, base - 3);
-      geoms.push(E.paint(g, b.color || palette[i % palette.length]));
+      const pal = PALETTES[st];
+      geoms.push(E.paint(g, st === 2 ? pal[i % pal.length] : (b.color || pal[i % pal.length])));
+      styles.push(st + E.hash('s' + i) * 0.98);
     });
     if (!geoms.length) return;
-    const m = new T.Mesh(E.mergeGeoms(geoms, true), facadeMat);
+    const merged = E.mergeGeoms(geoms, true);
+    const sa = new Float32Array(merged.attributes.position.count); let o = 0; geoms.forEach((g, k) => { const n = g.attributes.position.count; sa.fill(styles[k], o, o + n); o += n; }); merged.setAttribute('aStyle', new T.BufferAttribute(sa, 1));
+    const m = new T.Mesh(merged, facadeMat);
     m.castShadow = true; m.receiveShadow = true; scene.add(m);
   })();
 
@@ -384,6 +391,7 @@
     const i = Math.min(2, Math.floor(k)), t = k - i; return arr[i].clone().lerp(arr[i + 1], t);
   }
   let sunOffset = new T.Vector3(-320, 780, 720);
+  const sunWorld = { dir: new T.Vector3(0, 1, 0), altD: 40, uv: new T.Vector2(), i: 0, col: new T.Color() };
   function applyLighting() {
     const wu = water.userData.uniforms, su = sky.userData.uniforms;
     const { alt, dir } = sunVector(hour); const altD = alt * 180 / Math.PI;
@@ -398,7 +406,7 @@
     // light direction: real sun above ~4 deg; below that a moon from the east-north-east keeps shadows readable
     const lightDir = altD > 4 ? dir.clone() : new T.Vector3(0.6, 0.35, -0.55).normalize().lerp(dir, E.clamp((altD + 2) / 6, 0, 1)).normalize();
     sunOffset.copy(lightDir).multiplyScalar(1100);
-    wu.uSun.value.copy(altD > -1 ? dir : lightDir); su.uSun.value.copy(dir);
+    wu.uSun.value.copy(altD > -1 ? dir : lightDir); su.uSun.value.copy(dir); sunWorld.dir.copy(dir); sunWorld.altD = altD; sunWorld.col.copy(sun.color);
     wu.fogColor.value.copy(scene.fog.color); facadeMat.emissiveIntensity = 0.6 * (1 - E.smooth(-4, 3, altD));
     nightGroup.visible = altD < 1; updateEnv();
     const yachtNight = altD < 0; if (yachtNight !== lastYachtNight) { lastYachtNight = yachtNight; yachts.forEach(y => { if (y.obj) y.obj.traverse(o => { if (o.name === 'night') o.visible = yachtNight; }); }); }
@@ -835,7 +843,8 @@ void main(){
   const dbs = new T.Vector2();
   function resize() { const w = canvas.clientWidth || window.innerWidth, h = canvas.clientHeight || window.innerHeight; renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2)); renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.getDrawingBufferSize(dbs); post.setSize(dbs.x, dbs.y); }
   window.addEventListener('resize', resize); resize();
-  const clock = new T.Clock(); let frame = 0;
+  const clock = new T.Clock(); let frame = 0; const sunProj = new T.Vector3();
+  const birds = FX.makeBirds(isMobile ? 10 : 24, E.ll(VIEWS.entrance.lat, VIEWS.entrance.lon), 160, 55); scene.add(birds);
   function loop() {
     requestAnimationFrame(loop);
     const dt = clock.getDelta();
@@ -847,12 +856,17 @@ void main(){
     else if (!reduceMotion && performance.now() - controls.lastInput() > 30000) controls.goal.theta += 0.00045;
     if (!walk.on) controls.update(); camera.updateMatrixWorld();
     if ((frame & 15) === 0) updateSound();
-    sky.userData.uniforms.uTime.value = water.userData.uniforms.uTime.value;
+    sky.userData.uniforms.uTime.value = water.userData.uniforms.uTime.value; birds.userData.update(water.userData.uniforms.uTime.value);
     // keep the shadow frustum centred where the camera looks
     sun.target.position.copy(controls.state.target); sun.position.copy(controls.state.target).add(sunOffset);
     if (fxOn) {
       if ((frame & 1) === 0 || controls.state.dist < 600) water.userData.renderReflection(renderer, scene, camera, [nightGroup]);
-      post.render(scene, camera, night, water.userData.uniforms.uTime.value);
+      // where the sun sits on screen, for the lens glare
+      sunProj.copy(camera.position).addScaledVector(sunWorld.dir, 5000).project(camera);
+      const onScreen = sunProj.z < 1 && Math.abs(sunProj.x) < 1.6 && Math.abs(sunProj.y) < 1.6;
+      sunWorld.uv.set((sunProj.x + 1) / 2, (sunProj.y + 1) / 2);
+      sunWorld.i = onScreen && sunWorld.altD > -1 ? (0.35 + 0.5 * (1 - E.smooth(3, 28, sunWorld.altD))) * E.smooth(-1, 2, sunWorld.altD) : 0;
+      post.render(scene, camera, night, water.userData.uniforms.uTime.value, sunWorld);
     } else {
       renderer.setRenderTarget(null); renderer.render(scene, camera);
     }
@@ -897,7 +911,8 @@ void main(){
     }
     draw();
   })();
-  document.getElementById('enter').addEventListener('click', () => { loading.classList.add('done'); if (document.getElementById('enterSound').checked) { startSound(); btnSound.setAttribute('aria-pressed', 'true'); } controls.lastInput(); });
+  document.title = 'Monaco Yacht Show 2026 in 3D · Karin Keren';
+  document.getElementById('enter').addEventListener('click', () => { loading.classList.add('done'); const tc = document.getElementById('titlecard'); if (tc && !reduceMotion) { tc.hidden = false; document.body.classList.add('intro'); const endIntro = () => { tc.hidden = true; document.body.classList.remove('intro'); }; setTimeout(endIntro, 8400); canvas.addEventListener('pointerdown', endIntro, { once: true }); } if (document.getElementById('enterSound').checked) { startSound(); btnSound.setAttribute('aria-pressed', 'true'); } controls.lastInput(); });
   // photo mode: hide the interface, letterbox, no labels
   const btnPhoto = document.getElementById('btnPhoto'); let photo = false;
   btnPhoto.addEventListener('click', () => { photo = !photo; document.body.classList.toggle('photo', photo); btnPhoto.setAttribute('aria-pressed', String(photo)); if (photo) { showLabels = false; } else { showLabels = btnLabels.getAttribute('aria-pressed') === 'true'; } });

@@ -1,11 +1,11 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="הדמיה תלת-ממדית אינטראקטיבית של תערוכת היאכטות מונקו 2026 בנמל הרקולס – 99 יאכטות מהרשימה הרשמית עם קודי עגינה ומראה אמיתי, טופוגרפיה אמיתית, מצב הליכה, שעון שמש אמיתי, תאורת לילה, השתקפויות, צליל סביבה. הדמיה: קרין קרן.">
-<meta property="og:title" content="Monaco Yacht Show 2026 · 3D">
-<meta property="og:description" content="Interactive 3D model of the MYS 2026 fleet in Port Hercule, Monaco. Visualisation by Karin Keren.">
+<meta name="description" content="הדמיה תלת-ממדית אינטראקטיבית של תערוכת היאכטות במונקו 2026 · 99 יאכטות בנמל הרקול · קרין קרן">
+<meta property="og:title" content="Monaco Yacht Show 2026 in 3D · Karin Keren">
+<meta property="og:description" content="Interactive 3D model of the MYS 2026 fleet in Port Hercule, on real terrain, by Karin Keren">
 <meta name="color-scheme" content="light dark">
 <title>Monaco Yacht Show 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -184,6 +184,22 @@
   .loading .corner b { display: block; color: #c8a24a; font-weight: 500; }
   @media (max-width: 760px) { .loading .in { inset-inline: 18px; bottom: 22px; max-width: none; } .loading .in .t { font-size: 34px; } .loading .by .name { font-size: 22px; } .loading .corner { display: none; } }
 
+  /* ---------- credits: film title card on entry, watermark in photo mode ---------- */
+  .titlecard { position: fixed; z-index: 8; inset: 0; display: grid; place-items: center; pointer-events: none; text-align: center; color: #f3ead6; text-shadow: 0 2px 24px rgba(0,0,0,.55); }
+  .titlecard[hidden] { display: none; }
+  .titlecard::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 45% at 50% 50%, rgba(6,14,24,.62), rgba(6,14,24,0) 100%); animation: tcVeil 8.4s ease both; }
+  .titlecard > div { position: relative; }
+  @keyframes tcVeil { 0% { opacity: 0; } 12% { opacity: 1; } 78% { opacity: 1; } 100% { opacity: 0; } }
+  body.intro #labels { display: none !important; }
+  .titlecard .l1 { font-family: var(--mono); font-size: 12px; letter-spacing: .34em; text-transform: uppercase; color: var(--brass-2); opacity: 0; animation: tcFade 8s ease both; }
+  .titlecard .l2 { font-family: var(--display-lat); font-size: clamp(34px, 6vw, 72px); line-height: 1.05; margin-top: 14px; opacity: 0; animation: tcFade 8s ease both .35s; }
+  .titlecard .l2 .he { font-family: var(--display-he); font-weight: 500; font-size: .82em; }
+  .titlecard .l3 { font-family: var(--mono); font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: rgba(243,234,214,.8); margin-top: 16px; opacity: 0; animation: tcFade 8s ease both .7s; }
+  @keyframes tcFade { 0% { opacity: 0; transform: translateY(6px); letter-spacing: .5em; } 14% { opacity: 1; transform: none; } 78% { opacity: 1; } 100% { opacity: 0; } }
+  .wm { position: fixed; z-index: 10; bottom: 2.2vh; inset-inline-end: 22px; display: none; align-items: baseline; gap: 10px; color: #f3ead6; font-family: var(--display-lat); font-style: italic; font-size: 17px; letter-spacing: .02em; opacity: .85; }
+  .wm .he { font-family: var(--display-he); font-style: normal; font-weight: 500; font-size: 14px; }
+  .wm small { font-family: var(--mono); font-style: normal; font-size: 9.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--brass-2); }
+  body.photo .wm { display: flex; }
   /* ---------- photo mode ---------- */
   body.photo .top, body.photo .views, body.photo .drawer, body.photo .card, body.photo .bottom, body.photo .timebar, body.photo #labels { display: none !important; }
   body.photo::before, body.photo::after { content: ''; position: fixed; left: 0; right: 0; height: 7vh; background: #000; z-index: 9; }
@@ -224,6 +240,8 @@
   <div class="actions"><button class="enter" id="enter" hidden data-i18n="enter">Enter the show</button><label class="opt"><input type="checkbox" id="enterSound" checked><span data-i18n="enterSound">with ambient sound</span></label><div class="bar"><i id="loadbar"></i></div><span class="s" id="loadmsg" style="letter-spacing:.1em">building the harbour…</span></div>
 </div></div>
 <div class="photoexit">Esc · exit photo mode</div>
+<div class="titlecard" id="titlecard" hidden aria-hidden="true"><div><div class="l1">Port Hercule · Monaco · 23–26 September 2026</div><div class="l2"><span class="he">קרין קרן</span> · Karin Keren</div><div class="l3">presents the Monaco Yacht Show 2026 in 3D</div></div></div>
+<div class="wm" aria-hidden="true"><span><span class="he">קרין קרן</span> · Karin Keren</span><small>3D · Monaco Yacht Show 2026</small></div>
 <canvas id="stage" aria-label="Interactive 3D model of Port Hercule with the Monaco Yacht Show 2026 fleet"></canvas>
 <div id="labels" aria-hidden="true"></div>
 
@@ -302,5 +320,6 @@
 <script src="engine.js"></script>
 <script src="fx.js"></script>
 <script src="app.js"></script>
+
 </body>
 </html>
