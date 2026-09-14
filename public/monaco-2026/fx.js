@@ -436,26 +436,40 @@
     return m;
   }
 
-  /* ---------- low-poly trees (instanced) ---------- */
-  function makeTrees(positions) { // positions: [{x,y,z,s,k}] k: 0 pine, 1 round
+  /* ---------- Mediterranean trees (instanced, four species, vertex-coloured canopies) ----------
+     k: 0 umbrella pine · 1 round broadleaf · 2 palm · 3 cypress */
+  function makeTrees(positions) {
     const n = positions.length; if (!n) return new T.Group();
-    const trunk = new T.CylinderGeometry(0.25, 0.4, 1, 6); trunk.translate(0, 0.5, 0);
-    const pine = new T.ConeGeometry(1, 1, 7); pine.translate(0, 0.5, 0);
-    const round = new T.IcosahedronGeometry(1, 1);
-    const g = new T.Group();
-    const mTrunk = new T.InstancedMesh(trunk, new T.MeshStandardMaterial({ color: 0x6b5138, roughness: 1 }), n);
-    const mPine = new T.InstancedMesh(pine, new T.MeshStandardMaterial({ color: 0x3f6b3a, roughness: 0.95 }), n);
-    const mRound = new T.InstancedMesh(round, new T.MeshStandardMaterial({ color: 0x5a8a45, roughness: 0.95 }), n);
-    const o = new T.Object3D(); const col = new T.Color();
-    let ip = 0, ir = 0;
-    positions.forEach((p, i) => {
-      const s = p.s || 1;
-      o.position.set(p.x, p.y, p.z); o.scale.set(0.9 * s, 3.2 * s, 0.9 * s); o.rotation.set(0, 0, 0); o.updateMatrix(); mTrunk.setMatrixAt(i, o.matrix);
-      if (p.k === 0) { o.position.set(p.x, p.y + 2.2 * s, p.z); o.scale.set(2.6 * s, 6.5 * s, 2.6 * s); o.updateMatrix(); mPine.setMatrixAt(ip, o.matrix); col.setHSL(0.3 + Math.random() * 0.06, 0.35, 0.28 + Math.random() * 0.1); mPine.setColorAt(ip, col); ip++; }
-      else { o.position.set(p.x, p.y + 4.2 * s, p.z); o.scale.set(2.8 * s, 2.4 * s, 2.8 * s); o.updateMatrix(); mRound.setMatrixAt(ir, o.matrix); col.setHSL(0.24 + Math.random() * 0.08, 0.4, 0.3 + Math.random() * 0.12); mRound.setColorAt(ir, col); ir++; }
+    const col = new T.Color();
+    const paintNoise = (g, base, spread) => { const p = g.attributes.position, c = new Float32Array(p.count * 3); for (let i = 0; i < p.count; i++) { const y = p.getY(i); const k = 0.72 + 0.28 * Math.min(1, Math.max(0, y / 4)) + (Math.sin(p.getX(i) * 7.1 + p.getZ(i) * 5.3) * 0.5 + 0.5) * spread; col.setHex(base).multiplyScalar(k); c[i * 3] = col.r; c[i * 3 + 1] = col.g; c[i * 3 + 2] = col.b; } g.setAttribute('color', new T.BufferAttribute(c, 3)); return g; };
+    const paintFlat = (g, hex) => { const p = g.attributes.position, c = new Float32Array(p.count * 3); col.setHex(hex); for (let i = 0; i < p.count; i++) { c[i * 3] = col.r; c[i * 3 + 1] = col.g; c[i * 3 + 2] = col.b; } g.setAttribute('color', new T.BufferAttribute(c, 3)); return g; };
+    const merge = list => { const parts = list.map(g => g.index ? g.toNonIndexed() : g); let cnt = 0; parts.forEach(g => cnt += g.attributes.position.count); const pos = new Float32Array(cnt * 3), nor = new Float32Array(cnt * 3), cc = new Float32Array(cnt * 3); let o = 0; parts.forEach(g => { pos.set(g.attributes.position.array, o * 3); if (!g.attributes.normal) g.computeVertexNormals(); nor.set(g.attributes.normal.array, o * 3); cc.set(g.attributes.color.array, o * 3); o += g.attributes.position.count; }); const out = new T.BufferGeometry(); out.setAttribute('position', new T.BufferAttribute(pos, 3)); out.setAttribute('normal', new T.BufferAttribute(nor, 3)); out.setAttribute('color', new T.BufferAttribute(cc, 3)); return out; };
+    const sph = (r, x, y, z, sy) => { const g = new T.IcosahedronGeometry(r, 1); g.scale(1, sy || 1, 1); g.translate(x, y, z); return g; };
+    const cyl = (rt, rb, h, x, y, z) => { const g = new T.CylinderGeometry(rt, rb, h, 7); g.translate(x, y, z); return g; };
+    const BARK = 0x5e4632, PINE = 0x3b6636, LEAF = 0x5f8a44, PALM = 0x4f8a3e, CYP = 0x2f4f2e;
+    // umbrella pine: tall bare trunk, flat spreading crown of overlapping domes
+    const pine = merge([paintFlat(cyl(0.22, 0.42, 6.5, 0, 3.25, 0), BARK), paintFlat(cyl(0.12, 0.2, 2.2, 0.9, 6.6, 0.3), BARK), paintFlat(cyl(0.12, 0.2, 2.2, -0.8, 6.6, -0.4), BARK),
+      paintNoise(sph(2.6, 0, 7.6, 0, 0.55), PINE, 0.2), paintNoise(sph(2.1, 1.7, 7.9, 0.9, 0.55), PINE, 0.25), paintNoise(sph(2.0, -1.5, 7.8, -1.1, 0.55), PINE, 0.25), paintNoise(sph(1.7, 0.4, 8.3, -1.6, 0.6), PINE, 0.25), paintNoise(sph(1.6, -0.6, 8.4, 1.5, 0.6), PINE, 0.25)]);
+    // round broadleaf: short trunk, cluster of blobs
+    const round = merge([paintFlat(cyl(0.18, 0.3, 2.4, 0, 1.2, 0), BARK), paintNoise(sph(1.9, 0, 3.9, 0, 1.05), LEAF, 0.3), paintNoise(sph(1.4, 1.1, 3.4, 0.6, 1), LEAF, 0.3), paintNoise(sph(1.3, -1.0, 3.6, -0.5, 1), LEAF, 0.3), paintNoise(sph(1.2, 0.2, 4.9, 0.4, 1), LEAF, 0.3), paintNoise(sph(1.1, -0.4, 3.2, 1.2, 1), LEAF, 0.3)]);
+    // palm: slightly leaning ringed trunk, eight drooping fronds and a coconut cluster
+    const palmParts = [paintFlat(cyl(0.16, 0.26, 7.5, 0, 3.75, 0), 0x7a6650)];
+    for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; const f = new T.BoxGeometry(3.4, 0.08, 0.7); f.translate(1.7, 0, 0); f.rotateZ(-0.55 - (i % 2) * 0.35); f.rotateY(a); f.translate(0, 7.6, 0); palmParts.push(paintNoise(f, PALM, 0.35)); }
+    palmParts.push(paintFlat(sph(0.45, 0, 7.4, 0, 1), 0x8a7a3a));
+    const palm = merge(palmParts);
+    // cypress: tall narrow spire
+    const cypress = merge([paintFlat(cyl(0.12, 0.18, 1.2, 0, 0.6, 0), BARK), paintNoise((() => { const g = new T.ConeGeometry(0.9, 7.5, 7); g.translate(0, 4.6, 0); return g; })(), CYP, 0.25)]);
+    const specs = [pine, round, palm, cypress];
+    const counts = [0, 0, 0, 0]; positions.forEach(p => counts[p.k] = (counts[p.k] || 0) + 1);
+    const mat = new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0 });
+    const g = new T.Group(); const o = new T.Object3D(); const idx = [0, 0, 0, 0];
+    const meshes = specs.map((geo, k) => { const m = new T.InstancedMesh(geo, mat, Math.max(1, counts[k])); m.count = counts[k]; return m; });
+    positions.forEach(p => {
+      const k = p.k, s = p.s || 1; const m = meshes[k];
+      o.position.set(p.x, p.y, p.z); o.rotation.set(0, (p.x * 0.37 + p.z * 0.11) % 6.283, 0); o.scale.set(s, s * (k === 3 ? 1.1 : 1), s); o.updateMatrix(); m.setMatrixAt(idx[k], o.matrix);
+      col.setHSL(k === 2 ? 0.26 : 0.29 + ((p.x * 13.1 + p.z * 7.7) % 1) * 0.06, 0.38, 0.9 + ((p.z * 3.3) % 1) * 0.2); m.setColorAt(idx[k], col); idx[k]++;
     });
-    mPine.count = ip; mRound.count = ir;
-    [mTrunk, mPine, mRound].forEach(m => { m.castShadow = true; m.receiveShadow = true; m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; g.add(m); });
+    meshes.forEach(m => { if (m.count) { m.castShadow = true; m.receiveShadow = true; m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; g.add(m); } });
     return g;
   }
 

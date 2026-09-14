@@ -83,8 +83,10 @@
     out.panes = mk(256, 64, (x, w, h) => { x.fillStyle = '#0d1c2c'; x.fillRect(0, 0, w, h); const g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, 'rgba(120,160,200,0.35)'); g.addColorStop(0.5, 'rgba(20,40,60,0)'); g.addColorStop(1, 'rgba(0,0,0,0.25)'); x.fillStyle = g; x.fillRect(0, 0, w, h); x.fillStyle = '#e8e6e0'; for (let i = 0; i < 4; i++) x.fillRect(i * 64, 0, 4, h); x.fillRect(0, 0, w, 3); x.fillRect(0, h - 3, w, 3); });
     // teak planking: seams every 0.15 m across (v), plank ends every 2 m (u)
     out.teak = mk(256, 128, (x, w, h) => { x.fillStyle = '#c29a6b'; x.fillRect(0, 0, w, h); for (let i = 0; i < 1600; i++) { x.fillStyle = `rgba(${90 + Math.random() * 60 | 0},${60 + Math.random() * 40 | 0},${30 + Math.random() * 30 | 0},${0.06 + Math.random() * 0.1})`; x.fillRect(Math.random() * w, Math.random() * h, 12, 1); } x.fillStyle = '#f2ece2'; for (let r = 0; r < 8; r++) x.fillRect(0, r * 16, w, 1.5); x.fillStyle = 'rgba(80,50,30,0.5)'; for (let r = 0; r < 8; r++) x.fillRect((r % 2) * 128, r * 16, 1.5, 16); });
+    out.panesAlpha = mk(256, 64, (x, w, h) => { x.fillStyle = '#8c8c8c'; x.fillRect(0, 0, w, h); x.fillStyle = '#fff'; for (let i = 0; i < 4; i++) x.fillRect(i * 64, 0, 4, h); x.fillRect(0, 0, w, 3); x.fillRect(0, h - 3, w, 3); });
+    out.panesAlpha.colorSpace = T.NoColorSpace;
     out.teak.repeat.set(1 / 2, 1 / 1.2);
-    out.panes.repeat.set(1 / 6.4, 1);
+    out.panes.repeat.set(1 / 6.4, 1); out.panesAlpha.repeat.set(1 / 6.4, 1);
     const plates = new Map();
     out.nameplate = name => {
       if (plates.has(name)) return plates.get(name);
@@ -104,6 +106,9 @@
     super: (c) => new T.MeshStandardMaterial({ color: c, roughness: 0.38, metalness: 0.05 }),
     glass: new T.MeshStandardMaterial({ color: 0x0b1a2b, roughness: 0.08, metalness: 0.85 }),
     panes: new T.MeshStandardMaterial({ map: TEX.panes, color: 0xffffff, roughness: 0.15, metalness: 0.6 }),
+    // real glass: pale mullions stay solid, the panes let ~45 % through onto a dark saloon behind, with a sharp sky reflection
+    glazing: new T.MeshPhysicalMaterial({ map: TEX.panes, alphaMap: TEX.panesAlpha, color: 0xdfeaf2, transparent: true, opacity: 1.0, roughness: 0.06, metalness: 0.0, envMapIntensity: 1.6, clearcoat: 1.0, clearcoatRoughness: 0.04, side: T.DoubleSide, depthWrite: false }),
+    interior: new T.MeshStandardMaterial({ color: 0x2c3138, roughness: 0.9, emissive: new T.Color(0xffd9a6), emissiveIntensity: 0 }),
     teak: new T.MeshStandardMaterial({ map: TEX.teak, color: 0xffffff, roughness: 0.8, metalness: 0.0 }),
     mast: new T.MeshStandardMaterial({ color: 0xd9dde2, roughness: 0.5, metalness: 0.3 }),
     dome: new T.MeshStandardMaterial({ color: 0xf2f2f2, roughness: 0.6 }),
@@ -311,10 +316,17 @@
         for (let k = 0; k <= nSt; k++) for (const side of [-1, 1]) M.push(gBox(0.05, 1.0, 0.05, slabAft + (x1 - slabAft) * k / nSt, y + 0.5, side * (w / 2 + 0.3), STEEL)); }
       }
       const hH = last && !explorer ? dh * 0.85 : dh;
-      const house = new T.Mesh(extrudeUp(roundedPlan(x0, x1, w / 2, w * (o.glassy ? 0.75 : 0.6), 0.9), hH, y), MAT.super(color));
-      g.add(house); meshes.push(house);
-      const band = new T.Mesh(extrudeUp(roundedPlan(x0 + 0.3, x1 + 0.12, w / 2 + 0.06, w * (o.glassy ? 0.75 : 0.6), 0.9), hH * bandFrac, y + hH * bandY), o.low ? MAT.glass : MAT.panes);
-      g.add(band); meshes.push(band);
+      const bY0 = y + hH * bandY, bH = hH * bandFrac, rF = w * (o.glassy ? 0.75 : 0.6);
+      if (o.low) {
+        const house = new T.Mesh(extrudeUp(roundedPlan(x0, x1, w / 2, rF, 0.9), hH, y), MAT.super(color)); g.add(house); meshes.push(house);
+        const band = new T.Mesh(extrudeUp(roundedPlan(x0 + 0.3, x1 + 0.12, w / 2 + 0.06, rF, 0.9), bH, bY0), MAT.glass); g.add(band); meshes.push(band);
+      } else {
+        // solid wall below and above the glass, a dark saloon behind it, then the glazing shell
+        const lower = new T.Mesh(extrudeUp(roundedPlan(x0, x1, w / 2, rF, 0.9), hH * bandY + 0.02, y), MAT.super(color)); g.add(lower); meshes.push(lower);
+        const upperH = hH - hH * bandY - bH; if (upperH > 0.05) { const upper = new T.Mesh(extrudeUp(roundedPlan(x0, x1, w / 2, rF, 0.9), upperH + 0.02, bY0 + bH - 0.02), MAT.super(color)); g.add(upper); meshes.push(upper); }
+        const inner = new T.Mesh(extrudeUp(roundedPlan(x0 + 0.5, x1 - 0.5, w / 2 - 0.55, Math.max(0.3, rF - 0.55), 0.6), bH + 0.04, bY0 - 0.02), MAT.interior); g.add(inner); meshes.push(inner);
+        const band = new T.Mesh(extrudeUp(roundedPlan(x0 + 0.3, x1 + 0.12, w / 2 + 0.06, rF, 0.9), bH, bY0), MAT.glazing); band.renderOrder = 2; g.add(band); meshes.push(band);
+      }
       topX = (x0 + x1) / 2; topY = y + hH; lastHouse = { x0, x1, w };
       y += hH;
       const shrink = explorer ? 0.86 : 0.80;

@@ -212,10 +212,12 @@
     const pts = []; let seed = 7;
     const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
     const tryAdd = (x, z, k, s) => {
-      if (!pointInPoly(x, z, landXZ)) return; if (distToPoly(x, z, landXZ) < 30) return;
+      if (!pointInPoly(x, z, landXZ)) return; if (distToPoly(x, z, landXZ) < 14) return;
       if (inBuilding(x, z) || nearRoad(x, z)) return;
-      const y = elevation(x, z); if (y < 2) return;
-      pts.push({ x, y: y - 0.3, z, k, s });
+      const y = elevation(x, z); const dc = distToPoly(x, z, landXZ); if (y < (dc < 110 ? 0.9 : 2)) return;
+      if (dc < 110 && y < 12) k = rnd() < 0.7 ? 2 : 1;               // harbour-front promenades: palms
+      else if (k === 0 && rnd() < 0.14) k = 3;                          // a few cypress spires among the pines
+      pts.push({ x, y: y - 0.3, z, k, s: k === 2 ? 0.8 + rnd() * 0.5 : s });
     };
     (H.gardens || []).forEach(([lat, lon, r, n]) => { const c = E.ll(lat, lon); for (let i = 0; i < n; i++) { const a = rnd() * 6.283, d = Math.sqrt(rnd()) * r; tryAdd(c.x + Math.cos(a) * d, c.z + Math.sin(a) * d, rnd() < 0.5 ? 0 : 1, 0.8 + rnd() * 0.6); } });
     for (let i = 0; i < 9000 && pts.length < (isMobile ? 900 : 2600); i++) {
@@ -292,6 +294,14 @@
     const im = new T.InstancedMesh(tent, tentMat, tents.length); const o = new T.Object3D();
     tents.forEach((t, i) => { o.position.set(t.x, t.y, t.z); o.rotation.set(0, t.r, 0); o.updateMatrix(); im.setMatrixAt(i, o.matrix); });
     im.castShadow = true; im.receiveShadow = true; scene.add(im);
+  })();
+
+  // palm rows along the harbour-front quays (Quai des États-Unis, Quai Antoine 1er, Quai Louis II), behind the exhibition tents
+  (function buildQuayPalms() {
+    const pts = []; let seed = 5; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    quays.forEach(q => { if (!/^(etats|antoine-[123]|louis|jarlan)$/.test(q.id)) return; const yq = 2.2;
+      q.segs.forEach(sg => { for (let d = 5; d < sg.len - 4; d += 12) { const off = 13 + rnd() * 1.5; const x = sg.a.x + sg.d.x * d - sg.n.x * off, z = sg.a.z + sg.d.z * d - sg.n.z * off; if (!pointInPoly(x, z, landXZ)) continue; pts.push({ x, y: Math.max(elevation(x, z), yq) - 0.2, z, k: 2, s: 0.85 + rnd() * 0.35 }); } }); });
+    if (pts.length) scene.add(FX.makeTrees(pts));
   })();
 
   /* ---------- traffic on the main roads ---------- */
@@ -463,7 +473,7 @@
     const lightDir = altD > 4 ? dir.clone() : new T.Vector3(0.6, 0.35, -0.55).normalize().lerp(dir, E.clamp((altD + 2) / 6, 0, 1)).normalize();
     sunOffset.copy(lightDir).multiplyScalar(1100);
     wu.uSun.value.copy(altD > -1 ? dir : lightDir); su.uSun.value.copy(dir); sunWorld.dir.copy(dir); sunWorld.altD = altD; sunWorld.col.copy(sun.color);
-    wu.fogColor.value.copy(scene.fog.color); facadeMat.emissiveIntensity = 0.5 * (1 - E.smooth(-4, 3, altD)); tentMat.emissiveIntensity = 0.45 * (1 - E.smooth(-4, 2, altD));
+    wu.fogColor.value.copy(scene.fog.color); facadeMat.emissiveIntensity = 0.5 * (1 - E.smooth(-4, 3, altD)); tentMat.emissiveIntensity = 0.45 * (1 - E.smooth(-4, 2, altD)); E.MAT.interior.emissiveIntensity = 0.5 * (1 - E.smooth(-4, 2, altD));
     nightGroup.visible = altD < 1; updateEnv();
     const yachtNight = altD < 0; if (yachtNight !== lastYachtNight) { lastYachtNight = yachtNight; yachts.forEach(y => { if (y.obj) y.obj.traverse(o => { if (o.name === 'night') o.visible = yachtNight; }); }); }
     document.getElementById('btnNight').setAttribute('aria-pressed', String(night));
