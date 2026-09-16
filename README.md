@@ -118,6 +118,39 @@ The `/webhook` endpoint is channel-agnostic — `{ message, sessionId }` in,
 into that shape, call `generateReply(store, sessionId, message)` from `agent.js`,
 and send the reply back — exactly as `whatsapp.js` does.
 
+## קריינות ודיבוב מתוך קלוד (ElevenLabs MCP)
+
+The repo ships an [ElevenLabs](https://elevenlabs.io) **MCP server** so Claude
+Code can generate text-to-speech, voiceover and dubbing directly from the
+codebase — no separate app required. The server is declared in
+[`.mcp.json`](.mcp.json) and runs via `uvx elevenlabs-mcp`.
+
+**Setup:**
+
+1. Grab an API key from
+   <https://elevenlabs.io/app/settings/api-keys>.
+2. Add it to your environment (Claude Code reads `.mcp.json`'s `env` block,
+   which expands `${ELEVENLABS_API_KEY}` from your shell / `.env`):
+
+   ```bash
+   export ELEVENLABS_API_KEY=sk_...
+   # optional — where generated audio is written (default ./data/elevenlabs)
+   export ELEVENLABS_MCP_BASE_PATH=./data/elevenlabs
+   ```
+
+3. Reopen the project in Claude Code and approve the `elevenlabs` MCP server
+   when prompted. `uvx` fetches and runs the server on demand — nothing to
+   install manually.
+
+Once connected, Claude exposes ElevenLabs tools (text-to-speech, voice
+cloning, dubbing, sound effects, etc.). Generated audio lands under
+`ELEVENLABS_MCP_BASE_PATH`, which is git-ignored via `data/`.
+
+| Env var                   | Default             | Description                                          |
+| ------------------------- | ------------------- | ---------------------------------------------------- |
+| `ELEVENLABS_API_KEY`      | _(none)_            | Required — your ElevenLabs API key.                  |
+| `ELEVENLABS_MCP_BASE_PATH`| `./data/elevenlabs` | Directory the MCP server writes generated audio to.  |
+
 ## הערות (Notes)
 
 - Mia is instructed never to invent prices, policies, or order statuses. To give
