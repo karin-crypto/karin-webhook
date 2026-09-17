@@ -146,6 +146,17 @@ Once connected, Claude exposes ElevenLabs tools (text-to-speech, voice
 cloning, dubbing, sound effects, etc.). Generated audio lands under
 `ELEVENLABS_MCP_BASE_PATH`, which is git-ignored via `data/`.
 
+**Quick CLI check** — `scripts/voiceover-demo.js` turns text into a spoken
+MP3 using the same API (no MCP needed), handy for verifying your key or
+voicing one of Mia's replies:
+
+```bash
+export ELEVENLABS_API_KEY=sk_...
+npm run voiceover                       # default Hebrew Mia greeting
+npm run voiceover -- "טקסט לקריינות"     # custom text
+npm run voiceover -- "Hello" --voice <voice_id> --out hello.mp3
+```
+
 | Env var                   | Default             | Description                                          |
 | ------------------------- | ------------------- | ---------------------------------------------------- |
 | `ELEVENLABS_API_KEY`      | _(none)_            | Required — your ElevenLabs API key.                  |

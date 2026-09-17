@@ -5,7 +5,8 @@
   "scripts": {
     "start": "node index.js",
     "build": "npm --prefix compare-app ci --no-audit --no-fund && npm --prefix compare-app run build",
-    "build:site": "npm --prefix compare-app run build"
+    "build:site": "npm --prefix compare-app run build",
+    "voiceover": "node scripts/voiceover-demo.js"
   },
   "dependencies": {
     "express": "^4.18.2",
