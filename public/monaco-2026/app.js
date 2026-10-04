@@ -269,39 +269,112 @@
   });
   const quayById = Object.fromEntries(quays.map(q => [q.id, q]));
 
-  /* ---------- show dressing: exhibitor tents and red carpet along the show quays ---------- */
+  /* ---------- show dressing: exhibitor pavilions with signed fascias, red carpet, rope barriers, benches ---------- */
   const tentMat = new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.75, emissive: new T.Color(0xfff1d6), emissiveIntensity: 0 });
+  const signAtlas = (function makeSignAtlas() {
+    // one atlas of exhibitor fascia boards: builders from the fleet list (they exhibit) plus the show's own sector names
+    const builders = [...new Set(D.yachts.map(y => (y.builder || '').replace(/\s*\(.*?\)\s*/g, '').replace(/\s*[\/·-].*$/, '').trim()).filter(b => b && b.length < 26))];
+    const sectors = ['TENDERS & TOYS', 'YACHT DESIGN', 'BROKERAGE', 'CHARTER', 'MARINE ELECTRONICS', 'SUPERYACHT SERVICES', 'SAILING YACHTS', 'INTERIORS', 'REFIT & REPAIR', 'CREW SERVICES', 'YACHT INSURANCE', 'PRIVATE AVIATION', 'ADVENTURE AREA', 'DESIGNER GALLERY'];
+    const names = builders.concat(sectors);
+    const special = { entrance: names.length, welcome: names.length + 1, info: names.length + 2 };
+    names.push('ENTRANCE · ENTRÉE · 35TH EDITION', 'WELCOME · BIENVENUE', 'INFORMATION · SECURITY');
+    const c = document.createElement('canvas'); c.width = 2048; c.height = 2048; const x = c.getContext('2d');
+    x.fillStyle = '#f7f5f0'; x.fillRect(0, 0, 2048, 2048);
+    const CW = 512, CH = 64, COLS = 4;
+    names.forEach((nm, i) => { const cx = (i % COLS) * CW, cy = Math.floor(i / COLS) * CH; x.fillStyle = i >= special.entrance ? '#0e1b2a' : (i % 5 === 0 ? '#0e1b2a' : '#f7f5f0'); x.fillRect(cx, cy, CW, CH); x.fillStyle = i >= special.entrance || i % 5 === 0 ? '#f3ead6' : '#0e1b2a'; let size = 30; x.font = `600 ${size}px "Jost", "Assistant", "Helvetica Neue", Arial, sans-serif`; const t = nm.toUpperCase(); while (x.measureText(t).width > CW - 40 && size > 14) { size -= 2; x.font = `600 ${size}px "Jost", "Assistant", "Helvetica Neue", Arial, sans-serif`; } x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(t, cx + CW / 2, cy + CH / 2 + 1); x.fillStyle = 'rgba(0,0,0,0.12)'; x.fillRect(cx, cy + CH - 2, CW, 2); });
+    const tex = new T.CanvasTexture(c); tex.colorSpace = T.SRGBColorSpace; tex.anisotropy = 8; tex.flipY = false;
+    const uv = i => { const u0 = (i % COLS) * CW / 2048, v0 = Math.floor(i / COLS) * CH / 2048; return [u0, v0, u0 + CW / 2048, v0 + CH / 2048]; };
+    return { tex, n: builders.length + sectors.length, special, uv };
+  })();
+  const signMat = new T.MeshStandardMaterial({ map: signAtlas.tex, roughness: 0.6, emissive: new T.Color(0xffffff), emissiveMap: signAtlas.tex, emissiveIntensity: 0 });
+  function signPlane(w, h, idx, ry, lx, ly, lz, yaw, x, y, z) { const g = new T.PlaneGeometry(w, h); const [u0, v0, u1, v1] = signAtlas.uv(idx); const a = g.attributes.uv; for (let k = 0; k < a.count; k++) a.setXY(k, a.getX(k) ? u1 : u0, a.getY(k) ? v0 : v1); g.rotateY(ry || 0); g.translate(lx || 0, ly || 0, lz || 0); if (yaw) g.rotateY(yaw); if (x !== undefined) g.translate(x, y, z); return g; }
   (function buildTents() {
-    const tent = (() => { const walls = new T.BoxGeometry(3.2, 2.7, 3.2); walls.translate(0, 1.35, 0); const roof = new T.ConeGeometry(2.55, 1.5, 4); roof.rotateY(Math.PI / 4); roof.translate(0, 2.7 + 0.75, 0); return E.mergeGeoms([E.paint(walls, 0xf6f4ef), E.paint(roof, 0xe9e6df)]); })();
-    const carpet = [], tents = [];
+    // open pavilion: platform, four posts, pyramid roof, back wall, low side panels, counter with a model yacht, screen, plant; front faces the quay
+    const pavilion = fs => { const P = [], W = 0xf6f4ef, G = 0xdad7d0, D = 0x151a21;
+      const b = (w, h, d, x, y, z, c) => { const g = new T.BoxGeometry(w, h, d); g.translate(x, y, z); P.push(E.paint(g, c)); };
+      b(3.4, 0.1, 3.4, 0, 0.05, 0, G);
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) b(0.12, 2.7, 0.12, sx * 1.5, 1.35, sz * 1.5, W);
+      const roof = new T.ConeGeometry(2.55, 1.4, 4); roof.rotateY(Math.PI / 4); roof.translate(0, 3.4, 0); P.push(E.paint(roof, W));
+      b(3.4, 0.12, 3.4, 0, 2.7, 0, W);
+      b(3.2, 2.6, 0.08, 0, 1.4, -fs * 1.55, W);
+      for (const sx of [-1, 1]) b(0.08, 1.0, 3.2, sx * 1.55, 0.6, 0, W);
+      b(3.4, 0.45, 0.08, 0, 2.45, fs * 1.6, W);
+      b(1.6, 1.0, 0.5, 0.5, 0.6, fs * 0.8, 0xe6e2da); b(1.7, 0.05, 0.6, 0.5, 1.12, fs * 0.8, 0xb08a5a);
+      b(0.9, 0.16, 0.2, 0.5, 1.23, fs * 0.8, 0x1e2b45); b(0.5, 0.12, 0.16, 0.55, 1.37, fs * 0.8, 0xf3f1ec);
+      b(1.2, 0.7, 0.05, 0.6, 1.75, -fs * 1.5, D);
+      const pot = new T.CylinderGeometry(0.22, 0.18, 0.4, 8); pot.translate(-1.15, 0.3, -fs * 1.1); P.push(E.paint(pot, 0x8f8272)); const pl = new T.IcosahedronGeometry(0.34, 1); pl.translate(-1.15, 0.85, -fs * 1.1); P.push(E.paint(pl, 0x4f7a3e));
+      return E.mergeGeoms(P); };
+    const geos = { 1: pavilion(1), '-1': pavilion(-1) };
+    const carpet = [], tents = [], signs = [];
     let seed = 11; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
     quays.forEach(q => {
       if (q.mode !== 'stern' || q.zone === 'cruise' || /^chicane-p/.test(q.id)) return;
       const yq = q.zone === 'digue' ? 3.95 : 2.2;
       q.segs.forEach(sg => {
         if (sg.len < 14) return;
-        // red carpet strip just inland of the quay edge
         const g = new T.BoxGeometry(sg.len - 2, 0.05, 2.0); g.rotateY(-Math.atan2(sg.d.z, sg.d.x)); g.translate((sg.a.x + sg.b.x) / 2 - sg.n.x * 2.4, yq + 0.03, (sg.a.z + sg.b.z) / 2 - sg.n.z * 2.4); carpet.push(E.paint(g, 0x8e1b2c));
+        const r = -Math.atan2(sg.d.z, sg.d.x); const fs = ((-sg.d.z) * sg.n.x + sg.d.x * sg.n.z) > 0 ? 1 : -1;
         for (let d = 7; d < sg.len - 7; d += 9.5) {
           if (rnd() < 0.28) continue;
           const off = q.zone === 'digue' ? 9.5 : 7.5 + rnd() * 2;
-          tents.push({ x: sg.a.x + sg.d.x * d - sg.n.x * off, z: sg.a.z + sg.d.z * d - sg.n.z * off, y: yq, r: -Math.atan2(sg.d.z, sg.d.x) });
+          const x = sg.a.x + sg.d.x * d - sg.n.x * off, z = sg.a.z + sg.d.z * d - sg.n.z * off;
+          tents.push({ x, z, y: yq, r, fs });
+          signs.push(signPlane(3.2, 0.4, Math.floor(rnd() * signAtlas.n), fs > 0 ? 0 : Math.PI, 0, 2.45, fs * 1.65, r, x, yq, z));
         }
       });
     });
     if (carpet.length) { const m = new T.Mesh(E.mergeGeoms(carpet), new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.9 })); m.receiveShadow = true; scene.add(m); }
     if (!tents.length) return;
-    const im = new T.InstancedMesh(tent, tentMat, tents.length); const o = new T.Object3D();
-    tents.forEach((t, i) => { o.position.set(t.x, t.y, t.z); o.rotation.set(0, t.r, 0); o.updateMatrix(); im.setMatrixAt(i, o.matrix); });
-    im.castShadow = true; im.receiveShadow = true; scene.add(im);
+    for (const fs of [1, -1]) { const list = tents.filter(t => t.fs === fs); if (!list.length) continue; const im = new T.InstancedMesh(geos[fs], tentMat, list.length); const o = new T.Object3D(); list.forEach((t, i) => { o.position.set(t.x, t.y, t.z); o.rotation.set(0, t.r, 0); o.updateMatrix(); im.setMatrixAt(i, o.matrix); }); im.castShadow = true; im.receiveShadow = true; scene.add(im); }
+    const sm = new T.Mesh(E.mergeGeoms(signs, true), signMat); scene.add(sm);
   })();
-
-  // palm rows along the harbour-front quays (Quai des États-Unis, Quai Antoine 1er, Quai Louis II), behind the exhibition tents
-  (function buildQuayPalms() {
-    const pts = []; let seed = 5; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
-    quays.forEach(q => { if (!/^(etats|antoine-[123]|louis|jarlan)$/.test(q.id)) return; const yq = 2.2;
-      q.segs.forEach(sg => { for (let d = 5; d < sg.len - 4; d += 12) { const off = 13 + rnd() * 1.5; const x = sg.a.x + sg.d.x * d - sg.n.x * off, z = sg.a.z + sg.d.z * d - sg.n.z * off; if (!pointInPoly(x, z, landXZ)) continue; pts.push({ x, y: Math.max(elevation(x, z), yq) - 0.2, z, k: 2, s: 0.85 + rnd() * 0.35 }); } }); });
-    if (pts.length) scene.add(FX.makeTrees(pts));
+  (function buildStreetFurniture() {
+    // rope barriers along the carpet, benches, planters and bins along the promenade behind the tents
+    const posts = [], ropes = [], benches = [], planters = [], bins = [];
+    let seed = 17; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    quays.forEach(q => {
+      if (q.mode !== 'stern' || q.zone === 'cruise' || /^chicane-p/.test(q.id)) return;
+      const yq = q.zone === 'digue' ? 3.95 : 2.2;
+      q.segs.forEach(sg => {
+        if (sg.len < 14) return;
+        const r = -Math.atan2(sg.d.z, sg.d.x);
+        let prev = null;
+        for (let d = 2; d <= sg.len - 2; d += 2.2) { const x = sg.a.x + sg.d.x * d - sg.n.x * 3.7, z = sg.a.z + sg.d.z * d - sg.n.z * 3.7; posts.push({ x, y: yq, z }); if (prev) { for (let k = 0; k < 4; k++) { const t0 = k / 4, t1 = (k + 1) / 4; const sag = t => 0.95 - Math.sin(t * Math.PI) * 0.12; ropes.push(prev.x + (x - prev.x) * t0, yq + sag(t0), prev.z + (z - prev.z) * t0, prev.x + (x - prev.x) * t1, yq + sag(t1), prev.z + (z - prev.z) * t1); } } prev = { x, z }; }
+        for (let d = 4; d < sg.len - 4; d += 14) { const off = 12.2 + rnd() * 0.6; const x = sg.a.x + sg.d.x * d - sg.n.x * off, z = sg.a.z + sg.d.z * d - sg.n.z * off; if (!pointInPoly(x, z, landXZ)) continue; const k = rnd(); if (k < 0.5) benches.push({ x, y: yq, z, r }); else if (k < 0.8) planters.push({ x, y: yq, z, r }); else bins.push({ x, y: yq, z, r }); }
+      });
+    });
+    const inst = (geo, mat, list) => { if (!list.length) return; const im = new T.InstancedMesh(geo, mat, list.length); const o = new T.Object3D(); list.forEach((p, i) => { o.position.set(p.x, p.y, p.z); o.rotation.set(0, p.r || 0, 0); o.updateMatrix(); im.setMatrixAt(i, o.matrix); }); im.castShadow = true; scene.add(im); };
+    const post = E.mergeGeoms([E.paint((() => { const g = new T.CylinderGeometry(0.03, 0.03, 0.95, 6); g.translate(0, 0.475, 0); return g; })(), 0xd9c27a), E.paint((() => { const g = new T.CylinderGeometry(0.16, 0.16, 0.03, 8); g.translate(0, 0.015, 0); return g; })(), 0xd9c27a), E.paint((() => { const g = new T.SphereGeometry(0.05, 6, 5); g.translate(0, 0.97, 0); return g; })(), 0xd9c27a)]);
+    inst(post, new T.MeshStandardMaterial({ vertexColors: true, metalness: 0.7, roughness: 0.3 }), posts);
+    if (ropes.length) { const rg = new T.BufferGeometry(); rg.setAttribute('position', new T.Float32BufferAttribute(ropes, 3)); scene.add(new T.LineSegments(rg, new T.LineBasicMaterial({ color: 0x7a1c2a }))); }
+    const bench = E.mergeGeoms([E.paint((() => { const g = new T.BoxGeometry(1.8, 0.06, 0.45); g.translate(0, 0.45, 0); return g; })(), 0xb08a5a), E.paint((() => { const g = new T.BoxGeometry(1.8, 0.4, 0.05); g.translate(0, 0.72, -0.2); return g; })(), 0xb08a5a), E.paint((() => { const g = new T.BoxGeometry(0.06, 0.45, 0.4); g.translate(-0.8, 0.22, 0); return g; })(), 0x2a2e33), E.paint((() => { const g = new T.BoxGeometry(0.06, 0.45, 0.4); g.translate(0.8, 0.22, 0); return g; })(), 0x2a2e33)]);
+    inst(bench, new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.8 }), benches);
+    const planter = E.mergeGeoms([E.paint((() => { const g = new T.CylinderGeometry(0.55, 0.45, 0.7, 10); g.translate(0, 0.35, 0); return g; })(), 0x9a8f80), E.paint((() => { const g = new T.IcosahedronGeometry(0.7, 1); g.scale(1, 0.8, 1); g.translate(0, 1.15, 0); return g; })(), 0x4b7a3a)]);
+    inst(planter, new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.9 }), planters);
+    const bin = E.mergeGeoms([E.paint((() => { const g = new T.CylinderGeometry(0.28, 0.25, 0.85, 8); g.translate(0, 0.425, 0); return g; })(), 0x2f3438)]);
+    inst(bin, new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.6, metalness: 0.3 }), bins);
+  })();
+  (function buildGates() {
+    // visitor entrances: two pylons and a signed header, flags, ticket barriers and a welcome desk; one at each public access point
+    const spots = [['etats', 0, 22], ['antoine-1', 0, 20], ['louis', 0, 18]];
+    const parts = [], signs = [];
+    const b = (w, h, d, x, y, z, c, ry) => { const g = new T.BoxGeometry(w, h, d); if (ry) g.rotateY(ry); g.translate(x, y, z); parts.push(E.paint(g, c)); };
+    spots.forEach(([id, si, off]) => {
+      const q = quayById[id]; if (!q || !q.segs[si]) return; const sg = q.segs[si]; const yq = 2.2;
+      const along = Math.min(sg.len * 0.5, 30); const cx = sg.a.x + sg.d.x * along - sg.n.x * off, cz = sg.a.z + sg.d.z * along - sg.n.z * off;
+      if (!pointInPoly(cx, cz, landXZ)) return;
+      const r = -Math.atan2(sg.d.z, sg.d.x); const fs = ((-sg.d.z) * sg.n.x + sg.d.x * sg.n.z) > 0 ? 1 : -1;
+      const put = (w, h, d, lx, ly, lz, c) => { const g = new T.BoxGeometry(w, h, d); g.rotateY(r); const wx = cx + lx * sg.d.x + lz * (-sg.n.x * fs), wz = cz + lx * sg.d.z + lz * (-sg.n.z * fs); g.translate(wx, yq + ly, wz); parts.push(E.paint(g, c)); return { wx, wz }; };
+      for (const sx of [-4.5, 4.5]) put(0.7, 4.6, 0.7, sx, 2.3, 0, 0xf6f4ef);
+      put(9.8, 1.0, 0.7, 0, 4.6, 0, 0x0e1b2a);
+      for (const sx of [-6.2, 6.2]) { put(0.1, 7, 0.1, sx, 3.5, 0, 0xdfe3e8); put(1.2, 0.7, 0.04, sx + 0.6, 6.4, 0, sx < 0 ? 0xc8102e : 0xf3f1ec); }
+      for (const sx of [-3, -1, 1, 3]) put(0.5, 1.0, 0.3, sx, 0.5, 0.2, 0x2f3438);
+      put(2.6, 1.05, 0.7, 6.0, 0.52, -2.5, 0xe6e2da); put(2.8, 0.05, 0.9, 6.0, 1.08, -2.5, 0xb08a5a);
+      const s = signPlane(9.4, 0.8, signAtlas.special.entrance, 0, 0, 0, 0); s.rotateY(r + (fs > 0 ? Math.PI : 0)); s.translate(cx + 0.36 * (-sg.n.x * fs) * (fs > 0 ? 1 : 1), yq + 4.6, cz + 0.36 * (-sg.n.z * fs)); signs.push(s);
+      const s2 = signPlane(9.4, 0.8, signAtlas.special.welcome, 0, 0, 0, 0); s2.rotateY(r + (fs > 0 ? 0 : Math.PI)); s2.translate(cx - 0.36 * (-sg.n.x * fs), yq + 4.6, cz - 0.36 * (-sg.n.z * fs)); signs.push(s2);
+    });
+    if (parts.length) { const m = new T.Mesh(E.mergeGeoms(parts), new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.7 })); m.castShadow = true; scene.add(m); }
+    if (signs.length) scene.add(new T.Mesh(E.mergeGeoms(signs, true), signMat));
   })();
 
   /* ---------- traffic on the main roads ---------- */
@@ -473,7 +546,7 @@
     const lightDir = altD > 4 ? dir.clone() : new T.Vector3(0.6, 0.35, -0.55).normalize().lerp(dir, E.clamp((altD + 2) / 6, 0, 1)).normalize();
     sunOffset.copy(lightDir).multiplyScalar(1100);
     wu.uSun.value.copy(altD > -1 ? dir : lightDir); su.uSun.value.copy(dir); sunWorld.dir.copy(dir); sunWorld.altD = altD; sunWorld.col.copy(sun.color);
-    wu.fogColor.value.copy(scene.fog.color); facadeMat.emissiveIntensity = 0.5 * (1 - E.smooth(-4, 3, altD)); tentMat.emissiveIntensity = 0.45 * (1 - E.smooth(-4, 2, altD)); E.MAT.interior.emissiveIntensity = 0.5 * (1 - E.smooth(-4, 2, altD));
+    wu.fogColor.value.copy(scene.fog.color); facadeMat.emissiveIntensity = 0.5 * (1 - E.smooth(-4, 3, altD)); tentMat.emissiveIntensity = 0.45 * (1 - E.smooth(-4, 2, altD)); E.MAT.interior.emissiveIntensity = 0.5 * (1 - E.smooth(-4, 2, altD)); signMat.emissiveIntensity = 0.35 * (1 - E.smooth(-4, 2, altD));
     nightGroup.visible = altD < 1; updateEnv();
     const yachtNight = altD < 0; if (yachtNight !== lastYachtNight) { lastYachtNight = yachtNight; yachts.forEach(y => { if (y.obj) y.obj.traverse(o => { if (o.name === 'night') o.visible = yachtNight; }); }); }
     document.getElementById('btnNight').setAttribute('aria-pressed', String(night));
