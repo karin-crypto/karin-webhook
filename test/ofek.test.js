@@ -199,4 +199,6 @@ test("sentiment (9.6): rejects noise, accepts a real lagged signal", () => {
   const r = incrementalValueTest(related, ind, { regimes });
   assert.equal(r.accepted, true);
   assert.ok(r.byRegime.a.better && r.byRegime.b.better);
+  const many = incrementalValueTest(related, ind, { regimes, testsConducted: 20 });
+  assert.equal(many.significance.effectiveAlpha, 0.0025);
 });

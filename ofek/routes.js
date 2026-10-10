@@ -150,11 +150,11 @@ function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_AD
 
   // Module 9.6 §3: does a sentiment indicator add out-of-sample value?
   router.post("/evaluate/sentiment", wrap(async (req, res) => {
-    const { returns, indicator, regimes, lag, minTrain } = req.body || {};
+    const { returns, indicator, regimes, lag, minTrain, testsConducted } = req.body || {};
     const nums = (a) => Array.isArray(a) && a.every(Number.isFinite);
     if (!nums(returns) || !nums(indicator)) return res.status(400).json({ ok: false, error: "returns ו־indicator: מערכי מספרים" });
     try {
-      res.json({ ok: true, ...incrementalValueTest(returns, indicator, { regimes, lag, minTrain }) });
+      res.json({ ok: true, ...incrementalValueTest(returns, indicator, { regimes, lag, minTrain, testsConducted }) });
     } catch (err) {
       res.status(400).json({ ok: false, error: err.message });
     }

@@ -143,7 +143,9 @@ function compareModels(candidatePairs, referencePairs, { alpha = 0.05, iteration
  * returns[t], indicator[t]: aligned series (indicator[t] known at end of t).
  * regimes: optional label per t (e.g. 'bull' / 'bear', 'high-rate' / 'low-rate').
  */
-function incrementalValueTest(returns, indicator, { minTrain = 36, lag = 1, regimes = null, alpha = 0.05, minRegimeN = 6 } = {}) {
+function incrementalValueTest(returns, indicator, { minTrain = 36, lag = 1, regimes = null, alpha = 0.05, minRegimeN = 6, testsConducted = 1 } = {}) {
+  // Multiple-testing control (Bonferroni): each extra indicator/variant tried tightens the bar.
+  const effectiveAlpha = alpha / Math.max(1, Math.floor(testsConducted));
   if (returns.length !== indicator.length) throw new Error("returns ו־indicator חייבים להיות באותו אורך");
   if (regimes && regimes.length !== returns.length) throw new Error("regimes חייב להיות באותו אורך");
   if (returns.length - minTrain < 12) throw new Error("אין מספיק תצפיות מחוץ למדגם");
@@ -162,7 +164,7 @@ function incrementalValueTest(returns, indicator, { minTrain = 36, lag = 1, regi
     cand.push({ forecast: my + beta * (indicator[t - lag] - mx), actual: returns[t] });
     at.push(t);
   }
-  const overall = compareModels(cand, base, { alpha });
+  const overall = compareModels(cand, base, { alpha: effectiveAlpha });
   let byRegime = null;
   let stable = true;
   if (regimes) {
@@ -183,7 +185,7 @@ function incrementalValueTest(returns, indicator, { minTrain = 36, lag = 1, regi
     lag,
     baseline: { name: "ממוצע היסטורי", ...pointMetrics(base) },
     withIndicator: { name: "רגרסיה על האינדיקטור בפיגור", ...pointMetrics(cand) },
-    significance: overall,
+    significance: { ...overall, alpha, testsConducted: Math.max(1, Math.floor(testsConducted)), effectiveAlpha },
     byRegime,
     accepted,
     verdict: accepted
