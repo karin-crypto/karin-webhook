@@ -12,7 +12,7 @@ const crypto = require("crypto");
 const { OFEK_VERSION } = require("./prompt");
 const { validateCard, HORIZONS } = require("./forecast-card");
 const { createLedger, LedgerError } = require("./ledger");
-const { pointMetrics, walkForward, baselines, compareModels } = require("./metrics");
+const { pointMetrics, walkForward, baselines, compareModels, incrementalValueTest } = require("./metrics");
 const { evaluateSignals } = require("./signals");
 const { simulateRetirement } = require("./retirement");
 const { compareTracks } = require("./pension");
@@ -146,6 +146,18 @@ function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_AD
     const { candidate, reference, alpha } = req.body || {};
     if (!Array.isArray(candidate) || !Array.isArray(reference)) return res.status(400).json({ ok: false, error: "candidate ו־reference: מערכי {forecast, actual}" });
     res.json({ ok: true, ...compareModels(candidate, reference, { alpha }) });
+  }));
+
+  // Module 9.6 §3: does a sentiment indicator add out-of-sample value?
+  router.post("/evaluate/sentiment", wrap(async (req, res) => {
+    const { returns, indicator, regimes, lag, minTrain } = req.body || {};
+    const nums = (a) => Array.isArray(a) && a.every(Number.isFinite);
+    if (!nums(returns) || !nums(indicator)) return res.status(400).json({ ok: false, error: "returns ו־indicator: מערכי מספרים" });
+    try {
+      res.json({ ok: true, ...incrementalValueTest(returns, indicator, { regimes, lag, minTrain }) });
+    } catch (err) {
+      res.status(400).json({ ok: false, error: err.message });
+    }
   }));
 
   /* ---- analytics ---- */

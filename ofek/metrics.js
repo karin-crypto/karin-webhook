@@ -134,4 +134,62 @@ function compareModels(candidatePairs, referencePairs, { alpha = 0.05, iteration
   };
 }
 
-module.exports = { pointMetrics, brierScore, calibrationTable, baselines, walkForward, compareModels, mulberry32, mean };
+/**
+ * Module 9.6 §3 — does a sentiment indicator add out-of-sample predictive
+ * value? Baseline: historical mean. Candidate: OLS of returns[t] on
+ * indicator[t - lag], refit at every step on data available at that time.
+ * Accepted only if the improvement is significant AND holds in every regime.
+ *
+ * returns[t], indicator[t]: aligned series (indicator[t] known at end of t).
+ * regimes: optional label per t (e.g. 'bull' / 'bear', 'high-rate' / 'low-rate').
+ */
+function incrementalValueTest(returns, indicator, { minTrain = 36, lag = 1, regimes = null, alpha = 0.05, minRegimeN = 6 } = {}) {
+  if (returns.length !== indicator.length) throw new Error("returns ו־indicator חייבים להיות באותו אורך");
+  if (regimes && regimes.length !== returns.length) throw new Error("regimes חייב להיות באותו אורך");
+  if (returns.length - minTrain < 12) throw new Error("אין מספיק תצפיות מחוץ למדגם");
+  const base = [];
+  const cand = [];
+  const at = [];
+  for (let t = Math.max(minTrain, lag + 2); t < returns.length; t++) {
+    const xs = [];
+    const ys = [];
+    for (let s = lag; s < t; s++) { xs.push(indicator[s - lag]); ys.push(returns[s]); }
+    const mx = mean(xs);
+    const my = mean(ys);
+    const sxx = xs.reduce((a, x) => a + (x - mx) ** 2, 0);
+    const beta = sxx > 0 ? xs.reduce((a, x, i) => a + (x - mx) * (ys[i] - my), 0) / sxx : 0;
+    base.push({ forecast: mean(returns.slice(0, t)), actual: returns[t] });
+    cand.push({ forecast: my + beta * (indicator[t - lag] - mx), actual: returns[t] });
+    at.push(t);
+  }
+  const overall = compareModels(cand, base, { alpha });
+  let byRegime = null;
+  let stable = true;
+  if (regimes) {
+    byRegime = {};
+    for (const label of [...new Set(at.map((t) => regimes[t]))]) {
+      const idx = at.map((t, i) => (regimes[t] === label ? i : -1)).filter((i) => i >= 0);
+      const c = idx.map((i) => cand[i]);
+      const b = idx.map((i) => base[i]);
+      const cm = pointMetrics(c).mae;
+      const bm = pointMetrics(b).mae;
+      byRegime[label] = { n: idx.length, candidateMae: cm, baselineMae: bm, better: cm < bm };
+      if (idx.length < minRegimeN || !(cm < bm)) stable = false;
+    }
+  }
+  const accepted = overall.improved && stable;
+  return {
+    outOfSampleSteps: cand.length,
+    lag,
+    baseline: { name: "ממוצע היסטורי", ...pointMetrics(base) },
+    withIndicator: { name: "רגרסיה על האינדיקטור בפיגור", ...pointMetrics(cand) },
+    significance: overall,
+    byRegime,
+    accepted,
+    verdict: accepted
+      ? "האינדיקטור הוסיף ערך חיזויי מובהק ויציב בכל המשטרים שנבדקו — ניתן לשקול שילוב, בכפוף לאישור"
+      : "לא הוכח ערך חיזויי עקבי — אין לשלב את האינדיקטור בתחזית",
+  };
+}
+
+module.exports = { incrementalValueTest, pointMetrics, brierScore, calibrationTable, baselines, walkForward, compareModels, mulberry32, mean };

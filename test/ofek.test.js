@@ -6,7 +6,7 @@ const express = require("express");
 
 const { validateCard } = require("../ofek/forecast-card");
 const { createLedger, memoryBackend } = require("../ofek/ledger");
-const { pointMetrics, brierScore, walkForward, baselines, compareModels } = require("../ofek/metrics");
+const { pointMetrics, brierScore, walkForward, baselines, compareModels, incrementalValueTest, mulberry32 } = require("../ofek/metrics");
 const { evaluateSignals } = require("../ofek/signals");
 const { simulateRetirement } = require("../ofek/retirement");
 const { compareTracks } = require("../ofek/pension");
@@ -185,4 +185,18 @@ test("routes: token required, memory ledger warns it is not persistent", async (
   } finally {
     server.close();
   }
+});
+
+test("sentiment (9.6): rejects noise, accepts a real lagged signal", () => {
+  const rnd = mulberry32(7);
+  const n = 160;
+  const ind = Array.from({ length: n }, () => rnd() * 2 - 1);
+  const noise = () => (rnd() - 0.5) * 0.01;
+  const regimes = Array.from({ length: n }, (_, t) => (t % 40 < 20 ? "a" : "b"));
+  const unrelated = Array.from({ length: n }, () => noise());
+  assert.equal(incrementalValueTest(unrelated, ind, { regimes }).accepted, false);
+  const related = Array.from({ length: n }, (_, t) => (t ? 0.03 * ind[t - 1] : 0) + noise());
+  const r = incrementalValueTest(related, ind, { regimes });
+  assert.equal(r.accepted, true);
+  assert.ok(r.byRegime.a.better && r.byRegime.b.better);
 });
