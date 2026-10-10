@@ -8,6 +8,7 @@ const { validateCard } = require("../ofek/forecast-card");
 const { createLedger, memoryBackend } = require("../ofek/ledger");
 const { pointMetrics, brierScore, walkForward, baselines, compareModels, incrementalValueTest, mulberry32 } = require("../ofek/metrics");
 const { evaluateSignals } = require("../ofek/signals");
+const { readSentiment } = require("../ofek/sentiment");
 const { simulateRetirement } = require("../ofek/retirement");
 const { compareTracks } = require("../ofek/pension");
 const { checkVideo, findPii } = require("../ofek/video-check");
@@ -201,4 +202,29 @@ test("sentiment (9.6): rejects noise, accepts a real lagged signal", () => {
   assert.ok(r.byRegime.a.better && r.byRegime.b.better);
   const many = incrementalValueTest(related, ind, { regimes, testsConducted: 20 });
   assert.equal(many.significance.effectiveAlpha, 0.0025);
+});
+
+test("sentiment reading (9.6): point-in-time, partial, contradiction, confidence cap", () => {
+  const hist = (from = 0) => Array.from({ length: 30 }, (_, i) => ({ date: `2024-${String((i % 12) + 1).padStart(2, "0")}-01`.replace("2024", String(2024 + Math.floor(i / 12))), value: from + i }));
+  const ind = (name, family, value, orientation = "higher_is_bullish") => ({
+    name, family, orientation, source: "test", maxAgeDays: 30, history: hist(), current: { date: "2026-10-05", value },
+  });
+  // Future observation must be ignored (point-in-time).
+  const withFuture = ind("s1", "say", 29);
+  withFuture.history.push({ date: "2026-12-01", value: 1000 });
+  const opt = readSentiment({ indicators: [withFuture, ind("d1", "do", 29), ind("p1", "price", 15)], now: NOW });
+  assert.equal(opt.indicators[0].score, 98);
+  assert.equal(opt.overall.code, "optimistic");
+  assert.equal(opt.confidence.level, "medium"); // capped: no proven predictive value
+  assert.equal(readSentiment({ indicators: [withFuture, ind("d1", "do", 29), ind("p1", "price", 15)], predictiveValue: "proven", now: NOW }).confidence.level, "high");
+  const mixed = readSentiment({ indicators: [ind("s1", "say", 29), ind("d1", "do", 0), ind("p1", "price", 15)], now: NOW });
+  assert.equal(mixed.contradiction, true);
+  assert.equal(mixed.overall.code, "mixed");
+  assert.equal(mixed.confidence.level, "low");
+  const partial = readSentiment({ indicators: [ind("s1", "say", 29), ind("d1", "do", 29)], now: NOW });
+  assert.equal(partial.complete, false);
+  assert.equal(partial.overall, null);
+  const stale = ind("p1", "price", 15);
+  stale.current.date = "2026-01-01";
+  assert.equal(readSentiment({ indicators: [ind("s1", "say", 29), ind("d1", "do", 29), stale], now: NOW }).complete, false);
 });

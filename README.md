@@ -141,6 +141,7 @@ and send the reply back — exactly as `whatsapp.js` does.
 | `POST /api/ofek/evaluate/walk-forward` | בדיקת Walk-Forward היסטורית למודלי הייחוס |
 | `POST /api/ofek/evaluate/compare` | מבחן פרמוטציה — "שיפור" רק אם מובהק |
 | `POST /api/ofek/evaluate/sentiment` | מודול 9.6: מבחן תרומה חיזויית של אינדיקטור סנטימנט מול מודל בסיס, כולל יציבות בין משטרי שוק |
+| `POST /api/ofek/sentiment/read` | מודול 9.6: קריאת סנטימנט אומרים / עושים / מתמחרים — אחוזונים Point-in-Time, סתירות, קריאה חלקית וסולם ביטחון |
 | `POST /api/ofek/signals` | Early Market Signal Engine — 3 רמות לפי מדדים שסופקו |
 | `POST /api/ofek/retirement/simulate` | צבירה, דמי ניהול, מונטה קרלו, סיכון רצף ואריכות ימים |
 | `POST /api/ofek/pension/compare` | השוואת מסלולים באותה רמת סיכון ובאותה תקופה |

@@ -14,6 +14,7 @@ const { validateCard, HORIZONS } = require("./forecast-card");
 const { createLedger, LedgerError } = require("./ledger");
 const { pointMetrics, walkForward, baselines, compareModels, incrementalValueTest } = require("./metrics");
 const { evaluateSignals } = require("./signals");
+const { readSentiment } = require("./sentiment");
 const { simulateRetirement } = require("./retirement");
 const { compareTracks } = require("./pension");
 const { checkVideo } = require("./video-check");
@@ -161,6 +162,12 @@ function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_AD
   }));
 
   /* ---- analytics ---- */
+  // Module 9.6: say / do / price sentiment reading.
+  router.post("/sentiment/read", (req, res) => {
+    const r = readSentiment(req.body || {});
+    res.status(r.ok ? 200 : 400).json(r);
+  });
+
   router.post("/signals", (req, res) => res.json({ ok: true, ...evaluateSignals(req.body && req.body.indicators) }));
 
   router.post("/retirement/simulate", (req, res) => {
