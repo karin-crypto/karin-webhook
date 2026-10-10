@@ -188,43 +188,87 @@ test("routes: token required, memory ledger warns it is not persistent", async (
   }
 });
 
-test("sentiment (9.6): rejects noise, accepts a real lagged signal", () => {
+test("sentiment value test (9.6.6): noise rejected, signal approved, regime-limited approval, dependence", () => {
   const rnd = mulberry32(7);
-  const n = 160;
+  const n = 200;
   const ind = Array.from({ length: n }, () => rnd() * 2 - 1);
   const noise = () => (rnd() - 0.5) * 0.01;
   const regimes = Array.from({ length: n }, (_, t) => (t % 40 < 20 ? "a" : "b"));
   const unrelated = Array.from({ length: n }, () => noise());
-  assert.equal(incrementalValueTest(unrelated, ind, { regimes }).accepted, false);
+  assert.equal(incrementalValueTest(unrelated, ind, { regimes }).status, "rejected");
   const related = Array.from({ length: n }, (_, t) => (t ? 0.03 * ind[t - 1] : 0) + noise());
   const r = incrementalValueTest(related, ind, { regimes });
-  assert.equal(r.accepted, true);
-  assert.ok(r.byRegime.a.better && r.byRegime.b.better);
-  const many = incrementalValueTest(related, ind, { regimes, testsConducted: 20 });
-  assert.equal(many.significance.effectiveAlpha, 0.0025);
+  assert.equal(r.status, "approved");
+  assert.deepEqual(r.failingRegimes, []);
+  // Signal exists only in regime "a" => approval limited to "a", "b" reported as failing.
+  const partialSignal = Array.from({ length: n }, (_, t) => (t && regimes[t] === "a" ? 0.03 * ind[t - 1] : 0) + noise());
+  const lim = incrementalValueTest(partialSignal, ind, { regimes });
+  assert.equal(lim.status, "approved_limited");
+  assert.deepEqual(lim.approvedRegimes, ["a"]);
+  assert.deepEqual(lim.failingRegimes, ["b"]);
+  assert.equal(incrementalValueTest(related, ind, { regimes, testsConducted: 20 }).significance.effectiveAlpha, 0.0025);
+  assert.equal(incrementalValueTest(related, ind, { blockSize: 6 }).significance.blockSize, 6);
 });
 
-test("sentiment reading (9.6): point-in-time, partial, contradiction, confidence cap", () => {
-  const hist = (from = 0) => Array.from({ length: 30 }, (_, i) => ({ date: `2024-${String((i % 12) + 1).padStart(2, "0")}-01`.replace("2024", String(2024 + Math.floor(i / 12))), value: from + i }));
-  const ind = (name, family, value, orientation = "higher_is_bullish") => ({
-    name, family, orientation, source: "test", maxAgeDays: 30, history: hist(), current: { date: "2026-10-05", value },
+const sHist = () => Array.from({ length: 30 }, (_, i) => ({ date: `${2024 + Math.floor(i / 12)}-${String((i % 12) + 1).padStart(2, "0")}-01`, value: i }));
+const sInd = (name, family, value) => ({
+  name, family, orientation: "higher_is_bullish", source: "test", market: "IL", maxAgeDays: 30, history: sHist(), current: { date: "2026-10-05", value },
+});
+
+test("sentiment reading (9.6): point-in-time, dispersion, separate confidences, partial", () => {
+  const withFuture = sInd("s1", "say", 29);
+  withFuture.history.push({ date: "2026-12-01", value: 1000 }); // must be ignored
+  const one = readSentiment({ indicators: [withFuture, sInd("d1", "do", 29), sInd("p1", "price", 15)], now: NOW });
+  assert.equal(one.indicators[0].score, 98);
+  assert.equal(one.overall.code, "optimistic");
+  assert.equal(one.descriptiveConfidence.level, "medium"); // single indicator per family
+  assert.equal(one.predictiveConfidence.level, "not_tested");
+  const full = readSentiment({
+    indicators: [sInd("s1", "say", 29), sInd("s2", "say", 25), sInd("d1", "do", 29), sInd("d2", "do", 27), sInd("p1", "price", 28), sInd("p2", "price", 26)],
+    predictiveConfidence: "low", now: NOW,
   });
-  // Future observation must be ignored (point-in-time).
-  const withFuture = ind("s1", "say", 29);
-  withFuture.history.push({ date: "2026-12-01", value: 1000 });
-  const opt = readSentiment({ indicators: [withFuture, ind("d1", "do", 29), ind("p1", "price", 15)], now: NOW });
-  assert.equal(opt.indicators[0].score, 98);
-  assert.equal(opt.overall.code, "optimistic");
-  assert.equal(opt.confidence.level, "medium"); // capped: no proven predictive value
-  assert.equal(readSentiment({ indicators: [withFuture, ind("d1", "do", 29), ind("p1", "price", 15)], predictiveValue: "proven", now: NOW }).confidence.level, "high");
-  const mixed = readSentiment({ indicators: [ind("s1", "say", 29), ind("d1", "do", 0), ind("p1", "price", 15)], now: NOW });
-  assert.equal(mixed.contradiction, true);
+  assert.equal(full.descriptiveConfidence.level, "high");
+  assert.equal(full.predictiveConfidence.level, "low"); // accurate reading != predictive value
+  const conflict = readSentiment({ indicators: [sInd("s1", "say", 29), sInd("s2", "say", 0), sInd("d1", "do", 29), sInd("p1", "price", 28)], now: NOW });
+  assert.equal(conflict.families.say.internalConflict, true);
+  assert.ok(conflict.families.say.dispersion.range > 90);
+  const mixed = readSentiment({ indicators: [sInd("s1", "say", 29), sInd("d1", "do", 0), sInd("p1", "price", 15)], now: NOW });
   assert.equal(mixed.overall.code, "mixed");
-  assert.equal(mixed.confidence.level, "low");
-  const partial = readSentiment({ indicators: [ind("s1", "say", 29), ind("d1", "do", 29)], now: NOW });
+  const partial = readSentiment({ indicators: [sInd("s1", "say", 29), sInd("d1", "do", 29)], now: NOW });
   assert.equal(partial.complete, false);
   assert.equal(partial.overall, null);
-  const stale = ind("p1", "price", 15);
+  assert.equal(partial.descriptiveConfidence.level, "low");
+  const stale = sInd("p1", "price", 15);
   stale.current.date = "2026-01-01";
-  assert.equal(readSentiment({ indicators: [ind("s1", "say", 29), ind("d1", "do", 29), stale], now: NOW }).complete, false);
+  assert.equal(readSentiment({ indicators: [sInd("s1", "say", 29), sInd("d1", "do", 29), stale], now: NOW }).complete, false);
+});
+
+test("sentiment readings log (9.6.11): append-only, corrections, manual record without DB", async () => {
+  const ledger = createLedger({ backend: memoryBackend() });
+  const r = readSentiment({ indicators: [sInd("s1", "say", 29), sInd("d1", "do", 29), sInd("p1", "price", 15)], now: NOW });
+  await assert.rejects(ledger.recordSentimentReading(r, { market: "IL" }), /חובה/);
+  const first = await ledger.recordSentimentReading(r, { market: "IL", population: "פרטיים", horizon: "3m" });
+  await assert.rejects(ledger.recordSentimentReading(r, { market: "IL", population: "פרטיים", horizon: "3m", correctsId: first.id }), /סיבה/);
+  const fix = await ledger.recordSentimentReading(r, { market: "IL", population: "פרטיים", horizon: "3m", correctsId: first.id, reason: "תיקון מקור" });
+  assert.equal(fix.correctsId, first.id);
+  assert.equal((await ledger.listSentimentReadings()).length, 2);
+  assert.equal((await ledger.verify()).ok, true);
+
+  const app = express();
+  app.use(express.json());
+  app.use("/api/ofek", createOfekRouter({ ledger, token: "secret", runResearch: async () => ({}) }));
+  const server = app.listen(0);
+  try {
+    const res = await fetch(`http://127.0.0.1:${server.address().port}/api/ofek/sentiment/read`, {
+      method: "POST",
+      headers: { Authorization: "Bearer secret", "Content-Type": "application/json" },
+      body: JSON.stringify({ indicators: [sInd("s1", "say", 29)], record: { market: "IL", population: "פרטיים", horizon: "1m" } }),
+    });
+    assert.equal(res.status, 201);
+    const body = await res.json();
+    assert.equal(body.persistent, false);
+    assert.ok(body.manualRecord && body.manualRecord.type === "sentiment_reading");
+  } finally {
+    server.close();
+  }
 });

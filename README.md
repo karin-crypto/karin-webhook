@@ -140,8 +140,9 @@ and send the reply back — exactly as `whatsapp.js` does.
 | `GET /api/ofek/evaluate` | MAE / RMSE / Bias / כיוון / כיסוי טווח בתקופת פעילות אמיתית, מול מודל ייחוס נאיבי |
 | `POST /api/ofek/evaluate/walk-forward` | בדיקת Walk-Forward היסטורית למודלי הייחוס |
 | `POST /api/ofek/evaluate/compare` | מבחן פרמוטציה — "שיפור" רק אם מובהק |
-| `POST /api/ofek/evaluate/sentiment` | מודול 9.6: מבחן תרומה חיזויית של אינדיקטור סנטימנט מול מודל בסיס, כולל יציבות בין משטרי שוק |
-| `POST /api/ofek/sentiment/read` | מודול 9.6: קריאת סנטימנט אומרים / עושים / מתמחרים — אחוזונים Point-in-Time, סתירות, קריאה חלקית וסולם ביטחון |
+| `POST /api/ofek/evaluate/sentiment` | מודול 9.6.6: מבחן ערך חיזויי לאינדיקטור סנטימנט — מאושר / מאושר למשטרים מסוימים / נדחה, כולל תיקון לבדיקות מרובות (`testsConducted`) ותלות בין תצפיות (`blockSize`) |
+| `POST /api/ofek/sentiment/read` | מודול 9.6: קריאת סנטימנט אומרים / עושים / מתמחרים — אחוזונים Point-in-Time, פיזור בתוך משפחה, ביטחון תיאורי וביטחון חיזויי נפרדים. עם `record` נרשמת ביומן (9.6.11) |
+| `GET /api/ofek/sentiment/readings` | יומן קריאות הסנטימנט |
 | `POST /api/ofek/signals` | Early Market Signal Engine — 3 רמות לפי מדדים שסופקו |
 | `POST /api/ofek/retirement/simulate` | צבירה, דמי ניהול, מונטה קרלו, סיכון רצף ואריכות ימים |
 | `POST /api/ofek/pension/compare` | השוואת מסלולים באותה רמת סיכון ובאותה תקופה |

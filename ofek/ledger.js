@@ -200,6 +200,33 @@ function createLedger({ backend } = {}) {
       });
     },
 
+    /**
+     * Module 9.6.11 — record a sentiment reading. A correction is a new
+     * entry pointing at the reading it corrects; the original is untouched.
+     */
+    async recordSentimentReading(reading, meta = {}) {
+      const { market, population, horizon, findings = null, forecastId = null, correctsId = null, reason = null } = meta;
+      if (!market || !population || !horizon) throw new LedgerError("market, population ו־horizon חובה לרישום קריאה");
+      if (correctsId && !(reason && String(reason).trim())) throw new LedgerError("תיקון קריאה מחייב סיבה");
+      return be.append((entries) => {
+        if (correctsId && !entries.some((e) => e.type === "sentiment_reading" && e.id === correctsId)) {
+          throw new LedgerError("הקריאה המתוקנת לא נמצאה", 404);
+        }
+        if (forecastId && !entries.some((e) => e.type === "forecast" && e.id === forecastId)) {
+          throw new LedgerError("התחזית המקושרת לא נמצאה", 404);
+        }
+        return {
+          id: `sr_${crypto.randomUUID()}`, type: "sentiment_reading", recordedAt: new Date().toISOString(),
+          market, population, horizon, findings, forecastId, correctsId, correctionReason: reason,
+          methodologyVersion: reading.methodologyVersion, reading,
+        };
+      });
+    },
+
+    async listSentimentReadings() {
+      return (await be.all()).filter((e) => e.type === "sentiment_reading");
+    },
+
     async list({ asset } = {}) {
       const entries = await be.all();
       const outcomes = new Map(entries.filter((e) => e.type === "outcome").map((e) => [e.forecastId, e]));

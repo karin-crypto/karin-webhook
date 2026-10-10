@@ -102,16 +102,23 @@ function walkForward(series, predictors, { minTrain = 24 } = {}) {
  * Paired sign-flip permutation test on absolute-error differences.
  * Returns improvement only if the candidate's MAE is lower AND p < alpha.
  */
-function compareModels(candidatePairs, referencePairs, { alpha = 0.05, iterations = 10000, seed = 42, minN = 12 } = {}) {
+function compareModels(candidatePairs, referencePairs, { alpha = 0.05, iterations = 10000, seed = 42, minN = 12, blockSize = 1 } = {}) {
   if (candidatePairs.length !== referencePairs.length) throw new Error("נדרשות תצפיות מזווגות באותו אורך");
   const n = candidatePairs.length;
   const d = candidatePairs.map((c, i) => Math.abs(c.forecast - c.actual) - Math.abs(referencePairs[i].forecast - referencePairs[i].actual));
   const observed = mean(d);
   const rnd = mulberry32(seed);
   let extreme = 0;
+  // Block sign-flip: consecutive observations share one sign, so serial
+  // dependence (e.g. overlapping horizons) doesn't overstate significance.
+  const b = Math.max(1, Math.floor(blockSize));
   for (let k = 0; k < iterations; k++) {
     let s = 0;
-    for (const x of d) s += rnd() < 0.5 ? -x : x;
+    let sign = 1;
+    for (let i = 0; i < n; i++) {
+      if (i % b === 0) sign = rnd() < 0.5 ? -1 : 1;
+      s += sign * d[i];
+    }
     if (s / n <= observed) extreme++;
   }
   const pValue = (extreme + 1) / (iterations + 1); // one-sided: candidate better
@@ -121,6 +128,7 @@ function compareModels(candidatePairs, referencePairs, { alpha = 0.05, iteration
   const improved = enough && observed < 0 && pValue < alpha;
   return {
     n,
+    blockSize: b,
     candidateMae: candMae,
     referenceMae: refMae,
     maeSkill: refMae > 0 ? 1 - candMae / refMae : null,
@@ -143,7 +151,7 @@ function compareModels(candidatePairs, referencePairs, { alpha = 0.05, iteration
  * returns[t], indicator[t]: aligned series (indicator[t] known at end of t).
  * regimes: optional label per t (e.g. 'bull' / 'bear', 'high-rate' / 'low-rate').
  */
-function incrementalValueTest(returns, indicator, { minTrain = 36, lag = 1, regimes = null, alpha = 0.05, minRegimeN = 6, testsConducted = 1 } = {}) {
+function incrementalValueTest(returns, indicator, { minTrain = 36, lag = 1, regimes = null, alpha = 0.05, minRegimeN = 12, testsConducted = 1, blockSize = 1 } = {}) {
   // Multiple-testing control (Bonferroni): each extra indicator/variant tried tightens the bar.
   const effectiveAlpha = alpha / Math.max(1, Math.floor(testsConducted));
   if (returns.length !== indicator.length) throw new Error("returns ו־indicator חייבים להיות באותו אורך");
@@ -164,22 +172,30 @@ function incrementalValueTest(returns, indicator, { minTrain = 36, lag = 1, regi
     cand.push({ forecast: my + beta * (indicator[t - lag] - mx), actual: returns[t] });
     at.push(t);
   }
-  const overall = compareModels(cand, base, { alpha: effectiveAlpha });
+  const overall = compareModels(cand, base, { alpha: effectiveAlpha, blockSize });
+  // 9.6.6: not every regime must improve, but failing regimes are reported,
+  // and a model can be approved only for the regimes where it proved itself.
   let byRegime = null;
-  let stable = true;
+  let status;
+  let approvedRegimes = [];
+  let failingRegimes = [];
   if (regimes) {
     byRegime = {};
     for (const label of [...new Set(at.map((t) => regimes[t]))]) {
       const idx = at.map((t, i) => (regimes[t] === label ? i : -1)).filter((i) => i >= 0);
-      const c = idx.map((i) => cand[i]);
-      const b = idx.map((i) => base[i]);
-      const cm = pointMetrics(c).mae;
-      const bm = pointMetrics(b).mae;
-      byRegime[label] = { n: idx.length, candidateMae: cm, baselineMae: bm, better: cm < bm };
-      if (idx.length < minRegimeN || !(cm < bm)) stable = false;
+      const r = compareModels(idx.map((i) => cand[i]), idx.map((i) => base[i]), { alpha: effectiveAlpha, minN: minRegimeN, blockSize });
+      byRegime[label] = { n: idx.length, candidateMae: r.candidateMae, baselineMae: r.referenceMae, pValue: r.pValue, improved: r.improved };
+      (r.improved ? approvedRegimes : failingRegimes).push(label);
     }
+    status = failingRegimes.length === 0 ? "approved" : approvedRegimes.length ? "approved_limited" : "rejected";
+  } else {
+    status = overall.improved ? "approved" : "rejected";
   }
-  const accepted = overall.improved && stable;
+  const VERDICT = {
+    approved: "האינדיקטור הוסיף ערך חיזויי מובהק" + (regimes ? " בכל משטרי השוק שנבדקו" : "") + " — ניתן לשקול שילוב, בכפוף לאישור קארין",
+    approved_limited: `ערך חיזויי מובהק רק במשטרים: ${approvedRegimes.join(", ")}. מותר לשקול שימוש מוגבל למשטרים אלה בלבד; במשטרים ${failingRegimes.join(", ")} לא הוכח יתרון`,
+    rejected: "לא הוכח ערך חיזויי — אין לתת לאינדיקטור משקל חיזויי. יש לתעד את הניסוי שנכשל",
+  };
   return {
     outOfSampleSteps: cand.length,
     lag,
@@ -187,10 +203,11 @@ function incrementalValueTest(returns, indicator, { minTrain = 36, lag = 1, regi
     withIndicator: { name: "רגרסיה על האינדיקטור בפיגור", ...pointMetrics(cand) },
     significance: { ...overall, alpha, testsConducted: Math.max(1, Math.floor(testsConducted)), effectiveAlpha },
     byRegime,
-    accepted,
-    verdict: accepted
-      ? "האינדיקטור הוסיף ערך חיזויי מובהק ויציב בכל המשטרים שנבדקו — ניתן לשקול שילוב, בכפוף לאישור"
-      : "לא הוכח ערך חיזויי עקבי — אין לשלב את האינדיקטור בתחזית",
+    status,
+    approvedRegimes,
+    failingRegimes,
+    accepted: status !== "rejected",
+    verdict: VERDICT[status],
   };
 }
 

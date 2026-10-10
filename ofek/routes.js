@@ -151,22 +151,37 @@ function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_AD
 
   // Module 9.6 §3: does a sentiment indicator add out-of-sample value?
   router.post("/evaluate/sentiment", wrap(async (req, res) => {
-    const { returns, indicator, regimes, lag, minTrain, testsConducted } = req.body || {};
+    const { returns, indicator, regimes, lag, minTrain, testsConducted, blockSize } = req.body || {};
     const nums = (a) => Array.isArray(a) && a.every(Number.isFinite);
     if (!nums(returns) || !nums(indicator)) return res.status(400).json({ ok: false, error: "returns ו־indicator: מערכי מספרים" });
     try {
-      res.json({ ok: true, ...incrementalValueTest(returns, indicator, { regimes, lag, minTrain, testsConducted }) });
+      res.json({ ok: true, ...incrementalValueTest(returns, indicator, { regimes, lag, minTrain, testsConducted, blockSize }) });
     } catch (err) {
       res.status(400).json({ ok: false, error: err.message });
     }
   }));
 
   /* ---- analytics ---- */
-  // Module 9.6: say / do / price sentiment reading.
-  router.post("/sentiment/read", (req, res) => {
-    const r = readSentiment(req.body || {});
-    res.status(r.ok ? 200 : 400).json(r);
-  });
+  // Module 9.6: say / do / price sentiment reading; optionally logged (9.6.11).
+  router.post("/sentiment/read", wrap(async (req, res) => {
+    const { record, ...input } = req.body || {};
+    const r = readSentiment(input);
+    if (!r.ok) return res.status(400).json(r);
+    if (!record) return res.json(r);
+    const entry = await ledger.recordSentimentReading(r, record);
+    res.status(201).json({
+      ...r,
+      entry,
+      persistent: ledger.persistent,
+      storageWarning: storageNote(),
+      // 9.6.11: without a connected log, hand back a record for manual filing.
+      manualRecord: ledger.persistent ? null : entry,
+    });
+  }));
+
+  router.get("/sentiment/readings", wrap(async (_req, res) => {
+    res.json({ ok: true, persistent: ledger.persistent, readings: await ledger.listSentimentReadings() });
+  }));
 
   router.post("/signals", (req, res) => res.json({ ok: true, ...evaluateSignals(req.body && req.body.indicators) }));
 
