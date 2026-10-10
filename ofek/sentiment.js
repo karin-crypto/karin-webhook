@@ -18,7 +18,7 @@
  * }
  */
 
-const METHODOLOGY_VERSION = "9.6-v4.0";
+const METHODOLOGY_VERSION = "9.6-v4.1";
 const FAMILIES = { say: "אומרים", do: "עושים", price: "מתמחרים" };
 const MIN_HISTORY = 24;
 const T = { optimistic: 70, pessimistic: 30, extremeHigh: 90, extremeLow: 10 };
