@@ -6,6 +6,8 @@ const crypto  = require('crypto');
 const { createStore }   = require('./store');
 const { generateReply, MIA_MODEL, claudeEnabled } = require('./agent');
 const { registerWhatsApp, whatsappConfigured }    = require('./whatsapp');
+const { createOfekRouter } = require('./ofek/routes');
+const { createLedger }     = require('./ofek/ledger');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -362,9 +364,16 @@ app.post('/webhook', async (req, res) => {
 
 registerWhatsApp(app, miaStore);
 
+/* ========================
+   OFEK AI 4.0 – INVESTMENT RESEARCH (internal, token-protected)
+   ======================== */
+const ofekLedger = createLedger();
+app.use('/api/ofek', createOfekRouter({ ledger: ofekLedger }));
+
 app.get('/health', (req, res) => res.json({
   status: 'ok',
   mia: { claudeEnabled, model: MIA_MODEL, store: miaStore.kind, whatsapp: whatsappConfigured },
+  ofek: { enabled: !!process.env.OFEK_ADMIN_TOKEN, ledger: ofekLedger.kind },
 }));
 // Website routes (SPA): always serve the React app's index.html
 const spaRoutes = ['/', '/index.html', '/funds', '/funds/*', '/compare', '/articles', '/articles/*', '/contact'];
@@ -398,6 +407,7 @@ for (const signal of ['SIGINT', 'SIGTERM']) {
   process.on(signal, () => {
     server.close(async () => {
       await miaStore.close();
+      await ofekLedger.close();
       process.exit(0);
     });
   });

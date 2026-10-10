@@ -122,3 +122,31 @@ and send the reply back — exactly as `whatsapp.js` does.
 
 - Mia is instructed never to invent prices, policies, or order statuses. To give
   her real account/order data, extend `agent.js` with tool use or a lookup step.
+
+## אופק – OFEK AI 4.0 (מחקר השקעות, פנימי)
+
+מודול מחקר השקעות פנימי לצוות. כל הנתיבים תחת `/api/ofek` דורשים
+`Authorization: Bearer $OFEK_ADMIN_TOKEN` (בלי הטוקן ה־API כבוי).
+
+| נתיב | מה עושה |
+|---|---|
+| `GET /api/ofek/status` | גרסה, מצב מנוע המחקר, סוג היומן ובדיקת שלמות |
+| `POST /api/ofek/research` | דוח מחקר (Claude + חיפוש רשת) במבנה הדוח המקצועי. `context` = תוצאות כמותיות שחושבו בפועל |
+| `POST /api/ofek/forecast-card/validate` | בדיקת כרטיס תחזית (שדות חובה, עיגול נגד דיוק מדומה, טווח סטטיסטי מול שיפוטי) |
+| `POST /api/ofek/forecasts` | רישום תחזית ביומן |
+| `POST /api/ofek/forecasts/:id/revise` | גרסה חדשה (המקור נשמר כפי שהיה) |
+| `POST /api/ofek/forecasts/:id/outcome` | רישום תוצאה בפועל + שגיאת חיזוי |
+| `GET /api/ofek/forecasts`, `/forecasts/:id/history`, `/ledger/verify` | עיון ביומן ובדיקת שרשרת ה־hash |
+| `GET /api/ofek/evaluate` | MAE / RMSE / Bias / כיוון / כיסוי טווח בתקופת פעילות אמיתית, מול מודל ייחוס נאיבי |
+| `POST /api/ofek/evaluate/walk-forward` | בדיקת Walk-Forward היסטורית למודלי הייחוס |
+| `POST /api/ofek/evaluate/compare` | מבחן פרמוטציה — "שיפור" רק אם מובהק |
+| `POST /api/ofek/signals` | Early Market Signal Engine — 3 רמות לפי מדדים שסופקו |
+| `POST /api/ofek/retirement/simulate` | צבירה, דמי ניהול, מונטה קרלו, סיכון רצף ואריכות ימים |
+| `POST /api/ofek/pension/compare` | השוואת מסלולים באותה רמת סיכון ובאותה תקופה |
+| `POST /api/ofek/video/check` | בקרת איכות לסרטון לפני פרסום (כולל אישור קארין) |
+
+יומן התחזיות מאפשר רק הוספה (append-only) ושרשרת hash; ב־Postgres טריגר חוסם
+UPDATE/DELETE. בלי `DATABASE_URL` היומן נשמר בזיכרון בלבד וכל תגובה מציינת זאת.
+אין במודול מסחר, ניוד או העברת כספים. נתוני האתר (compare-app) הם נתוני דמו ואין להזין אותם למחקר.
+
+בדיקות: `npm test`.
