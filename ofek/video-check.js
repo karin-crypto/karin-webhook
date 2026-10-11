@@ -107,4 +107,4 @@ function checkVideo(input = {}, { now = new Date(), approvers } = {}) {
   return { publishable: failed.length === 0, containsForecast, failed: failed.map((c) => c.id), checks };
 }
 
-module.exports = { checkVideo, findPii, validIsraeliId };
+module.exports = { checkVideo, findPii, validIsraeliId, todayInIsrael, FORECAST_WORDS, RESEARCH_DISCLAIMER, GENERAL_DISCLAIMER };

@@ -272,3 +272,85 @@ test("sentiment readings log (9.6.11): append-only, corrections, manual record w
     server.close();
   }
 });
+
+const { runQualityGate } = require("../ofek/quality-gate");
+const { createIndicatorRegistry } = require("../ofek/indicators");
+
+test("quality gate (9.6.13): pass, pass with notes, blocked", () => {
+  const ctx = { now: NOW, approvers: ["karin"], knownForecastIds: new Set(["fc_1"]) };
+  const base = {
+    contentType: "post",
+    text: "מדד ת\"א 125 עלה 5% ברבעון. אין באמור ייעוץ.",
+    sources: [{ claim: "תשואת ת\"א 125", source: "הבורסה", verifiedAt: "2026-10-09" }],
+    dataPoints: [{ label: "תשואה רבעונית", measuredAt: "2026-09-30", publishedAt: "2026-10-01" }],
+    manual: { regulatoryDisclosures: true },
+    approval: { approvedBy: "karin", approvedAt: "2026-10-10T08:00:00Z" },
+  };
+  assert.equal(runQualityGate(base, ctx).outcome, "pass");
+
+  // 3: direction without a ledger forecast -> blocked; with a known forecast -> passes check 3.
+  const dir = { ...base, text: base.text + " השוק יעלה ברבעון הבא, בטווח של תרחישים. זו הערכה מחקרית ואינה תשואה מובטחת." };
+  const blocked = runQualityGate(dir, ctx);
+  assert.equal(blocked.outcome, "blocked");
+  assert.equal(blocked.checks.find((c) => c.n === 3).pass, false);
+  assert.equal(runQualityGate({ ...dir, forecastIds: ["fc_1"] }, ctx).outcome, "pass");
+  assert.equal(runQualityGate({ ...dir, forecastIds: ["fc_missing"] }, ctx).outcome, "blocked");
+
+  // 6: a guarantee blocks; the negated disclaimer does not.
+  assert.equal(runQualityGate({ ...base, text: base.text + " תשואה מובטחת!" }, ctx).checks.find((c) => c.n === 6).pass, false);
+
+  // 7 (non-blocking): blocked until documented, then pass_with_notes.
+  const hype = { ...base, text: base.text + " אל תפספסו." };
+  assert.equal(runQualityGate(hype, ctx).outcome, "blocked");
+  assert.equal(runQualityGate({ ...hype, notes: "הביטוי יוסר בעריכה הסופית" }, ctx).outcome, "pass_with_notes");
+
+  // 8 and 10 block.
+  assert.equal(runQualityGate({ ...base, text: base.text + " ת.ז. 000000018" }, ctx).outcome, "blocked");
+  assert.equal(runQualityGate({ ...base, approval: {} }, ctx).outcome, "blocked");
+
+  // Video also runs the video fact check.
+  const v = runQualityGate({ ...base, contentType: "video", video: { videoDate: "2026-10-01" } }, ctx);
+  assert.equal(v.outcome, "blocked");
+  assert.ok(v.video.failed.includes("date"));
+});
+
+test("indicator registry (9.6.1/9.6.6): lifecycle, approvals, experiments", async () => {
+  const ledger = createLedger({ backend: memoryBackend() });
+  const reg = createIndicatorRegistry(ledger);
+  const karin = { approvedBy: "karin", approvedAt: "2026-10-10T08:00:00Z" };
+  const card = {
+    name: "פדיונות קרנות נאמנות", family: "do", market: "IL", population: "פרטיים", source: "מקור לדוגמה",
+    termsOfUse: "שימוש פנימי מותר", frequency: "חודשי", measurementPeriod: "חודש קלנדרי", unit: "% מהנכסים",
+    orientation: "higher_is_bearish", maxAgeDays: 45,
+  };
+  await assert.rejects(reg.register(card, {}), /אישור/);
+  const { indicatorId } = await reg.register(card, karin);
+  assert.equal((await reg.get(indicatorId)).status, "research");
+  await assert.rejects(reg.register(card, karin), /כבר רשום/);
+
+  // Cannot skip to active, cannot enter probation without an approved experiment.
+  await assert.rejects(reg.transition(indicatorId, { to: "active", reason: "x", probationSummary: "x", approval: karin }), /מעבר לא מותר/);
+  await assert.rejects(reg.transition(indicatorId, { to: "probation", reason: "x" }), /ניסוי/);
+
+  const prereg = { hypothesis: "פדיונות חריגים מקדימים ירידות", asset: "ת\"א 125", market: "IL", horizon: "1m", successMetrics: "MAE", lag: 1, orientation: "contrarian", regimeDefinition: "ריבית מעל/מתחת 3%", plannedVariants: 2 };
+  const rejected = await reg.recordExperiment(indicatorId, { preRegistration: prereg, testsConducted: 1, result: { status: "rejected" } });
+  await assert.rejects(reg.transition(indicatorId, { to: "probation", reason: "x", experimentId: rejected.id }), /נדחה/);
+  await assert.rejects(reg.recordExperiment(indicatorId, { preRegistration: prereg, testsConducted: 2, result: { status: "approved", significance: { testsConducted: 1 } } }), /אינו תואם/);
+
+  const limited = await reg.recordExperiment(indicatorId, { preRegistration: prereg, testsConducted: 2, result: { status: "approved_limited", approvedRegimes: ["ריבית גבוהה"], failingRegimes: ["ריבית נמוכה"] } });
+  await assert.rejects(reg.transition(indicatorId, { to: "probation", reason: "x", experimentId: limited.id }), /זמן אמת/);
+  await reg.transition(indicatorId, { to: "probation", reason: "עבר בדיקה היסטורית", experimentId: limited.id, realTimeRegimeRule: "ריבית בנק ישראל ביום הקריאה > 3%" });
+  const onProbation = await reg.get(indicatorId);
+  assert.equal(onProbation.status, "probation");
+  assert.deepEqual(onProbation.approvedRegimes, ["ריבית גבוהה"]);
+
+  await assert.rejects(reg.transition(indicatorId, { to: "active", reason: "x", approval: karin }), /probationSummary/);
+  await assert.rejects(reg.transition(indicatorId, { to: "active", reason: "x", probationSummary: "6 חודשים", approval: { approvedBy: "someone", approvedAt: "2026-10-10" } }), /אישור/);
+  await reg.transition(indicatorId, { to: "active", reason: "תקופת ניסיון הצליחה", probationSummary: "6 חודשים, MAE נמוך מהבסיס", approval: karin });
+  await reg.transition(indicatorId, { to: "suspended", reason: "ביצועים נחותים בזמן אמת" });
+  const final = await reg.get(indicatorId);
+  assert.equal(final.status, "suspended");
+  assert.equal(final.approvedRegimes, null);
+  assert.equal(final.history.length, 4);
+  assert.equal((await ledger.verify()).ok, true);
+});

@@ -147,6 +147,11 @@ and send the reply back — exactly as `whatsapp.js` does.
 | `POST /api/ofek/retirement/simulate` | צבירה, דמי ניהול, מונטה קרלו, סיכון רצף ואריכות ימים |
 | `POST /api/ofek/pension/compare` | השוואת מסלולים באותה רמת סיכון ובאותה תקופה |
 | `POST /api/ofek/video/check` | בקרת איכות לסרטון לפני פרסום (כולל אישור קארין) |
+| `POST /api/ofek/quality-gate` | OFEK QUALITY GATE (9.6.13) לסרטון / פוסט / סקירת שוק / דוח ללקוח — עבר / עבר בהערות / נחסם. בסרטון רצה גם בקרת הסרטון המלאה |
+| `GET/POST /api/ofek/indicators` | מרשם אינדיקטורים (9.6.1): כרטיס מלא, הוספה ושינוי באישור קארין בלבד |
+| `GET /api/ofek/indicators/:id` · `POST /indicators/:id/card` | מצב, היסטוריה וניסויים של אינדיקטור; עדכון כרטיס עם סיבה |
+| `POST /api/ofek/indicators/:id/experiments` | מריץ בדיקת ערך חיזויי (9.6.6) ורושם אותה ביומן עם הרישום המוקדם ומספר הבדיקות בפועל |
+| `POST /api/ofek/indicators/:id/status` | מחזור חיים: מחקרי → תקופת ניסיון (ניסוי מאושר; באישור מוגבל — כלל משטר בזמן אמת) → פעיל (אישור קארין + סיכום ניסיון) → מושעה |
 
 יומן התחזיות מאפשר רק הוספה (append-only) ושרשרת hash; ב־Postgres טריגר חוסם
 UPDATE/DELETE. בלי `DATABASE_URL` היומן נשמר בזיכרון בלבד וכל תגובה מציינת זאת.

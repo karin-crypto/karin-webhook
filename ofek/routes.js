@@ -18,6 +18,8 @@ const { readSentiment } = require("./sentiment");
 const { simulateRetirement } = require("./retirement");
 const { compareTracks } = require("./pension");
 const { checkVideo } = require("./video-check");
+const { runQualityGate } = require("./quality-gate");
+const { createIndicatorRegistry } = require("./indicators");
 const research = require("./research");
 
 function tokenMatches(given, expected) {
@@ -28,6 +30,7 @@ function tokenMatches(given, expected) {
 
 function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_ADMIN_TOKEN, runResearch = research.runResearch } = {}) {
   const router = express.Router();
+  const registry = createIndicatorRegistry(ledger);
 
   router.use((req, res, next) => {
     if (!token) return res.status(503).json({ ok: false, error: "OFEK_ADMIN_TOKEN לא מוגדר — ה־API של אופק כבוי" });
@@ -167,6 +170,22 @@ function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_AD
     const { record, ...input } = req.body || {};
     const r = readSentiment(input);
     if (!r.ok) return res.status(400).json(r);
+
+    // Annotate each indicator with its registry status (9.6.1). Only active
+    // indicators may carry predictive weight; the reading itself still runs.
+    const registered = await registry.list();
+    if (registered.length) {
+      const warnings = [];
+      for (const row of r.indicators) {
+        const reg = registered.find((x) => x.card.name === row.name && (!row.market || x.card.market === row.market));
+        row.registryStatus = reg ? reg.status : "unregistered";
+        row.predictiveWeightAllowed = !!reg && reg.status === "active";
+        if (!reg) warnings.push(`${row.name}: לא רשום במרשם האינדיקטורים`);
+        else if (reg.status === "suspended") warnings.push(`${row.name}: מושעה — אין להסתמך עליו`);
+      }
+      r.registryWarnings = warnings;
+    }
+
     if (!record) return res.json(r);
     const entry = await ledger.recordSentimentReading(r, record);
     res.status(201).json({
@@ -195,6 +214,57 @@ function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_AD
     const r = compareTracks(tracks, { from, to, allowMixedRisk });
     res.status(r.ok ? 200 : 400).json(r);
   });
+
+  /* ---- Module 9.6: indicator registry & lifecycle ---- */
+  router.get("/indicators", wrap(async (_req, res) => {
+    res.json({ ok: true, persistent: ledger.persistent, indicators: await registry.list() });
+  }));
+
+  router.post("/indicators", wrap(async (req, res) => {
+    const { card, approval } = req.body || {};
+    const entry = await registry.register(card, approval);
+    res.status(201).json({ ok: true, entry, persistent: ledger.persistent, storageWarning: storageNote() });
+  }));
+
+  router.post("/indicators/:id/card", wrap(async (req, res) => {
+    const { card, reason, approval } = req.body || {};
+    const entry = await registry.updateCard(req.params.id, card, reason, approval);
+    res.status(201).json({ ok: true, entry, persistent: ledger.persistent, storageWarning: storageNote() });
+  }));
+
+  router.get("/indicators/:id", wrap(async (req, res) => {
+    const ind = await registry.get(req.params.id);
+    if (!ind) return res.status(404).json({ ok: false, error: "אינדיקטור לא נמצא" });
+    res.json({ ok: true, indicator: ind, experiments: await registry.experiments(req.params.id) });
+  }));
+
+  // Run the 9.6.6 test and log it as an experiment in one step.
+  router.post("/indicators/:id/experiments", wrap(async (req, res) => {
+    const { preRegistration, returns, indicator, regimes, lag, minTrain, testsConducted, blockSize } = req.body || {};
+    const nums = (a) => Array.isArray(a) && a.every(Number.isFinite);
+    if (!nums(returns) || !nums(indicator)) return res.status(400).json({ ok: false, error: "returns ו־indicator: מערכי מספרים" });
+    if (!Number.isInteger(testsConducted) || testsConducted < 1) return res.status(400).json({ ok: false, error: "testsConducted: מספר הבדיקות שבוצעו בפועל (כולל זו)" });
+    let result;
+    try {
+      result = incrementalValueTest(returns, indicator, { regimes, lag, minTrain, testsConducted, blockSize });
+    } catch (err) {
+      return res.status(400).json({ ok: false, error: err.message });
+    }
+    const entry = await registry.recordExperiment(req.params.id, { preRegistration, testsConducted, result });
+    res.status(201).json({ ok: true, result, entry, persistent: ledger.persistent, storageWarning: storageNote() });
+  }));
+
+  router.post("/indicators/:id/status", wrap(async (req, res) => {
+    const entry = await registry.transition(req.params.id, req.body || {});
+    res.status(201).json({ ok: true, entry, indicator: await registry.get(req.params.id), persistent: ledger.persistent, storageWarning: storageNote() });
+  }));
+
+  /* ---- OFEK QUALITY GATE (9.6.13) ---- */
+  router.post("/quality-gate", wrap(async (req, res) => {
+    const known = new Set((await ledger.list()).map((f) => f.id));
+    const r = runQualityGate(req.body || {}, { knownForecastIds: known });
+    res.status(r.ok ? 200 : 400).json(r);
+  }));
 
   router.post("/video/check", (req, res) => res.json({ ok: true, ...checkVideo(req.body || {}) }));
 

@@ -223,6 +223,15 @@ function createLedger({ backend } = {}) {
       });
     },
 
+    /** Low-level append for other append-only registries (indicator registry, experiments, gate results). */
+    async appendEntry(build) {
+      return be.append(build);
+    },
+
+    async entries() {
+      return be.all();
+    },
+
     async listSentimentReadings() {
       return (await be.all()).filter((e) => e.type === "sentiment_reading");
     },
