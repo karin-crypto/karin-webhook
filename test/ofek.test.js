@@ -354,3 +354,105 @@ test("indicator registry (9.6.1/9.6.6): lifecycle, approvals, experiments", asyn
   assert.equal(final.history.length, 4);
   assert.equal((await ledger.verify()).ok, true);
 });
+
+const { recordsToTracks, parseCsv } = require("../ofek/connectors/gemelnet");
+const { postProcess, createReportAnalyzer } = require("../ofek/reports");
+const { loadSources, mcpRequestParts, describeSources } = require("../ofek/sources");
+const { buildDcf, buildComps } = require("../ofek/valuation");
+
+test("gemel-net import: CSV parsing, mapping, units, validation", () => {
+  const csv = [
+    "FUND_ID,FUND_NAME,MANAGING_CORPORATION,FUND_CLASSIFICATION,SPECIALIZATION,REPORT_PERIOD,MONTHLY_YIELD,AVG_ANNUAL_MANAGEMENT_FEE,STOCK_MARKET_EXPOSURE",
+    '101,"קופה א, מניות",חברה א,תגמולים,מניות,202401,1.5,0.6,95',
+    "101,קופה א,חברה א,תגמולים,מניות,202402,-0.5,0.6,95",
+    "102,קופה ב,חברה ב,תגמולים,מניות,2024-01,1.0,0.5,90",
+    "102,קופה ב,חברה ב,תגמולים,מניות,,1.0,0.5,90",
+  ].join("\r\n");
+  const rows = parseCsv(csv);
+  assert.equal(rows.length, 4);
+  assert.equal(rows[0].FUND_NAME, "קופה א, מניות");
+  const out = recordsToTracks(rows, { returnsBasis: "gross", source: "גמל־נט (בדיקה)" });
+  assert.equal(out.tracks.length, 2);
+  const a = out.tracks.find((t) => t.fundId === "101");
+  assert.deepEqual(a.monthlyReturns, [{ month: "2024-01", r: 0.015 }, { month: "2024-02", r: -0.005 }]);
+  assert.equal(a.feeOnBalance, 0.006);
+  assert.equal(out.skipped.length, 1);
+  assert.throws(() => recordsToTracks(rows, { source: "x" }), /returnsBasis/);
+  assert.throws(() => recordsToTracks([{ ID: 1 }], { returnsBasis: "net", source: "x" }), /עמודות חובה/);
+  const mapped = recordsToTracks([{ ID: 7, M: "202403", Y: 0.01 }], { mapping: { fundId: "ID", period: "M", monthlyReturn: "Y" }, unit: "decimal", returnsBasis: "net", source: "x" });
+  assert.equal(mapped.tracks[0].monthlyReturns[0].r, 0.01);
+});
+
+test("report analyzer: quotes verified by code, changes computed by code, draft + review", async () => {
+  const text = "הכנסות הקרן ברבעון השני הסתכמו ב־120 מיליון ש\"ח. דמי הניהול עמדו על 0.52%.";
+  const extraction = {
+    summary: "ס", notableChanges: [], risks: [], dataGaps: [],
+    metrics: [
+      { name: "הכנסות", value: 120, unit: "₪ מיליונים", period: "Q2", page: null, quote: "הסתכמו ב־120 מיליון ש\"ח" },
+      { name: "דמי ניהול", value: 0.52, unit: "%", period: "Q2", page: null, quote: "דמי ניהול של 0.9%" },
+    ],
+  };
+  const prev = { metrics: [{ name: "הכנסות", value: 100, unit: "₪ מיליונים", period: "Q1" }] };
+  const r = postProcess(extraction, { text, previous: prev });
+  assert.equal(r.metrics[0].quoteCheck, "verified");
+  assert.equal(r.metrics[1].quoteCheck, "not_found");
+  assert.equal(r.changes[0].relativeChange, 0.2);
+  assert.equal(postProcess(extraction, {}).metrics[0].quoteCheck, "manual_check_required");
+
+  // Mocked Claude client: the analyzer records a draft, then a review.
+  const fake = { beta: { messages: { create: async () => ({ stop_reason: "end_turn", model: "m", content: [{ type: "text", text: JSON.stringify(extraction) }] }) } } };
+  const ledger = createLedger({ backend: memoryBackend() });
+  const an = createReportAnalyzer(ledger, { client: fake });
+  await assert.rejects(an.analyze({ entity: "קרן X", period: "Q2", text }), /entityType/);
+  const res = await an.analyze({ entity: "קרן X", entityType: "fund", period: "2026-Q2", text });
+  assert.equal(res.recorded, true);
+  assert.equal(res.entry.status, "draft");
+  await assert.rejects(an.review(res.entry.id, { approval: { approvedBy: "nobody", approvedAt: "2026-10-15" } }), /אישור/);
+  await an.review(res.entry.id, { approval: { approvedBy: "karin", approvedAt: "2026-10-15T09:00:00Z" }, notes: "תוקן ציטוט דמי ניהול" });
+  assert.equal((await an.list("קרן X"))[0].status, "reviewed");
+  const second = await an.analyze({ entity: "קרן X", entityType: "fund", period: "2026-Q3", text });
+  assert.equal(second.entry.previousExtractionId, res.entry.id);
+});
+
+test("licensed data sources: validation, MCP request shape, no token leak", () => {
+  const { sources, errors } = loadSources(JSON.stringify([
+    { name: "morningstar", label: "Morningstar", url: "https://mcp.example.com/ms", authorization_token: "SECRET", allowedTools: ["search"] },
+    { name: "bad", url: "http://insecure.example.com" },
+    { name: "morningstar", url: "https://dup.example.com" },
+  ]));
+  assert.equal(sources.length, 1);
+  assert.equal(errors.length, 2);
+  const parts = mcpRequestParts(sources);
+  assert.equal(parts.beta, "mcp-client-2025-11-20");
+  assert.equal(parts.mcp_servers[0].authorization_token, "SECRET");
+  assert.equal(parts.tools[0].mcp_server_name, "morningstar");
+  assert.equal(parts.tools[0].configs.search.enabled, true);
+  assert.ok(!JSON.stringify(describeSources(sources)).includes("SECRET"));
+  assert.equal(mcpRequestParts([]), null);
+  assert.equal(loadSources("not json").errors.length, 1);
+});
+
+test("model builder: DCF math, guards, sensitivity; comps range and outliers", () => {
+  const src = { baseFcf: "דוח 2025", growth: "הנחת צוות", discountRate: "WACC", terminal: "צמיחה ארוכת טווח" };
+  // One explicit year, Gordon terminal: hand-checkable.
+  const d = buildDcf({ baseFcf: 100, growth: [0.1], discountRate: 0.1, terminal: { method: "gordon", growth: 0.02 }, netDebt: 50, sharesOutstanding: 10, currency: "ILS", assumptionSources: src });
+  assert.equal(d.ok, true);
+  // FCF1 = 110; PV = 100; TV = 110*1.02/0.08 = 1402.5; PV(TV) = 1275; EV = 1375; equity = 1325; per share 132.5
+  assert.equal(d.result.enterpriseValue, 1375);
+  assert.equal(d.result.perShare, 132.5);
+  assert.ok(d.warnings.some((w) => w.includes("ערך הטרמינלי")));
+  assert.equal(d.sensitivity.grid.length, 5);
+  assert.equal(d.sensitivity.grid[2].values[2], 132.5);
+  assert.equal(buildDcf({ ...d.assumptions, currency: "ILS", assumptionSources: src, terminal: { method: "gordon", growth: 0.1 } }).ok, false); // g >= r
+  assert.equal(buildDcf({ baseFcf: 100, growth: [0.1], discountRate: 0.1, terminal: { method: "gordon", growth: 0.02 }, netDebt: 0, currency: "ILS" }).ok, false); // sources required
+  const sc = buildDcf({ baseFcf: 100, growth: [0.1], discountRate: 0.1, terminal: { method: "gordon", growth: 0.02 }, netDebt: 50, sharesOutstanding: 10, currency: "ILS", assumptionSources: src, scenarios: { bear: { discountRate: 0.12 } } });
+  assert.ok(sc.scenarios.bear.perShare < sc.result.perShare);
+
+  const peers = [8, 9, 10, 11, 12, 60, -3].map((m, i) => ({ name: `P${i}`, multiple: m, source: "מקור", asOf: "2026-10-01" }));
+  const c = buildComps({ multipleName: "EV/EBITDA", basis: "enterprise", subjectMetric: 10, netDebt: 20, currency: "ILS", peers });
+  assert.equal(c.ok, true);
+  assert.ok(c.excluded.some((x) => x.name === "P5")); // outlier 60
+  assert.ok(c.excluded.some((x) => x.name === "P6")); // negative
+  assert.equal(c.peerStats.median, 10);
+  assert.equal(c.impliedRange.median.equityValue, 80); // 10 * 10 - 20
+});

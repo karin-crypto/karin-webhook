@@ -191,4 +191,4 @@ function createIndicatorRegistry(ledger) {
   };
 }
 
-module.exports = { createIndicatorRegistry, foldRegistry, STATUSES, TRANSITIONS, CARD_FIELDS, PREREG_FIELDS };
+module.exports = { createIndicatorRegistry, foldRegistry, requireApproval, STATUSES, TRANSITIONS, CARD_FIELDS, PREREG_FIELDS };

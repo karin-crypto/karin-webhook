@@ -147,6 +147,12 @@ and send the reply back — exactly as `whatsapp.js` does.
 | `POST /api/ofek/retirement/simulate` | צבירה, דמי ניהול, מונטה קרלו, סיכון רצף ואריכות ימים |
 | `POST /api/ofek/pension/compare` | השוואת מסלולים באותה רמת סיכון ובאותה תקופה |
 | `POST /api/ofek/video/check` | בקרת איכות לסרטון לפני פרסום (כולל אישור קארין) |
+| `POST /api/ofek/pension/import` | ייבוא נתוני גמל־נט / פנסיה־נט: CSV, רשומות JSON או data.gov.il (CKAN). מיפוי עמודות ניתן לשינוי; אפשר להשוות ישירות (`compare`) |
+| `POST /api/ofek/reports/analyze` | מנתח דוחות (PDF או טקסט): חילוץ נתונים עם ציטוט ועמוד; הקוד מאמת ציטוטים ומחשב שינוי מהדוח הקודם; נשמר כטיוטה |
+| `POST /api/ofek/reports/:id/review` · `GET /reports` | אישור טיוטה (קארין) ותיקונים; רשימת דוחות לפי ישות |
+| `GET /api/ofek/sources` | מקורות נתונים מורשים שמחוברים (ללא טוקנים) |
+| `POST /api/ofek/models/dcf` | בונה מודלים: DCF עם תרחישים וטבלת רגישות; מחייב מקור לכל הנחה |
+| `POST /api/ofek/models/comps` | מכפילי השוואה: טווח רבעונים, סינון חריגים ומכפילים שליליים |
 | `POST /api/ofek/quality-gate` | OFEK QUALITY GATE (9.6.13) לסרטון / פוסט / סקירת שוק / דוח ללקוח — עבר / עבר בהערות / נחסם. בסרטון רצה גם בקרת הסרטון המלאה |
 | `GET/POST /api/ofek/indicators` | מרשם אינדיקטורים (9.6.1): כרטיס מלא, הוספה ושינוי באישור קארין בלבד |
 | `GET /api/ofek/indicators/:id` · `POST /indicators/:id/card` | מצב, היסטוריה וניסויים של אינדיקטור; עדכון כרטיס עם סיבה |
@@ -155,6 +161,7 @@ and send the reply back — exactly as `whatsapp.js` does.
 
 יומן התחזיות מאפשר רק הוספה (append-only) ושרשרת hash; ב־Postgres טריגר חוסם
 UPDATE/DELETE. בלי `DATABASE_URL` היומן נשמר בזיכרון בלבד וכל תגובה מציינת זאת.
+מקורות נתונים בתשלום (S&P, Morningstar, Daloopa וכו') מתחברים לדוחות המחקר דרך `OFEK_MCP_SERVERS` — נדרש מינוי אצל הספק.
 אין במודול מסחר, ניוד או העברת כספים. נתוני האתר (compare-app) הם נתוני דמו ואין להזין אותם למחקר.
 
 בדיקות: `npm test`.

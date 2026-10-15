@@ -11,13 +11,19 @@
 
 const Anthropic = require("@anthropic-ai/sdk");
 const { SYSTEM_PROMPT } = require("./prompt");
+const { loadSources, mcpRequestParts, describeSources } = require("./sources");
 
 const { ANTHROPIC_API_KEY, OFEK_MODEL = "claude-opus-5-5", OFEK_EFFORT = "high" } = process.env;
 const MAX_CONTINUATIONS = 5;
 
 const client = ANTHROPIC_API_KEY ? new Anthropic({ apiKey: ANTHROPIC_API_KEY }) : null;
 
-function buildUserMessage({ question, horizons, context, now }) {
+// Licensed data sources (MCP connector), read once at startup.
+const { sources: DATA_SOURCES, errors: SOURCE_ERRORS } = loadSources();
+if (SOURCE_ERRORS.length) console.warn("OFEK_MCP_SERVERS:", SOURCE_ERRORS.join("; "));
+const MCP = mcpRequestParts(DATA_SOURCES);
+
+function buildUserMessage({ question, horizons, context, now, sources = DATA_SOURCES }) {
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem" }).format(now);
   const parts = [
     `תאריך היום (ישראל): ${today}`,
@@ -31,6 +37,9 @@ function buildUserMessage({ question, horizons, context, now }) {
     );
   } else {
     parts.push("לא סופקו תוצאות של מודל כמותי שהורץ — הניתוח יהיה איכותני, וציין זאת במפורש.");
+  }
+  if (sources.length) {
+    parts.push(`מקורות נתונים מורשים מחוברים: ${sources.map((s) => s.label).join(", ")}. העדף אותם על פני חיפוש רשת כשהם רלוונטיים, וציין לכל נתון מאיזה מקור הגיע.`);
   }
   parts.push("השתמש בחיפוש רשת לאיסוף נתונים עדכניים וציין מקור ותאריך לכל נתון. כתוב את הדוח במבנה הדוח המקצועי.");
   return parts.filter(Boolean).join("\n\n");
@@ -48,14 +57,16 @@ async function runResearch({ question, horizons = [], context = null, now = new 
     const stream = client.beta.messages.stream({
       model: OFEK_MODEL,
       max_tokens: 64000,
-      betas: ["server-side-fallback-2026-07-01"],
+      betas: ["server-side-fallback-2026-07-01", ...(MCP ? [MCP.beta] : [])],
       fallbacks: "default",
       thinking: { type: "adaptive" },
       output_config: { effort: OFEK_EFFORT },
       system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
+      ...(MCP ? { mcp_servers: MCP.mcp_servers } : {}),
       tools: [
         { type: "web_search_20260209", name: "web_search", max_uses: 15 },
         { type: "web_fetch_20260209", name: "web_fetch", max_uses: 10 },
+        ...(MCP ? MCP.tools : []),
       ],
       messages,
     });
@@ -89,4 +100,7 @@ async function runResearch({ question, horizons = [], context = null, now = new 
   };
 }
 
-module.exports = { runResearch, buildUserMessage, researchEnabled: !!client, OFEK_MODEL };
+module.exports = {
+  runResearch, buildUserMessage, researchEnabled: !!client, OFEK_MODEL,
+  dataSources: describeSources(DATA_SOURCES), dataSourceErrors: SOURCE_ERRORS,
+};

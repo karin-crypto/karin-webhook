@@ -20,6 +20,9 @@ const { compareTracks } = require("./pension");
 const { checkVideo } = require("./video-check");
 const { runQualityGate } = require("./quality-gate");
 const { createIndicatorRegistry } = require("./indicators");
+const { createReportAnalyzer } = require("./reports");
+const { recordsToTracks, parseCsv, fetchCkan } = require("./connectors/gemelnet");
+const { buildDcf, buildComps } = require("./valuation");
 const research = require("./research");
 
 function tokenMatches(given, expected) {
@@ -28,9 +31,10 @@ function tokenMatches(given, expected) {
   return crypto.timingSafeEqual(a, b);
 }
 
-function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_ADMIN_TOKEN, runResearch = research.runResearch } = {}) {
+function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_ADMIN_TOKEN, runResearch = research.runResearch, reportClient, fetchImpl } = {}) {
   const router = express.Router();
   const registry = createIndicatorRegistry(ledger);
+  const reports = createReportAnalyzer(ledger, reportClient === undefined ? {} : { client: reportClient });
 
   router.use((req, res, next) => {
     if (!token) return res.status(503).json({ ok: false, error: "OFEK_ADMIN_TOKEN לא מוגדר — ה־API של אופק כבוי" });
@@ -61,7 +65,8 @@ function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_AD
     res.json({
       ok: true,
       version: OFEK_VERSION,
-      research: { enabled: research.researchEnabled, model: research.OFEK_MODEL },
+      research: { enabled: research.researchEnabled, model: research.OFEK_MODEL, dataSources: research.dataSources, dataSourceErrors: research.dataSourceErrors },
+      reports: { enabled: reports.enabled },
       ledger: { kind: ledger.kind, persistent: ledger.persistent, integrity: await ledger.verify() },
       horizons: Object.keys(HORIZONS),
     });
@@ -258,6 +263,72 @@ function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_AD
     const entry = await registry.transition(req.params.id, req.body || {});
     res.status(201).json({ ok: true, entry, indicator: await registry.get(req.params.id), persistent: ledger.persistent, storageWarning: storageNote() });
   }));
+
+  /* ---- licensed data sources (MCP connector) ---- */
+  router.get("/sources", (_req, res) => {
+    res.json({ ok: true, sources: research.dataSources, errors: research.dataSourceErrors, webSearch: true });
+  });
+
+  /* ---- Israeli pension data import (Gemel-Net / Pension-Net) ---- */
+  router.post("/pension/import", wrap(async (req, res) => {
+    const b = req.body || {};
+    let records;
+    let fetched = null;
+    if (b.source === "records") records = b.records;
+    else if (b.source === "csv") records = parseCsv(b.csv || "");
+    else if (b.source === "ckan") {
+      fetched = await fetchCkan({
+        resourceId: b.resourceId || process.env.GEMELNET_RESOURCE_ID, filters: b.filters, q: b.q, maxRows: b.maxRows,
+        ...(fetchImpl ? { fetchImpl } : {}),
+      });
+      records = fetched.records;
+    } else return res.status(400).json({ ok: false, error: "source: records | csv | ckan" });
+    if (!Array.isArray(records) || !records.length) return res.status(400).json({ ok: false, error: "לא התקבלו רשומות" });
+
+    let out;
+    try {
+      out = recordsToTracks(records, { mapping: b.mapping, unit: b.unit, returnsBasis: b.returnsBasis, source: b.sourceLabel, asOf: b.asOf });
+    } catch (err) {
+      return res.status(400).json({ ok: false, error: err.message });
+    }
+    let comparison = null;
+    if (b.compare) {
+      const ids = new Set((b.compare.fundIds || []).map(String));
+      const chosen = ids.size ? out.tracks.filter((t) => ids.has(String(t.fundId))) : out.tracks;
+      comparison = compareTracks(chosen, b.compare);
+    }
+    res.json({
+      ok: true, records: records.length, truncated: fetched ? fetched.truncated : false,
+      tracks: out.tracks, skipped: out.skipped, warnings: out.warnings, comparison,
+      notice: "מיפוי העמודות ברירת המחדל לא אומת מול ייצוא חי — בדקו את הקופה הראשונה מול האתר לפני שימוש.",
+    });
+  }));
+
+  /* ---- report analyzer ---- */
+  router.post("/reports/analyze", wrap(async (req, res) => {
+    const r = await reports.analyze(req.body || {});
+    res.status(r.recorded ? 201 : 200).json({ ok: true, ...r, persistent: ledger.persistent, storageWarning: r.recorded ? storageNote() : null });
+  }));
+
+  router.post("/reports/:id/review", wrap(async (req, res) => {
+    const entry = await reports.review(req.params.id, req.body || {});
+    res.status(201).json({ ok: true, entry, persistent: ledger.persistent, storageWarning: storageNote() });
+  }));
+
+  router.get("/reports", wrap(async (req, res) => {
+    res.json({ ok: true, persistent: ledger.persistent, reports: await reports.list(req.query.entity) });
+  }));
+
+  /* ---- model builder ---- */
+  router.post("/models/dcf", (req, res) => {
+    const r = buildDcf(req.body || {});
+    res.status(r.ok ? 200 : 400).json(r);
+  });
+
+  router.post("/models/comps", (req, res) => {
+    const r = buildComps(req.body || {});
+    res.status(r.ok ? 200 : 400).json(r);
+  });
 
   /* ---- OFEK QUALITY GATE (9.6.13) ---- */
   router.post("/quality-gate", wrap(async (req, res) => {
