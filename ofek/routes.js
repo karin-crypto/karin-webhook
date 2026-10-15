@@ -23,6 +23,7 @@ const { createIndicatorRegistry } = require("./indicators");
 const { createReportAnalyzer } = require("./reports");
 const { recordsToTracks, parseCsv, fetchCkan } = require("./connectors/gemelnet");
 const { buildDcf, buildComps } = require("./valuation");
+const { createAgent } = require("./agent");
 const research = require("./research");
 
 function tokenMatches(given, expected) {
@@ -31,9 +32,11 @@ function tokenMatches(given, expected) {
   return crypto.timingSafeEqual(a, b);
 }
 
-function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_ADMIN_TOKEN, runResearch = research.runResearch, reportClient, fetchImpl } = {}) {
+function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_ADMIN_TOKEN, runResearch = research.runResearch, reportClient, fetchImpl, agentClient } = {}) {
   const router = express.Router();
   const registry = createIndicatorRegistry(ledger);
+  const agent = createAgent(agentClient === undefined ? { ledger } : { ledger, client: agentClient });
+  const jobs = new Map(); // jobId -> { status, startedAt, result?, error? } (in memory)
   const reports = createReportAnalyzer(ledger, reportClient === undefined ? {} : { client: reportClient });
 
   router.use((req, res, next) => {
@@ -67,6 +70,7 @@ function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_AD
       version: OFEK_VERSION,
       research: { enabled: research.researchEnabled, model: research.OFEK_MODEL, dataSources: research.dataSources, dataSourceErrors: research.dataSourceErrors },
       reports: { enabled: reports.enabled },
+      agent: { enabled: agent.enabled },
       ledger: { kind: ledger.kind, persistent: ledger.persistent, integrity: await ledger.verify() },
       horizons: Object.keys(HORIZONS),
     });
@@ -262,6 +266,44 @@ function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_AD
   router.post("/indicators/:id/status", wrap(async (req, res) => {
     const entry = await registry.transition(req.params.id, req.body || {});
     res.status(201).json({ ok: true, entry, indicator: await registry.get(req.params.id), persistent: ledger.persistent, storageWarning: storageNote() });
+  }));
+
+  /* ---- Ofek Agent ---- */
+  // Runs can take minutes: start a background job and poll it.
+  router.post("/agent", wrap(async (req, res) => {
+    const { task, sessionId, context, attachments } = req.body || {};
+    if (!agent.enabled) return res.status(503).json({ ok: false, error: "ANTHROPIC_API_KEY לא מוגדר — הסוכן אינו פעיל" });
+    if (!task || typeof task !== "string") return res.status(400).json({ ok: false, error: "task חובה" });
+    if ([...jobs.values()].filter((j) => j.status === "running").length >= 3) {
+      return res.status(429).json({ ok: false, error: "כבר רצות 3 משימות — המתינו לסיום" });
+    }
+    // Forget finished jobs after 24 hours.
+    for (const [id, j] of jobs) if (j.finishedAt && Date.now() - Date.parse(j.finishedAt) > 864e5) jobs.delete(id);
+    const jobId = `job_${crypto.randomUUID()}`;
+    const job = { status: "running", startedAt: new Date().toISOString(), task };
+    jobs.set(jobId, job);
+    agent.run({ task, sessionId, context, attachments })
+      .then((result) => Object.assign(job, { status: "done", finishedAt: new Date().toISOString(), result }))
+      .catch((err) => {
+        console.error("ofek agent:", err.message);
+        Object.assign(job, { status: "error", finishedAt: new Date().toISOString(), error: err.status && err.status < 500 ? err.message : "שגיאה בהרצת הסוכן" });
+      });
+    res.status(202).json({ ok: true, jobId, status: "running" });
+  }));
+
+  router.get("/agent/jobs/:id", (req, res) => {
+    const job = jobs.get(req.params.id);
+    if (!job) return res.status(404).json({ ok: false, error: "משימה לא נמצאה (ייתכן שהשרת אותחל)" });
+    res.json({ ok: true, jobId: req.params.id, ...job });
+  });
+
+  router.get("/agent/proposals", wrap(async (_req, res) => {
+    res.json({ ok: true, persistent: ledger.persistent, proposals: await agent.listProposals() });
+  }));
+
+  router.post("/agent/proposals/:id/decision", wrap(async (req, res) => {
+    const r = await agent.decide(req.params.id, req.body || {});
+    res.status(201).json({ ok: true, ...r, persistent: ledger.persistent, storageWarning: storageNote() });
   }));
 
   /* ---- licensed data sources (MCP connector) ---- */

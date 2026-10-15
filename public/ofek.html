@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>אופק — סוכן מחקר</title>
+<style>
+  :root { --bg:#f6f5f2; --card:#fff; --ink:#1d2433; --muted:#667085; --line:#e4e2dc; --accent:#0f6b5c; --warn:#a15c07; --bad:#b42318; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#14161b; --card:#1d2027; --ink:#e8e9ec; --muted:#9aa1ad; --line:#2d313a; --accent:#3fb59f; --warn:#e3a14a; --bad:#f07167; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.6 system-ui, "Segoe UI", Arial, sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 20px 16px 60px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; } .sub { color: var(--muted); margin: 0 0 18px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+  label { display:block; font-weight:600; margin: 8px 0 4px; }
+  textarea, input[type=text], input[type=password] { width:100%; padding:10px; border:1px solid var(--line); border-radius:8px; background:transparent; color:inherit; font:inherit; }
+  textarea { min-height: 110px; resize: vertical; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:10px; }
+  button { background: var(--accent); color:#fff; border:0; border-radius:8px; padding:10px 16px; font:inherit; font-weight:600; cursor:pointer; }
+  button.secondary { background: transparent; color: var(--ink); border:1px solid var(--line); }
+  button.danger { background: var(--bad); }
+  button:disabled { opacity:.5; cursor:default; }
+  .muted { color: var(--muted); font-size: .9rem; }
+  .status { font-weight:600; } .warn { color: var(--warn); } .bad { color: var(--bad); }
+  #report h2, #report h3 { margin: 18px 0 6px; } #report p { margin: 6px 0; }
+  #report table { border-collapse: collapse; width:100%; display:block; overflow-x:auto; }
+  #report td, #report th { border:1px solid var(--line); padding:4px 8px; }
+  ul.trace { margin:0; padding-inline-start: 18px; font-size:.9rem; }
+  .pill { display:inline-block; border:1px solid var(--line); border-radius:999px; padding:0 8px; font-size:.8rem; margin-inline-end:4px; }
+  .prop { border-top:1px solid var(--line); padding-top:10px; margin-top:10px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>אופק — סוכן מחקר השקעות</h1>
+  <p class="sub">כלי פנימי לצוות. הסוכן אוסף, מאמת, מריץ מודלים וכותב דוח. תחזיות מוגשות כהצעות ונרשמות רק באישור קארין.</p>
+
+  <section class="card">
+    <label for="token">טוקן גישה</label>
+    <input id="token" type="password" autocomplete="off" placeholder="OFEK_ADMIN_TOKEN">
+    <label for="task">משימה</label>
+    <textarea id="task" placeholder="לדוגמה: נתח את סביבת הריבית בישראל ואת ההשלכה על מסלולי אג״ח בקרנות השתלמות לאופק של שנה"></textarea>
+    <label for="file">קובץ מצורף (CSV / טקסט, אופציונלי)</label>
+    <input id="file" type="file" accept=".csv,.txt,.json,.md">
+    <div class="row">
+      <button id="run">הרץ</button>
+      <label class="muted" style="font-weight:400;margin:0"><input type="checkbox" id="cont"> המשך את השיחה הקודמת</label>
+      <span id="status" class="status"></span>
+    </div>
+  </section>
+
+  <section class="card" id="out" hidden>
+    <div id="report"></div>
+    <h3>עקבות עבודה</h3>
+    <ul class="trace" id="trace"></ul>
+    <h3>מקורות</h3>
+    <ul class="trace" id="sources"></ul>
+  </section>
+
+  <section class="card">
+    <div class="row" style="margin:0;justify-content:space-between">
+      <strong>הצעות תחזית ממתינות לאישור</strong>
+      <button class="secondary" id="loadProps">רענן</button>
+    </div>
+    <label for="approver">שם המאשר/ת</label>
+    <input id="approver" type="text" placeholder="karin">
+    <div id="props" class="muted">—</div>
+  </section>
+</main>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const store = { get(k) { try { return sessionStorage.getItem(k); } catch { return null; } }, set(k, v) { try { sessionStorage.setItem(k, v); } catch {} } };
+  $("token").value = store.get("ofekToken") || "";
+  $("token").addEventListener("change", () => store.set("ofekToken", $("token").value));
+  let sessionId = store.get("ofekSession");
+
+  const api = async (path, opts = {}) => {
+    const res = await fetch("/api/ofek" + path, { ...opts, headers: { "Content-Type": "application/json", Authorization: "Bearer " + $("token").value, ...(opts.headers || {}) } });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok || body.ok === false) throw new Error(body.error || ("שגיאה " + res.status));
+    return body;
+  };
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  // Minimal, safe markdown: escape first, then headings / bold / lists / tables.
+  function md(src) {
+    const lines = esc(src).split("\n");
+    let html = "", inList = false, table = [];
+    const flushTable = () => {
+      if (!table.length) return;
+      const rows = table.filter((r) => !/^\|?\s*:?-{2,}/.test(r));
+      html += "<table>" + rows.map((r, i) => "<tr>" + r.replace(/^\||\|$/g, "").split("|").map((c) => (i ? "<td>" : "<th>") + c.trim() + (i ? "</td>" : "</th>")).join("") + "</tr>").join("") + "</table>";
+      table = [];
+    };
+    for (let l of lines) {
+      l = l.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+      if (/^\s*\|/.test(l)) { table.push(l.trim()); continue; } else flushTable();
+      if (/^\s*[-*]\s+/.test(l)) { if (!inList) { html += "<ul>"; inList = true; } html += "<li>" + l.replace(/^\s*[-*]\s+/, "") + "</li>"; continue; }
+      if (inList) { html += "</ul>"; inList = false; }
+      const h = l.match(/^(#{1,4})\s+(.*)/);
+      if (h) html += `<h${Math.min(h[1].length + 1, 4)}>${h[2]}</h${Math.min(h[1].length + 1, 4)}>`;
+      else if (l.trim()) html += "<p>" + l + "</p>";
+    }
+    flushTable(); if (inList) html += "</ul>";
+    return html;
+  }
+
+  async function readFile() {
+    const f = $("file").files[0];
+    if (!f) return [];
+    if (f.size > 2_000_000) throw new Error("הקובץ גדול מ־2MB");
+    return [{ type: "text", name: f.name, text: await f.text() }];
+  }
+
+  $("run").addEventListener("click", async () => {
+    const task = $("task").value.trim();
+    if (!task) return;
+    $("run").disabled = true;
+    $("status").className = "status"; $("status").textContent = "מתחיל…";
+    try {
+      const attachments = await readFile();
+      const start = await api("/agent", { method: "POST", body: JSON.stringify({ task, attachments, sessionId: $("cont").checked ? sessionId : undefined }) });
+      const t0 = Date.now();
+      for (;;) {
+        await new Promise((r) => setTimeout(r, 4000));
+        const job = await api("/agent/jobs/" + start.jobId);
+        $("status").textContent = "עובד… " + Math.round((Date.now() - t0) / 1000) + " שניות";
+        if (job.status === "running") continue;
+        if (job.status === "error") throw new Error(job.error);
+        show(job.result); break;
+      }
+    } catch (e) {
+      $("status").className = "status bad"; $("status").textContent = e.message;
+    } finally { $("run").disabled = false; }
+  });
+
+  function show(r) {
+    sessionId = r.sessionId; store.set("ofekSession", sessionId);
+    $("out").hidden = false;
+    $("report").innerHTML = md(r.report || "(אין טקסט)");
+    $("trace").innerHTML = r.trace.map((t) => `<li><span class="pill">${esc(t.kind)}</span>${esc(t.tool)}${t.ok === false ? ' <span class="bad">נכשל</span>' : ""}</li>`).join("") || "<li>לא הורצו כלים</li>";
+    $("sources").innerHTML = r.sources.map((s) => `<li><a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.title || s.url)}</a></li>`).join("") || "<li>—</li>";
+    $("status").className = "status" + (r.complete ? "" : " warn");
+    $("status").textContent = r.complete ? "הושלם" : "הסתיים חלקית (" + r.stopped + ")";
+    if (!r.persistent) $("status").textContent += " · אין מסד נתונים — הרישום בזיכרון בלבד";
+    if (r.proposals.length) loadProps();
+  }
+
+  async function loadProps() {
+    try {
+      const { proposals } = await api("/agent/proposals");
+      const pending = proposals.filter((p) => p.status === "pending");
+      $("props").innerHTML = pending.length ? pending.map((p) => `
+        <div class="prop" data-id="${esc(p.id)}">
+          <div><strong>${esc(p.preview.asset)}</strong> · ${esc(p.preview.horizonLabel)} · ${p.preview.pointForecast == null ? "ללא תשואה מרכזית" : esc((p.preview.pointForecast * 100).toFixed(1) + "%")}</div>
+          <div class="muted">${esc(p.rationale)}</div>
+          <div class="row"><button data-d="approve">אשר ורשום</button><button class="danger" data-d="reject">דחה</button></div>
+        </div>`).join("") : "אין הצעות ממתינות";
+    } catch (e) { $("props").textContent = e.message; }
+  }
+  $("loadProps").addEventListener("click", loadProps);
+  $("props").addEventListener("click", async (ev) => {
+    const b = ev.target.closest("button[data-d]"); if (!b) return;
+    const id = b.closest(".prop").dataset.id;
+    const approvedBy = $("approver").value.trim();
+    if (!approvedBy) { alert("נא למלא שם מאשר/ת"); return; }
+    const reason = b.dataset.d === "reject" ? prompt("סיבת הדחייה:") : null;
+    if (b.dataset.d === "reject" && !reason) return;
+    try {
+      await api(`/agent/proposals/${encodeURIComponent(id)}/decision`, { method: "POST", body: JSON.stringify({ decision: b.dataset.d, reason, approval: { approvedBy, approvedAt: new Date().toISOString() } }) });
+      loadProps();
+    } catch (e) { alert(e.message); }
+  });
+})();
+</script>
+</body>
+</html>

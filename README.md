@@ -147,6 +147,8 @@ and send the reply back — exactly as `whatsapp.js` does.
 | `POST /api/ofek/retirement/simulate` | צבירה, דמי ניהול, מונטה קרלו, סיכון רצף ואריכות ימים |
 | `POST /api/ofek/pension/compare` | השוואת מסלולים באותה רמת סיכון ובאותה תקופה |
 | `POST /api/ofek/video/check` | בקרת איכות לסרטון לפני פרסום (כולל אישור קארין) |
+| `POST /api/ofek/agent` → `GET /agent/jobs/:id` | **סוכן אופק**: מקבל משימה (ואופציונלית קובץ CSV/טקסט), מתכנן, מחפש ברשת ובמקורות המורשים, מריץ את כל מודולי אופק ככלים, וכותב דוח עם עקבות עבודה. רץ ברקע; ממשק: `/ofek.html` |
+| `GET /api/ofek/agent/proposals` · `POST /agent/proposals/:id/decision` | הצעות תחזית של הסוכן — נרשמות כתחזית רק באישור קארין (approve / reject) |
 | `POST /api/ofek/pension/import` | ייבוא נתוני גמל־נט / פנסיה־נט: CSV, רשומות JSON או data.gov.il (CKAN). מיפוי עמודות ניתן לשינוי; אפשר להשוות ישירות (`compare`) |
 | `POST /api/ofek/reports/analyze` | מנתח דוחות (PDF או טקסט): חילוץ נתונים עם ציטוט ועמוד; הקוד מאמת ציטוטים ומחשב שינוי מהדוח הקודם; נשמר כטיוטה |
 | `POST /api/ofek/reports/:id/review` · `GET /reports` | אישור טיוטה (קארין) ותיקונים; רשימת דוחות לפי ישות |

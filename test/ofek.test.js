@@ -456,3 +456,80 @@ test("model builder: DCF math, guards, sensitivity; comps range and outliers", (
   assert.equal(c.peerStats.median, 10);
   assert.equal(c.impliedRange.median.equityValue, 80); // 10 * 10 - 20
 });
+
+const { createAgent } = require("../ofek/agent");
+
+function fakeClient(script) {
+  const calls = [];
+  return {
+    calls,
+    beta: { messages: { stream: (params) => {
+      calls.push(JSON.parse(JSON.stringify(params.messages)));
+      const next = script.shift();
+      return { finalMessage: async () => { if (next instanceof Error) throw next; return next; } };
+    } } },
+  };
+}
+
+test("Ofek agent: tool loop, parallel results, proposals need approval, run is logged", async () => {
+  const ledger = createLedger({ backend: memoryBackend() });
+  const d = (value) => ({ value, asOf: "2026-10-01", source: "test" });
+  const client = fakeClient([
+    {
+      model: "m", stop_reason: "tool_use",
+      content: [
+        { type: "text", text: "מריץ כלים" },
+        { type: "tool_use", id: "t1", name: "evaluate_market_signals", input: { indicators: { rateShock: d(10), inflationExpectations: d(5), yieldCurve: d(0.5), creditSpreads: d(10), earningsRevisions: d(1), volatility: d(15) } } },
+        { type: "tool_use", id: "t2", name: "propose_forecast", input: { card: card(), rationale: "בדיקה" } },
+        { type: "tool_use", id: "t3", name: "no_such_tool", input: {} },
+      ],
+    },
+    { model: "m", stop_reason: "end_turn", content: [{ type: "text", text: "## תקציר מנהלים\nסביבה יציבה יחסית." }] },
+  ]);
+  const agent = createAgent({ ledger, client, sources: [], now: () => NOW });
+  const r = await agent.run({ task: "בדיקת סביבת שוק" });
+
+  assert.equal(r.complete, true);
+  assert.match(r.report, /סביבה יציבה/);
+  // All three tool results went back in ONE user message, errors flagged.
+  const second = client.calls[1];
+  const results = second[second.length - 1].content;
+  assert.equal(results.length, 3);
+  assert.match(results[0].content, /stable/);
+  assert.equal(results[2].is_error, true);
+  // Proposal filed, not a forecast.
+  assert.equal(r.proposals.length, 1);
+  assert.equal((await ledger.list()).length, 0);
+  const [p] = await agent.listProposals();
+  assert.equal(p.status, "pending");
+
+  await assert.rejects(agent.decide(p.id, { decision: "approve", approval: { approvedBy: "someone", approvedAt: "2026-10-10" } }), /אישור/);
+  const dec = await agent.decide(p.id, { decision: "approve", approval: { approvedBy: "karin", approvedAt: "2026-10-10T09:00:00Z" } });
+  assert.ok(dec.forecast.id);
+  assert.equal((await ledger.list()).length, 1);
+  await assert.rejects(agent.decide(p.id, { decision: "reject", approval: { approvedBy: "karin", approvedAt: "2026-10-10T09:00:00Z" } }), /כבר התקבלה/);
+
+  const runs = (await ledger.entries()).filter((e) => e.type === "agent_run");
+  assert.equal(runs.length, 1);
+  assert.deepEqual(runs[0].tools, ["evaluate_market_signals", "propose_forecast", "no_such_tool"]);
+  assert.equal((await ledger.verify()).ok, true);
+});
+
+test("Ofek agent: failed run rolls back, session continues append-only", async () => {
+  const ledger = createLedger({ backend: memoryBackend() });
+  const client = fakeClient([
+    { model: "m", stop_reason: "end_turn", content: [{ type: "text", text: "תשובה ראשונה" }] },
+    new Error("network"),
+    { model: "m", stop_reason: "end_turn", content: [{ type: "text", text: "תשובה שנייה" }] },
+  ]);
+  const agent = createAgent({ ledger, client, sources: [], now: () => NOW });
+  const first = await agent.run({ task: "שאלה 1" });
+  await assert.rejects(agent.run({ task: "שאלה 2", sessionId: first.sessionId }), /network/);
+  const third = await agent.run({ task: "שאלה 2", sessionId: first.sessionId });
+  assert.equal(third.sessionId, first.sessionId);
+  // History sent on the retry = turn 1 (user + assistant) + new user turn; the failed turn is gone.
+  const sent = client.calls[2];
+  assert.equal(sent.length, 3);
+  assert.deepEqual(sent.map((m) => m.role), ["user", "assistant", "user"]);
+  assert.equal(sent[1].content[0].text, "תשובה ראשונה");
+});
