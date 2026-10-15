@@ -6,6 +6,8 @@ const crypto  = require('crypto');
 const { createStore }   = require('./store');
 const { generateReply, MIA_MODEL, claudeEnabled } = require('./agent');
 const { registerWhatsApp, whatsappConfigured }    = require('./whatsapp');
+const { createOfekRouter } = require('./ofek/routes');
+const { createLedger }     = require('./ofek/ledger');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -14,7 +16,20 @@ const WA_NUMBER = '972502423356';
 const miaStore = createStore();
 
 // rawBody is needed by the WhatsApp channel to verify X-Hub-Signature-256.
-app.use(express.json({ verify: (req, _res, buf) => { req.rawBody = buf; } }));
+const jsonDefault = express.json({ verify: (req, _res, buf) => { req.rawBody = buf; } });
+// Ofek's report analyzer accepts PDFs as base64, so it needs a larger body limit.
+const jsonReports = express.json({ limit: '35mb' });
+// Only an authenticated request gets the large limit.
+function ofekAuthorized(req) {
+  const token = process.env.OFEK_ADMIN_TOKEN;
+  const auth = req.headers.authorization || '';
+  if (!token || !auth.startsWith('Bearer ')) return false;
+  const a = crypto.createHash('sha256').update(auth.slice(7)).digest();
+  const b = crypto.createHash('sha256').update(token).digest();
+  return crypto.timingSafeEqual(a, b);
+}
+app.use((req, res, next) =>
+  (req.path.startsWith('/api/ofek/reports') && ofekAuthorized(req) ? jsonReports : jsonDefault)(req, res, next));
 app.use(express.urlencoded({ extended: true }));
 // ---- Main website: React comparison app (compare-app/dist, built by `npm run build`) ----
 const COMPARE_DIST = path.join(__dirname, 'compare-app', 'dist');
@@ -362,9 +377,16 @@ app.post('/webhook', async (req, res) => {
 
 registerWhatsApp(app, miaStore);
 
+/* ========================
+   OFEK AI 4.0 – INVESTMENT RESEARCH (internal, token-protected)
+   ======================== */
+const ofekLedger = createLedger();
+app.use('/api/ofek', createOfekRouter({ ledger: ofekLedger }));
+
 app.get('/health', (req, res) => res.json({
   status: 'ok',
   mia: { claudeEnabled, model: MIA_MODEL, store: miaStore.kind, whatsapp: whatsappConfigured },
+  ofek: { enabled: !!process.env.OFEK_ADMIN_TOKEN, ledger: ofekLedger.kind },
 }));
 // Website routes (SPA): always serve the React app's index.html
 const spaRoutes = ['/', '/index.html', '/funds', '/funds/*', '/compare', '/articles', '/articles/*', '/contact'];
@@ -398,6 +420,7 @@ for (const signal of ['SIGINT', 'SIGTERM']) {
   process.on(signal, () => {
     server.close(async () => {
       await miaStore.close();
+      await ofekLedger.close();
       process.exit(0);
     });
   });

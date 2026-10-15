@@ -122,3 +122,48 @@ and send the reply back — exactly as `whatsapp.js` does.
 
 - Mia is instructed never to invent prices, policies, or order statuses. To give
   her real account/order data, extend `agent.js` with tool use or a lookup step.
+
+## אופק – OFEK AI 4.0 (מחקר השקעות, פנימי)
+
+מודול מחקר השקעות פנימי לצוות. כל הנתיבים תחת `/api/ofek` דורשים
+`Authorization: Bearer $OFEK_ADMIN_TOKEN` (בלי הטוקן ה־API כבוי).
+
+| נתיב | מה עושה |
+|---|---|
+| `GET /api/ofek/status` | גרסה, מצב מנוע המחקר, סוג היומן ובדיקת שלמות |
+| `POST /api/ofek/research` | דוח מחקר (Claude + חיפוש רשת) במבנה הדוח המקצועי. `context` = תוצאות כמותיות שחושבו בפועל |
+| `POST /api/ofek/forecast-card/validate` | בדיקת כרטיס תחזית (שדות חובה, עיגול נגד דיוק מדומה, טווח סטטיסטי מול שיפוטי) |
+| `POST /api/ofek/forecasts` | רישום תחזית ביומן |
+| `POST /api/ofek/forecasts/:id/revise` | גרסה חדשה (המקור נשמר כפי שהיה) |
+| `POST /api/ofek/forecasts/:id/outcome` | רישום תוצאה בפועל + שגיאת חיזוי |
+| `GET /api/ofek/forecasts`, `/forecasts/:id/history`, `/ledger/verify` | עיון ביומן ובדיקת שרשרת ה־hash |
+| `GET /api/ofek/evaluate` | MAE / RMSE / Bias / כיוון / כיסוי טווח בתקופת פעילות אמיתית, מול מודל ייחוס נאיבי |
+| `POST /api/ofek/evaluate/walk-forward` | בדיקת Walk-Forward היסטורית למודלי הייחוס |
+| `POST /api/ofek/evaluate/compare` | מבחן פרמוטציה — "שיפור" רק אם מובהק |
+| `POST /api/ofek/evaluate/sentiment` | מודול 9.6.6: מבחן ערך חיזויי לאינדיקטור סנטימנט — מאושר / מאושר למשטרים מסוימים / נדחה, כולל תיקון לבדיקות מרובות (`testsConducted`) ותלות בין תצפיות (`blockSize`) |
+| `POST /api/ofek/sentiment/read` | מודול 9.6: קריאת סנטימנט אומרים / עושים / מתמחרים — אחוזונים Point-in-Time, פיזור בתוך משפחה, ביטחון תיאורי וביטחון חיזויי נפרדים. עם `record` נרשמת ביומן (9.6.11) |
+| `GET /api/ofek/sentiment/readings` | יומן קריאות הסנטימנט |
+| `POST /api/ofek/signals` | Early Market Signal Engine — 3 רמות לפי מדדים שסופקו |
+| `POST /api/ofek/retirement/simulate` | צבירה, דמי ניהול, מונטה קרלו, סיכון רצף ואריכות ימים |
+| `POST /api/ofek/pension/compare` | השוואת מסלולים באותה רמת סיכון ובאותה תקופה |
+| `POST /api/ofek/video/check` | בקרת איכות לסרטון לפני פרסום (כולל אישור קארין) |
+| `POST /api/ofek/agent` → `GET /agent/jobs/:id` | **סוכן אופק**: מקבל משימה (ואופציונלית קובץ CSV/טקסט), מתכנן, מחפש ברשת ובמקורות המורשים, מריץ את כל מודולי אופק ככלים, וכותב דוח עם עקבות עבודה. רץ ברקע; ממשק: `/ofek.html` |
+| `GET /api/ofek/agent/proposals` · `POST /agent/proposals/:id/decision` | הצעות תחזית של הסוכן — נרשמות כתחזית רק באישור קארין (approve / reject) |
+| `POST /api/ofek/pension/import` | ייבוא נתוני גמל־נט / פנסיה־נט: CSV, רשומות JSON או data.gov.il (CKAN). מיפוי עמודות ניתן לשינוי; אפשר להשוות ישירות (`compare`) |
+| `POST /api/ofek/reports/analyze` | מנתח דוחות (PDF או טקסט): חילוץ נתונים עם ציטוט ועמוד; הקוד מאמת ציטוטים ומחשב שינוי מהדוח הקודם; נשמר כטיוטה |
+| `POST /api/ofek/reports/:id/review` · `GET /reports` | אישור טיוטה (קארין) ותיקונים; רשימת דוחות לפי ישות |
+| `GET /api/ofek/sources` | מקורות נתונים מורשים שמחוברים (ללא טוקנים) |
+| `POST /api/ofek/models/dcf` | בונה מודלים: DCF עם תרחישים וטבלת רגישות; מחייב מקור לכל הנחה |
+| `POST /api/ofek/models/comps` | מכפילי השוואה: טווח רבעונים, סינון חריגים ומכפילים שליליים |
+| `POST /api/ofek/quality-gate` | OFEK QUALITY GATE (9.6.13) לסרטון / פוסט / סקירת שוק / דוח ללקוח — עבר / עבר בהערות / נחסם. בסרטון רצה גם בקרת הסרטון המלאה |
+| `GET/POST /api/ofek/indicators` | מרשם אינדיקטורים (9.6.1): כרטיס מלא, הוספה ושינוי באישור קארין בלבד |
+| `GET /api/ofek/indicators/:id` · `POST /indicators/:id/card` | מצב, היסטוריה וניסויים של אינדיקטור; עדכון כרטיס עם סיבה |
+| `POST /api/ofek/indicators/:id/experiments` | מריץ בדיקת ערך חיזויי (9.6.6) ורושם אותה ביומן עם הרישום המוקדם ומספר הבדיקות בפועל |
+| `POST /api/ofek/indicators/:id/status` | מחזור חיים: מחקרי → תקופת ניסיון (ניסוי מאושר; באישור מוגבל — כלל משטר בזמן אמת) → פעיל (אישור קארין + סיכום ניסיון) → מושעה |
+
+יומן התחזיות מאפשר רק הוספה (append-only) ושרשרת hash; ב־Postgres טריגר חוסם
+UPDATE/DELETE. בלי `DATABASE_URL` היומן נשמר בזיכרון בלבד וכל תגובה מציינת זאת.
+מקורות נתונים בתשלום (S&P, Morningstar, Daloopa וכו') מתחברים לדוחות המחקר דרך `OFEK_MCP_SERVERS` — נדרש מינוי אצל הספק.
+אין במודול מסחר, ניוד או העברת כספים. נתוני האתר (compare-app) הם נתוני דמו ואין להזין אותם למחקר.
+
+בדיקות: `npm test`.
