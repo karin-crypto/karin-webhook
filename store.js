@@ -10,14 +10,21 @@
  * Interface (all async):
  *   getHistory(sessionId) -> [{ role, content }]   (chronological, last MAX_TURNS)
  *   append(sessionId, messages)                     (messages: [{ role, content }])
+ *   cleanup(maxAgeMs?) -> removedCount              (prune sessions idle beyond maxAgeMs)
  *   close()
  *   .kind                                           ("postgres" | "memory")
  */
 
 const MAX_TURNS = 20; // messages (user + assistant) kept per session
 
+// Conversations idle longer than this are pruned by cleanup(). Keeps storage
+// bounded so abandoned sessions don't accumulate forever.
+const RETENTION_MS =
+  (parseInt(process.env.MIA_RETENTION_DAYS, 10) || 30) * 24 * 60 * 60 * 1000;
+
 function createMemoryStore() {
   const map = new Map(); // sessionId -> [{ role, content }]
+  const seen = new Map(); // sessionId -> last-activity timestamp (ms)
   return {
     kind: "memory",
     async getHistory(sessionId) {
@@ -28,6 +35,19 @@ function createMemoryStore() {
       const next = (map.get(sessionId) || []).concat(messages);
       if (next.length > MAX_TURNS) next.splice(0, next.length - MAX_TURNS);
       map.set(sessionId, next);
+      seen.set(sessionId, Date.now());
+    },
+    async cleanup(maxAgeMs = RETENTION_MS) {
+      const cutoff = Date.now() - maxAgeMs;
+      let removed = 0;
+      for (const [id, ts] of seen) {
+        if (ts < cutoff) {
+          map.delete(id);
+          seen.delete(id);
+          removed++;
+        }
+      }
+      return removed;
     },
     async close() {},
   };
@@ -83,6 +103,29 @@ function createPostgresStore(databaseUrl) {
           [sessionId, m.role, m.content]
         );
       }
+      // Keep only the most recent MAX_TURNS rows for this session; getHistory
+      // never reads beyond that, so older rows are dead weight.
+      await pool.query(
+        `DELETE FROM mia_messages
+         WHERE session_id = $1
+           AND id NOT IN (
+             SELECT id FROM mia_messages
+             WHERE session_id = $1
+             ORDER BY id DESC
+             LIMIT $2
+           )`,
+        [sessionId, MAX_TURNS]
+      );
+    },
+    async cleanup(maxAgeMs = RETENTION_MS) {
+      await ready;
+      const cutoffSeconds = Math.floor(maxAgeMs / 1000);
+      const { rowCount } = await pool.query(
+        `DELETE FROM mia_messages
+         WHERE created_at < now() - ($1 * interval '1 second')`,
+        [cutoffSeconds]
+      );
+      return rowCount;
     },
     async close() {
       await pool.end();
