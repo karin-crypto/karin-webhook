@@ -1,0 +1,135 @@
+{
+  "show": {
+    "name": "Monaco Yacht Show 2026",
+    "dates": "23–26.09.2026",
+    "venue": "Port Hercule, Monaco",
+    "pressOffice": { "email": "communicationdivision@monacoyachtshow.mc", "pressCentre": "Quai Antoine Ier (מפה 2026: Virage Louis Chiron) · נקודה 18" },
+    "source": "YachtBuyer, 10 Largest Superyachts Confirmed for MYS 2026 (17.07.2026); רשימת MYS הרשמית; הודעות מספנות/ברוקרים, נכון ל-12.09.2026"
+  },
+  "statuses": [
+    { "id": "none", "label": "לא פנינו" },
+    { "id": "sent", "label": "פנייה נשלחה" },
+    { "id": "pending", "label": "ממתינים לתשובה" },
+    { "id": "approved", "label": "צילום אושר" },
+    { "id": "declined", "label": "נדחה" }
+  ],
+  "yachts": [
+    {
+      "id": "leviathan", "rank": 1, "name": "Leviathan", "length": "111 מ׳", "builder": "Oceanco", "year": "2025", "debut": false,
+      "themes": ["flagship", "exploration"], "priority": "כתבת הדגל",
+      "berth": "D02 · Quai Rainier III", "berthVerified": true,
+      "why": "הגדולה בתערוכה. מעבדה, מרכז צלילה, הנעה מתקדמת. סיפור luxury × science × technology, לא רק יאכטה יפה. הבעלים: גייב ניואל (Valve).",
+      "exhibitor": "Oceanco",
+      "contacts": [
+        { "role": "Press · Oceanco", "name": "Georgia Lewis, PR Manager", "phone": "+31 6 83 19 46 88", "email": "", "note": "האימייל מופיע בהודעה לעיתונות של Oceanco (PR Newswire, 6.8.2026) – לאמת לפני שליחה", "url": "https://www.oceancoyacht.com/newsroom/" }
+      ],
+      "links": [ { "label": "Oceanco · Leviathan", "url": "https://www.oceancoyacht.com/fleet/leviathan/" } ]
+    },
+    {
+      "id": "nixie", "rank": 2, "name": "Nixie", "length": "102.4 מ׳", "builder": "Lürssen", "year": "2026", "debut": true,
+      "themes": ["flagship", "debut"], "priority": "יעד מס׳ 1 למעיין",
+      "berth": "Quai Rainier Ier (לפי Edmiston)", "berthVerified": false,
+      "why": "בכורה עולמית. מסירה יוני 2026 (לשעבר Project JASSJ). Beach club של 126 מ״ר, בריכת אינפיניטי עם רצפת זכוכית, מנחת מסוקים מוסמך. עיצוב RWD. לשכירות דרך Edmiston מ-€2.4M לשבוע.",
+      "exhibitor": "Edmiston (סוכן שכירות בלעדי)",
+      "contacts": [
+        { "role": "Press · Lürssen", "name": "Yacht PR", "phone": "+49 421 6604 190", "email": "ypr@luerssen.de", "note": "", "url": "https://www.lurssen.com/en/news-media-friends/press-releases/" },
+        { "role": "Broker · Edmiston", "name": "Rory Noble, Head of Marketing & Brand", "phone": "", "email": "", "note": "דרך עמוד Press & Media של Edmiston (משרד מונקו)", "url": "https://edmiston.com/press-and-media" }
+      ],
+      "links": [ { "label": "Edmiston · MYS 2026 guide", "url": "https://www.edmiston.com/monaco-yacht-show-complete-guide/" } ]
+    },
+    {
+      "id": "draak", "rank": 3, "name": "Draak", "length": "92.8 מ׳", "builder": "Oceanco (rebuild)", "year": "2026 (rebuild)", "debut": false,
+      "themes": ["exploration"], "priority": "סיפור משותף עם Leviathan",
+      "berth": "D01 · Quai Rainier III", "berthVerified": true,
+      "why": "לשעבר Equanimity / Tranquility. נבנתה מחדש כ-support vessel ל-Leviathan: יאכטת־אם וספינת־צל שעובדות כמערכת אחת למחקר ים. לראשונה Oceanco מציגה new build ו-rebuild יחד.",
+      "exhibitor": "Oceanco",
+      "contacts": [
+        { "role": "Press · Oceanco", "name": "Georgia Lewis, PR Manager", "phone": "+31 6 83 19 46 88", "email": "", "note": "אותו איש קשר כמו Leviathan – לבקש את שתי היאכטות בפנייה אחת", "url": "https://www.oceancoyacht.com/fleet/draak/" }
+      ],
+      "links": []
+    },
+    {
+      "id": "angelique", "rank": 4, "name": "Angelique", "length": "87.7 מ׳", "builder": "Turquoise Yachts", "year": "2026", "debut": true,
+      "themes": ["debut", "newgen"], "priority": "The New Generation of Superyachts",
+      "berth": "לא פורסם עדיין", "berthVerified": false,
+      "why": "הגדולה ביותר שנבנתה בטורקיה (2,646 GT). מסירה מאי 2026, הופעה ציבורית ראשונה. עיצוב H2 Yacht Design: סיפון בעלים פרטי, beach club ברוחב מלא, בריכה עם קיר זכוכית. שכירות בלעדית Edmiston מ-€1.2M לשבוע.",
+      "exhibitor": "Turquoise Yachts / Edmiston",
+      "contacts": [
+        { "role": "Shipyard · Turquoise", "name": "Turquoise Yachts, Istanbul", "phone": "+1 754 258 4755 (US office)", "email": "infousa@turquoiseyachts.com", "note": "אין כתובת Press ייעודית שפורסמה – לפנות דרך טופס Contact ולבקש את מחלקת התקשורת", "url": "https://www.turquoiseyachts.com/contact" },
+        { "role": "Broker · Edmiston", "name": "Rory Noble, Head of Marketing & Brand", "phone": "", "email": "", "note": "", "url": "https://edmiston.com/press-and-media" }
+      ],
+      "links": []
+    },
+    {
+      "id": "pangea", "rank": 5, "name": "Pangea", "length": "80 מ׳", "builder": "Amels (Damen Yachting)", "year": "2025", "debut": true,
+      "themes": ["hybrid", "debut"], "priority": "כתבת משנה: העתיד של התחום",
+      "berth": "E14 · Quai des États-Unis", "berthVerified": true,
+      "why": "Amels 80 הראשונה שמוצגת בתערוכה אי פעם (show debut). הנעה היברידית, 14 אורחים ב-7 סוויטות. צוות Damen Yachting בעמדה JS6 (Jules Soccal).",
+      "exhibitor": "Damen Yachting · stand JS6",
+      "contacts": [
+        { "role": "Press · Damen Yachting / Amels", "name": "Press Officer", "phone": "", "email": "team@damenyachting.com", "note": "לציין Pangea + Synthesis באותה פנייה", "url": "https://www.amelsyachting.com/media-and-press" }
+      ],
+      "links": [ { "label": "Damen · MYS 2026 guide", "url": "https://www.damenyachting.com/events/monaco-yacht-show" } ]
+    },
+    {
+      "id": "malia", "rank": 6, "name": "Malia", "length": "77.7 מ׳", "builder": "Golden Yachts", "year": "2023 (refit 2024)", "debut": false,
+      "themes": ["icon"], "priority": "ויזואל חזק לווידאו",
+      "berth": "לא פורסם עדיין", "berthVerified": false,
+      "why": "עיצוב Studio Vafiadis. מנחת מסוקים בחרטום, beach club, בריכות עם רצפת זכוכית, טווח 6,500 מייל. למכירה ב-€110M דרך Burgess; שכירות מ-€750K לשבוע.",
+      "exhibitor": "Burgess",
+      "contacts": [
+        { "role": "Press · Burgess", "name": "Nicci Perides, Head of PR & Communications", "phone": "+44 20 7766 4300", "email": "press@burgessyachts.com", "note": "Burgess מציגה גם את Vanish ו-Synthesis – פנייה אחת לשלוש יאכטות", "url": "https://www.burgessyachts.com/en/about-us/press-centre" },
+        { "role": "Shipyard · Golden Yachts", "name": "Marketing", "phone": "+30 210 4410719", "email": "marketing@goldenyachts.gr", "note": "", "url": "https://www.goldenyachts.gr/contact/" }
+      ],
+      "links": []
+    },
+    {
+      "id": "n2h", "rank": 7, "name": "N2H", "length": "76.25 מ׳", "builder": "Turquoise Yachts", "year": "2026", "debut": true,
+      "themes": ["hybrid", "debut"], "priority": "כתבת משנה: hybrid",
+      "berth": "לא פורסם עדיין", "berthVerified": false,
+      "why": "הסופר־יאכטה ההיברידית הראשונה של Turquoise. חיצוני Team for Design (Enrico Gobbi), פנים H2. Beach club מדורג, מרפסות מתקפלות, touch-and-go helipad. לא למכירה – יאכטה פרטית (משויכת ל-Kees Vermaat).",
+      "exhibitor": "Turquoise Yachts",
+      "contacts": [
+        { "role": "Shipyard · Turquoise", "name": "Turquoise Yachts, Istanbul", "phone": "+1 754 258 4755 (US office)", "email": "infousa@turquoiseyachts.com", "note": "יאכטה פרטית – הסיכוי לעלייה לסיפון נמוך יותר; לבקש ראיון עם המספנה על ההנעה ההיברידית גם בלי צילום פנים", "url": "https://www.turquoiseyachts.com/contact" }
+      ],
+      "links": []
+    },
+    {
+      "id": "synthesis", "rank": 8, "name": "Synthesis", "length": "74 מ׳", "builder": "Amels 242 (Damen Yachting)", "year": "2021 (refit 2026)", "debut": false,
+      "themes": ["icon", "refit"], "priority": "Owner's Deck + refit 2026",
+      "berth": "H15 · Quai de l'Hirondelle", "berthVerified": true,
+      "why": "חיצוני Tim Heywood, פנים Winch Design. Refit משמעותי 2026, סיפון בעלים שלם עם ספא, בריכת אינפיניטי, קולנוע פתוח. למכירה ב-€132M דרך Burgess + Torrance Yachts (co-exhibitors).",
+      "exhibitor": "Burgess + Torrance Yachts (עם Damen Yachting)",
+      "contacts": [
+        { "role": "Press · Burgess", "name": "Nicci Perides, Head of PR & Communications", "phone": "+44 20 7766 4300", "email": "press@burgessyachts.com", "note": "", "url": "https://www.burgessyachts.com/en/about-us/press-centre" },
+        { "role": "Press · Damen Yachting / Amels", "name": "Press Officer", "phone": "", "email": "team@damenyachting.com", "note": "", "url": "https://www.amelsyachting.com/media-and-press" }
+      ],
+      "links": []
+    },
+    {
+      "id": "silver-fox", "rank": 9, "name": "Silver Fox", "length": "72 מ׳ (MYS: 73.4)", "builder": "Sanlorenzo · 74Steel", "year": "2026", "debut": true,
+      "themes": ["hybrid", "debut"], "priority": "כתבת משנה: diesel-electric",
+      "berth": "לא פורסם עדיין", "berthVerified": false,
+      "why": "הראשונה בסדרת 74Steel, בכורה עולמית. חיצוני Zuccon International Project, פנים Francesco Paszkowski. שכירות בלעדית Edmiston מ-€900K לשבוע. Sanlorenzo מציגה גם 58Steel.",
+      "exhibitor": "Sanlorenzo / Edmiston",
+      "contacts": [
+        { "role": "Media Relations · Sanlorenzo", "name": "Mariangela Barbato", "phone": "+39 340 9955110", "email": "", "note": "", "url": "https://www.sanlorenzoyacht.com/uk/news/comunicati-stampa.asp" },
+        { "role": "Press Office · Comin & Partners (עבור Sanlorenzo)", "name": "Giulia Mori · Tommaso Accomanno", "phone": "+39 347 4938864", "email": "tommaso.accomanno@cominandpartners.com", "note": "", "url": "" },
+        { "role": "Broker · Edmiston", "name": "Rory Noble, Head of Marketing & Brand", "phone": "", "email": "", "note": "", "url": "https://edmiston.com/press-and-media" }
+      ],
+      "links": []
+    },
+    {
+      "id": "vanish", "rank": 10, "name": "Vanish", "length": "71.5 מ׳", "builder": "Feadship", "year": "2021", "debut": false,
+      "themes": ["icon"], "priority": "הכי יקרה למכירה בתערוכה",
+      "berth": "לא פורסם עדיין", "berthVerified": false,
+      "why": "Feadship עטורת פרסים, עיצוב Harrison Eidsgaard, בריכה + helipad. למכירה לראשונה: €148M דרך Burgess (Christian Bakewell) – היאכטה היקרה ביותר למכירה ב-MYS 2026.",
+      "exhibitor": "Burgess",
+      "contacts": [
+        { "role": "Press · Burgess", "name": "Nicci Perides, Head of PR & Communications", "phone": "+44 20 7766 4300", "email": "press@burgessyachts.com", "note": "הברוקר האחראי: Christian Bakewell", "url": "https://www.burgessyachts.com/en/about-us/press-centre" },
+        { "role": "Press · Feadship", "name": "Francis Vermeer, PR & Communications Manager", "phone": "", "email": "francis@feadship.nl", "note": "", "url": "https://www.feadship.nl/pressroom" }
+      ],
+      "links": []
+    }
+  ]
+}
