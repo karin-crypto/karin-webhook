@@ -348,7 +348,10 @@ app.post('/api/contact', (req, res) => {
   res.json({ ok: true, waUrl: `https://wa.me/${WA_NUMBER}?text=${waText}` });
 });
 
+// Leads contain customers' personal details: admin only (same token as Ofek).
 app.get('/api/inquiries', (req, res) => {
+  if (!process.env.OFEK_ADMIN_TOKEN) return res.status(503).json({ ok: false, error: 'OFEK_ADMIN_TOKEN לא מוגדר' });
+  if (!ofekAuthorized(req)) return res.status(401).json({ ok: false, error: 'לא מורשה' });
   ensureDataDir();
   res.json(JSON.parse(fs.readFileSync(INQUIRIES_FILE, 'utf8')));
 });
