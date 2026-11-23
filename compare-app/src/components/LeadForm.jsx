@@ -7,6 +7,7 @@ export default function LeadForm({ defaultProduct = '', context = '', compact = 
   const [errors, setErrors] = useState({});
   const [state, setState] = useState('idle'); // idle | sending | done
   const [waUrl, setWaUrl] = useState(null);
+  const [sendError, setSendError] = useState(null);
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
 
   const validate = () => {
@@ -20,8 +21,11 @@ export default function LeadForm({ defaultProduct = '', context = '', compact = 
   const submit = async e => {
     e.preventDefault(); if (!validate()) return;
     setState('sending');
+    setSendError(null);
     const res = await submitLead({ ...form, context, source: 'compare-site' });
-    setWaUrl(res?.waUrl || null); setState('done'); onDone?.();
+    // Only confirm when the server saved the lead; otherwise let the visitor retry.
+    if (!res?.ok) { setSendError(res?.error || 'השליחה נכשלה'); setState('idle'); return; }
+    setWaUrl(res.waUrl || null); setState('done'); onDone?.();
   };
 
   if (state === 'done') return (
@@ -50,6 +54,7 @@ export default function LeadForm({ defaultProduct = '', context = '', compact = 
           </select><Err k="product" /></div>
         <div className="sm:col-span-2"><label className="label" htmlFor="lf-notes">הערות</label><textarea id="lf-notes" className="input min-h-[90px]" value={form.notes} onChange={set('notes')} placeholder="למשל: צבירה נוכחית, חברה קיימת, מה חשוב לי…" /></div>
       </div>
+      {sendError && <p className="mt-4 text-sm font-semibold text-neg" role="alert">הפנייה לא נשלחה ({sendError}). נסי שוב, או התקשרי אלינו.</p>}
       <button type="submit" disabled={state === 'sending'} className="btn-primary mt-5 w-full !py-3 text-base">{state === 'sending' ? 'שולח…' : 'בדקי לי איפה כדאי להשקיע'}</button>
       <p className="mt-3 text-center text-[11px] text-muted">בשליחת הטופס את/ה מאשר/ת יצירת קשר. הפרטים לא יועברו לצד שלישי.</p>
     </form>
