@@ -88,6 +88,7 @@ test("track model: scenarios, early estimate and their guards", () => {
   assert.equal(custom.impact, -1.25);
   assert.deepEqual(custom.ignoredFactors, ["nasdaq"]);
   assert.throws(() => tm.scenarioImpact(model, "no_such"), /לא מוכר/);
+  assert.throws(() => tm.scenarioImpact(model, "constructor"), /לא מוכר/); // inherited object keys are not scenarios
   assert.throws(() => tm.scenarioImpact({}, "local_shock"), /betas/);
   assert.equal(tm.scenarioTable(model).length, Object.keys(tm.SCENARIOS).length);
 
@@ -405,6 +406,7 @@ test("fund history: merges older and current files, one row per month, skips emp
   assert.equal(h.fundName, "מסלול בדיקה כללי");
   assert.ok(h.rows.every((r, i) => i === 0 || r.period > h.rows[i - 1].period));
   await assert.rejects(fetchFundHistory({ dataset: "stocks", fundId: 50, fetchImpl }), /dataset/);
+  await assert.rejects(fetchFundHistory({ dataset: "constructor", fundId: 50, fetchImpl }), /dataset/);
   await assert.rejects(fetchFundHistory({ dataset: "gemel", fundId: "abc", fetchImpl }), /fundId/);
 });
 

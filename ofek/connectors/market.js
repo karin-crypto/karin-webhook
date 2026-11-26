@@ -89,7 +89,7 @@ function lastOnOrBefore(daily, yyyymmdd) {
 
 /** Close of one index on (or just before) a date, from the Globes data service. */
 async function fetchIndexClose({ factor, date, fetchImpl = fetch, today = new Date() } = {}) {
-  const sym = INDEX_SYMBOLS[factor];
+  const sym = Object.prototype.hasOwnProperty.call(INDEX_SYMBOLS, factor) ? INDEX_SYMBOLS[factor] : null;
   if (!sym) throw new MarketDataError(`מדד לא מוכר: ${factor}`);
   if (!/^\d{8}$/.test(date || "")) throw new MarketDataError("date: YYYYMMDD");
   const key = `${factor}:${date}`;

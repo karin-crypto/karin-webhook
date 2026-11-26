@@ -324,7 +324,7 @@ function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_AD
     else if (b.source === "csv") records = parseCsv(b.csv || "");
     else if (b.source === "ckan") {
       fetched = await fetchCkan({
-        resourceId: b.resourceId || RESOURCES[b.dataset] || process.env.GEMELNET_RESOURCE_ID || RESOURCES.gemel, filters: b.filters, q: b.q, maxRows: b.maxRows,
+        resourceId: b.resourceId || (Object.hasOwn(RESOURCES, String(b.dataset)) ? RESOURCES[b.dataset] : null) || process.env.GEMELNET_RESOURCE_ID || RESOURCES.gemel, filters: b.filters, q: b.q, maxRows: b.maxRows,
         ...(fetchImpl ? { fetchImpl } : {}),
       });
       records = fetched.records;

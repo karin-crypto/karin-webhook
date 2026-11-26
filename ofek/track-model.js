@@ -199,7 +199,7 @@ function walkForwardFit(rows, { factors = FACTOR_NAMES, minTrain = 36, window = 
 
 function resolveShocks(scenario) {
   if (typeof scenario === "string") {
-    const s = SCENARIOS[scenario];
+    const s = Object.prototype.hasOwnProperty.call(SCENARIOS, scenario) ? SCENARIOS[scenario] : null;
     if (!s) throw new TrackModelError(`תרחיש לא מוכר: ${scenario}. קיימים: ${Object.keys(SCENARIOS).join(", ")}`);
     return { name: scenario, he: s.he, shocks: s.shocks };
   }

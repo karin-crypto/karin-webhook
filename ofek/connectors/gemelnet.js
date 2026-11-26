@@ -199,7 +199,7 @@ async function fetchCkan({ resourceId, filters = {}, q, maxRows = 50000, pageSiz
  * month: { period: 'YYYYMM', ret (percent), totalAssets, fundName }.
  */
 async function fetchFundHistory({ dataset, fundId, includeOlder = true, fetchImpl = fetch } = {}) {
-  if (!RESOURCES[dataset]) throw new Error(`dataset: ${Object.keys(RESOURCES).join(" | ")}`);
+  if (!Object.prototype.hasOwnProperty.call(RESOURCES, dataset)) throw new Error(`dataset: ${Object.keys(RESOURCES).join(" | ")}`);
   const id = Number(fundId);
   if (!Number.isInteger(id) || id <= 0) throw new Error("fundId: מספר הקופה/המסלול ברשות שוק ההון");
   const resources = [...(includeOlder ? HISTORY_RESOURCES[dataset] : []), RESOURCES[dataset]];
