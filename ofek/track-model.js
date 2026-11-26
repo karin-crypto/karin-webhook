@@ -487,8 +487,13 @@ function findBaselineModel(baseline, { category, fundId } = {}) {
     if (f) return { ...f, kind: "fund" };
   }
   if (category) {
-    const c = (baseline.categories || []).find((x) => x.category === category) || (baseline.categories || []).find((x) => x.category.includes(category));
-    if (c) return { ...c, kind: "category" };
+    const cats = baseline.categories || [];
+    const exact = cats.find((x) => x.category === category);
+    if (exact) return { ...exact, kind: "category" };
+    // a partial name is accepted only when it points at exactly one category
+    const partial = cats.filter((x) => x.category.includes(category));
+    if (partial.length === 1) return { ...partial[0], kind: "category" };
+    if (partial.length > 1) throw new TrackModelError(`"${category}" מתאים לכמה סוגי מסלולים — ציינו שם מלא: ${partial.map((x) => x.category).join(" | ")}`);
   }
   return null;
 }

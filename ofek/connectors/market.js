@@ -169,13 +169,20 @@ async function fetchFactorHistory({ from, to, asOf = null, fetchImpl = fetch, en
   }
   const periods = periodsBetween(from, to);
   const base = prevPeriod(periods[0]);
-  const ends = [base, ...periods].map(monthEnd);
   let asOfKey = null;
+  // Complete months after `to` and before the as-of month: their official
+  // figures may not be published yet, but each is still its own month.
+  const pending = [];
   if (asOf) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(asOf)) throw new MarketDataError("asOf: YYYY-MM-DD");
     asOfKey = asOf.replace(/-/g, "");
-    if (asOfKey <= ends[ends.length - 1]) throw new MarketDataError("asOf חייב להיות אחרי סוף החודש האחרון בטווח");
+    if (asOfKey <= monthEnd(periods[periods.length - 1])) throw new MarketDataError("asOf חייב להיות אחרי סוף החודש האחרון בטווח");
+    const asOfPeriod = asOfKey.slice(0, 6);
+    for (let p = nextPeriod(periods[periods.length - 1]); p < asOfPeriod; p = nextPeriod(p)) pending.push(p);
+    if (pending.length > 6) throw new MarketDataError("asOf רחוק מדי מסוף הטווח (עד 6 חודשים)");
   }
+  const allPeriods = [...periods, ...pending];
+  const ends = [base, ...allPeriods].map(monthEnd);
 
   const iso = (k) => `${k.slice(0, 4)}-${k.slice(4, 6)}-${k.slice(6)}`;
   const usdFrom = iso(`${base.slice(0, 6)}01`);
@@ -201,11 +208,13 @@ async function fetchFactorHistory({ from, to, asOf = null, fetchImpl = fetch, en
     corp: pct(table.corp[a].close, table.corp[b].close),
   });
 
-  const rows = periods.map((p, i) => ({ period: p, factors: moves(ends[i], ends[i + 1]) }));
+  const all = allPeriods.map((p, i) => ({ period: p, factors: moves(ends[i], ends[i + 1]) }));
   let monthToDate = null;
   if (asOfKey) {
+    // month-to-date always starts at the end of the month before the as-of month
     const last = ends[ends.length - 1];
     monthToDate = {
+      period: asOfKey.slice(0, 6),
       since: iso(last),
       asOf,
       factors: moves(last, asOfKey),
@@ -215,14 +224,20 @@ async function fetchFactorHistory({ from, to, asOf = null, fetchImpl = fetch, en
     };
   }
   return {
-    rows,
+    rows: all.slice(0, periods.length),
+    unpublishedMonths: all.slice(periods.length),
     monthToDate,
     sources: ["בנק ישראל — שער יציג דולר/שקל (API סטטיסטי ציבורי)", "שערי סגירה של מדדים — שירות הנתונים הציבורי של גלובס"],
   };
 }
 
+/** Calendar date in Israel (YYYY-MM-DD) — the server clock is UTC. */
+function israelDate(d = new Date()) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem", year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
+}
+
 module.exports = {
   INDEX_SYMBOLS, MarketDataError, indexSourceEnabled,
-  fetchUsdIls, fetchIndexClose, fetchFactorHistory, fetchYieldCurve, periodsBetween, monthEnd, prevPeriod, nextPeriod, lastOnOrBefore,
+  fetchUsdIls, fetchIndexClose, fetchFactorHistory, fetchYieldCurve, israelDate, periodsBetween, monthEnd, prevPeriod, nextPeriod, lastOnOrBefore,
   _clearCache: () => { closeCache.clear(); curveCache = null; },
 };

@@ -230,7 +230,8 @@
     const r = Number(Number(v).toFixed(d)); // -0.04 is shown as 0.0, without a sign
     return `<span class="${r < 0 ? "neg" : r > 0 ? "posv" : ""}">${r > 0 ? "+" : ""}${r.toFixed(d)}%</span>`;
   };
-  $("tasof").value = new Date().toISOString().slice(0, 10);
+  // today's date in Israel (toISOString would give the UTC date, which is still "yesterday" after midnight)
+  $("tasof").value = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
 
   $("wrun").addEventListener("click", async () => {
     $("wstatus").className = "status"; $("wstatus").textContent = "מושך נתוני שוק ומחשב…";
@@ -283,8 +284,10 @@
   $("tfetch").addEventListener("click", async () => {
     $("tstatus").className = "status"; $("tstatus").textContent = "מושך נתונים…";
     try {
-      const through = (await api("/track-model/funds?limit=1")).dataThrough;
-      const r = await api(`/market/factors?from=${through}&to=${through}&asOf=${$("tasof").value}`);
+      // the month before the as-of month; the server measures month-to-date from its end
+      const d = $("tasof").value; const y = Number(d.slice(0, 4)); const m = Number(d.slice(5, 7));
+      const prev = m === 1 ? `${y - 1}12` : `${y}${String(m - 1).padStart(2, "0")}`;
+      const r = await api(`/market/factors?from=${prev}&to=${prev}&asOf=${d}`);
       FACTOR_IDS.forEach((f) => { $("f_" + f).value = r.monthToDate.factors[f].toFixed(2); });
       $("tsrc").value = r.sources.join("; ");
       const il = (d) => d.slice(8) + "." + d.slice(5, 7) + "." + d.slice(0, 4);

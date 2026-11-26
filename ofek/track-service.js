@@ -194,7 +194,7 @@ function monthShare(asOf) {
 async function fetchMarketWatch({ asOf, fetchImpl, env = process.env, today = new Date() } = {}) {
   const b = loadBaseline();
   if (!b) throw new tm.TrackModelError("קובץ הבסיס של מודל המסלולים חסר");
-  const date = asOf || today.toISOString().slice(0, 10);
+  const date = asOf || market.israelDate(today);
   // the month before the as-of month is the last complete one
   const [y, m] = date.split("-").map(Number);
   const prev = m === 1 ? `${y - 1}12` : `${y}${String(m - 1).padStart(2, "0")}`;
@@ -342,6 +342,7 @@ async function analyzeFund({ dataset, fundId, window = 60, factorRows = null, mt
   if (history.rows.length < 30) throw new tm.TrackModelError(`למסלול ${fundId} יש רק ${history.rows.length} חודשי נתונים — מעט מדי למודל`);
   const last = history.rows[history.rows.length - 1].period;
 
+  let unpublished = []; // complete months whose official figure is not out yet
   let factors = factorRows;
   let monthToDate = mtdFactors ? { asOf, factors: mtdFactors, supplied: true } : null;
   let sources = ["רשות שוק ההון — data.gov.il (תשואות חודשיות רשמיות)"];
@@ -350,6 +351,7 @@ async function analyzeFund({ dataset, fundId, window = 60, factorRows = null, mt
     const fetched = await market.fetchFactorHistory({ from: want[0].period, to: last, asOf, env, today, ...fx });
     factors = fetched.rows;
     if (fetched.monthToDate) monthToDate = fetched.monthToDate;
+    unpublished = fetched.unpublishedMonths || [];
     sources = sources.concat(fetched.sources);
   } else sources.push("גורמי שוק — סופקו על ידי המשתמש");
 
@@ -370,6 +372,9 @@ async function analyzeFund({ dataset, fundId, window = 60, factorRows = null, mt
     earlyEstimate = { ...tm.nowcast(model, monthToDate.factors, { elapsedShare: monthShare(monthToDate.asOf) }), asOf: monthToDate.asOf || null, since: monthToDate.since || null, marketMoves: monthToDate.factors, lastObservation: monthToDate.lastObservation || null };
   }
 
+  // each complete month without an official figure gets its own full-month estimate
+  const unpublishedEstimates = unpublished.map((u) => ({ period: u.period, ...tm.nowcast(model, u.factors), marketMoves: u.factors }));
+
   let depositTiming = null;
   if (history.rows.length >= 36) depositTiming = tm.depositTimingStats(history.rows.map((r) => r.ret), { splitMonths });
 
@@ -382,6 +387,7 @@ async function analyzeFund({ dataset, fundId, window = 60, factorRows = null, mt
     model: { ...fit, accuracy },
     scenarios: tm.scenarioTable(model),
     earlyEstimate,
+    unpublishedMonths: unpublishedEstimates,
     depositTiming,
     volatilityOutlook,
     sources,

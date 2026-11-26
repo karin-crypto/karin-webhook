@@ -203,6 +203,11 @@ test("track model: stored baseline is complete and usable", () => {
   assert.equal(service.resolveModel({ category: "ביטוח · כללי" }).model.kind, "category");
   assert.equal(service.resolveModel({ betas: { ta125: 1 } }).origin, "supplied");
   assert.throws(() => service.resolveModel({ fundId: 999999 }), /לא נמצא מודל/);
+  // a partial category name must point at exactly one category
+  assert.throws(() => service.resolveModel({ category: "כללי" }), /מתאים לכמה סוגי מסלולים/);
+  assert.throws(() => service.resolveModel({ category: "מניות" }), /מתאים לכמה סוגי מסלולים/);
+  assert.equal(service.resolveModel({ category: "אשראי" }).label, 'גמל/השתלמות · אשראי ואג"ח');
+  assert.equal(service.resolveModel({ category: "גמל/השתלמות · מניות" }).label, "גמל/השתלמות · מניות"); // exact wins over "מניות סחיר"
 
   const sum = service.baselineSummary({ product: "פנסיה" });
   assert.ok(sum.categories.length >= 4 && sum.categories.every((c) => c.category.includes("פנסיה")));
@@ -492,6 +497,22 @@ test("market data: USD from Bank of Israel, index source is opt-in, moves comput
   await market.fetchFactorHistory({ from: "202609", to: "202610", asOf: "2026-11-26", fetchImpl, env, today });
   assert.equal(log.filter((x) => x.startsWith("www.globes")).length - before, 4);
 
+  // official data two months behind: October is returned as its own unpublished month,
+  // and month-to-date still starts at the end of October — not at the end of September
+  const lag = await market.fetchFactorHistory({ from: "202609", to: "202609", asOf: "2026-11-26", fetchImpl, env, today });
+  assert.deepEqual(lag.rows.map((x) => x.period), ["202609"]);
+  assert.deepEqual(lag.unpublishedMonths.map((x) => x.period), ["202610"]);
+  near(lag.unpublishedMonths[0].factors.ta125, -2);
+  assert.equal(lag.monthToDate.since, "2026-10-31");
+  assert.equal(lag.monthToDate.period, "202611");
+  near(lag.monthToDate.factors.ta125, -2); // not the two-month move of about -4%
+  near(lag.monthToDate.factors.spx, -5);
+  assert.deepEqual(r.unpublishedMonths, []);
+
+  // "today" is the Israeli calendar date, not the UTC one
+  assert.equal(market.israelDate(new Date("2026-11-30T22:30:00Z")), "2026-12-01");
+  assert.equal(market.israelDate(new Date("2026-11-30T12:00:00Z")), "2026-11-30");
+
   await assert.rejects(market.fetchFactorHistory({ from: "202609", to: "202610", asOf: "2026-10-15", fetchImpl, env, today }), /asOf/);
   await assert.rejects(market.fetchFactorHistory({ from: "202610", to: "202609", fetchImpl, env }), /from ≤ to/);
   await assert.rejects(market.fetchFactorHistory({ from: "202609", to: "202612", fetchImpl, env, today }), (e) => e.status === 502);
@@ -535,6 +556,38 @@ test("fund analysis: model, accuracy, scenarios, early estimate and deposit timi
   assert.match(r.notice, /אינו חוזה/);
   assert.equal(r.volatilityOutlook.basedOn.isEarlyEstimate, true);
   assert.ok(["elevated_volatility", "normal_volatility"].includes(r.volatilityOutlook.state));
+
+  // official data ends in September while the market data runs to late November:
+  // October gets its own full-month estimate and November its own month-to-date estimate
+  market._clearCache();
+  const months = []; for (let y = 2015, m = 1; months.length < 141; m === 12 ? (m = 1, y++) : m++) months.push(`${y}${String(m).padStart(2, "0")}`);
+  const upToSept = synthetic(141).map((x, i) => ({ ...x, period: months[i] })).filter((x) => x.period <= "202609");
+  const lagFetch = fakeFetch({ funds: { 77: { [RESOURCES.gemel]: fundRecords(upToSept.slice(-100), 77) } } });
+  const flat = async (url, opts) => {
+    const u = new URL(url);
+    if (u.host === "edge.boi.gov.il") {
+      const [head, ...rest] = USD_CSV.split("\n");
+      // a varying rate for the older months (mid-month observations, so the real late-2026 rows decide the recent moves)
+      const older = months.filter((p) => p < "202608").map((p, i) => rest[0].replace("2026-08-28", `${p.slice(0, 4)}-${p.slice(4)}-15`).replace(",3.2,", `,${(3.2 + 0.15 * Math.sin(i * 1.3)).toFixed(4)},`));
+      return { ok: true, status: 200, text: async () => [head, ...older, ...rest].join("\n") };
+    }
+    if (u.host === "www.globes.co.il") {
+      const d = u.searchParams.get("until");
+      const factor = SYMBOL_TO_FACTOR[u.searchParams.get("symbol")];
+      const known = CLOSES[factor][d];
+      const wobble = 100 + 8 * Math.sin(Number(d.slice(0, 6)) * ({ ta125: 0.7, spx: 1.1, gov: 1.7, corp: 2.3 })[factor]); // older months: any varying level
+      return { ok: true, status: 200, text: async () => `<yield><until>${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6)}T00:00:00</until><until_close_price>${known == null ? wobble : known}</until_close_price></yield>` };
+    }
+    return lagFetch(url, opts);
+  };
+  const lagged = await service.analyzeFund({ dataset: "gemel", fundId: 77, asOf: "2026-11-26", fetchImpl: flat, env: { OFEK_INDEX_SOURCE: "globes" }, today: new Date("2026-11-27T05:00:00Z") });
+  assert.equal(lagged.fund.lastOfficialMonth, "202609");
+  assert.deepEqual(lagged.unpublishedMonths.map((u) => u.period), ["202610"]);
+  assert.ok(Math.abs(lagged.unpublishedMonths[0].marketMoves.ta125 + 2) < 1e-9);
+  assert.equal(lagged.earlyEstimate.since, "2026-10-31");
+  assert.ok(Math.abs(lagged.earlyEstimate.marketMoves.ta125 + 2) < 1e-9);
+  assert.equal(lagged.earlyEstimate.partialMonth, true);
+  market._clearCache();
 
   // without supplied factors and without the opt-in index source the analysis refuses rather than guessing
   await assert.rejects(service.analyzeFund({ dataset: "gemel", fundId: 77, fetchImpl, env: {} }), (e) => e.status === 409);
