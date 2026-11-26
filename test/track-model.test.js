@@ -243,6 +243,7 @@ test("all-track file: every active track is searchable and almost all have a usa
     assert.equal(f.b.length, 5, f.name);
     assert.ok(f.b.every((v) => Number.isFinite(v)) && Number.isFinite(f.a), f.name);
     assert.ok(file.basisNote[f.basis], f.basis);
+    assert.ok(f.p90 > 0, `${f.name}: every modelled track carries an error band`);
   }
   assert.equal(file.funds.some((f) => /1;[pP]/.test(f.name)), false); // source typo for "S&P" is repaired
 
