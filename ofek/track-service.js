@@ -248,7 +248,7 @@ async function forecastFund({ fundId, dataset, category, annualFee = 0, assumpti
 
   const forecast = forecastEngine.forecastTrack({ model, history, yields, assumptions, categoryAlpha: cat ? cat.alpha : null, annualFee: Number(annualFee) || 0 });
   const name = trackLabel || label || "המסלול";
-  const text = explain.explainForecast({ forecast, trackLabel: trackLabel || "המסלול" });
+  const text = explain.explainForecast({ forecast, trackLabel: name });
 
   // the track's own record, when its official history is reachable
   let ownRecord = null;

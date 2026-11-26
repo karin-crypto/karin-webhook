@@ -209,7 +209,7 @@ function explainYearOverYear({ attribution, factorMoves, years, fromMonth, toMon
  * client-message draft. The range is the message; the centre alone is never
  * presented as "the forecast".
  */
-function explainForecast({ forecast, trackLabel = "המסלול", peerNote = true } = {}) {
+function explainForecast({ forecast, trackLabel = "המסלול", draftLabel = "המסלול", peerNote = true } = {}) {
   const h = Object.fromEntries(forecast.horizons.map((x) => [x.key, x]));
   const rangeYear = (x) => between(x.annualized.low, x.annualized.high);
   const summary = [];
@@ -221,7 +221,8 @@ function explainForecast({ forecast, trackLabel = "המסלול", peerNote = tru
   if (peerNote) summary.push("בין חברות שונות באותו סוג מסלול הפער בעבר היה קטן יחסית (כ-2 נקודות אחוז לשנה בין הטובות לחלשות), והצטיינות בעבר חזתה את ההמשך רק במעט. סוג המסלול משפיע הרבה יותר מזהות החברה.");
 
   const lines = [
-    `היי, בדקתי את ${trackLabel}. לפי המודל שלנו, לאורך 5 שנים התשואה השנתית הממוצעת הצפויה היא בסביבות ${forecast.central}%, בטווח סביר של ${rangeYear(h["5y"])} לשנה.`,
+    // the client draft keeps a generic label: office rules ban the word "קרן" there, and many track names contain it
+    `היי, בדקתי את ${draftLabel}. לפי המודל שלנו, לאורך 5 שנים התשואה השנתית הממוצעת הצפויה היא בסביבות ${forecast.central}%, בטווח סביר של ${rangeYear(h["5y"])} לשנה.`,
     `בשנה בודדת הטווח רחב הרבה יותר, ${rangeYear(h["1y"])}, ולכן אי אפשר להתחייב על שנה מסוימת.`,
     "זו הערכה מחקרית ואינה תשואה מובטחת, והיא לפני התאמה אישית של המסלול לטווח ולרמת הסיכון שלך.",
   ];

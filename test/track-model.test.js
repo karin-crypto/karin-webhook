@@ -413,6 +413,8 @@ test("forecast service: live yields with a dated fallback, per-track and per-cat
   assert.equal(r.ownRecord, null); // no official history reachable in this test — the forecast does not depend on it
   assert.ok(r.forecastCardDrafts["5y"].asset.includes("הפניקס") && validateCard(r.forecastCardDrafts["1y"], { now: today }).ok);
   assert.match(r.notice, /אינה הבטחה/);
+  assert.ok(r.summary.startsWith(r.track.label), "the professional summary names the track that was analysed");
+  assert.ok(r.clientDraft.text.startsWith("היי, בדקתי את המסלול."), "the client draft keeps the generic label");
 
   // Bank of Israel unreachable -> stored snapshot, and the result says so
   market._clearCache();
