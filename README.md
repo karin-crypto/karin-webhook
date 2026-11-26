@@ -168,6 +168,7 @@ and send the reply back — exactly as `whatsapp.js` does.
 | `POST /api/ofek/track-model/explain` · `GET /track-model/playbook` | הסבר בשפה פשוטה לחודש של מסלול (מה הוביל, מה קיזז, סביבת השוק) וטיוטת הודעה קצרה ללקוח — בלי שמות ובלי חתימה, תמיד לאישור קארין. ספר התרחישים: לכל תרחיש שוק — מה קורה, מה להסביר, וההשפעה על סוגי המסלולים העיקריים |
 | `POST /api/ofek/track-model/attribution` | פירוק הפער בין שתי תקופות (למשל שנה מול שנה) לפי גורמי השוק ולחלק שאינו מוסבר |
 | `POST /api/ofek/track-model/deposit-timing` | סטטיסטיקה היסטורית ל"להפקיד עכשיו או לפרוס": חד־פעמי מול פריסה, אחרי חודש שלילי, תקופות החזקה, ירידות והתאוששות. לא המלצה אישית |
+| `POST /api/ofek/track-model/volatility-outlook` | רמת התנודתיות הצפויה בחודש הקרוב מההיסטוריה של המסלול: אחרי חודש שלילי התנועות גדולות יותר, לשני הכיוונים. סטטיסטיקה תיאורית בשלב מחקרי — אינה חוזה כיוון |
 | `POST /api/ofek/track-model/fit` · `/track-model/predictability` | אמידת מודל על נתונים שסופקו + בדיקת walk-forward; בדיקה האם תנועות החודש הקודם חוזות את החודש הבא (במחקר 2012–2026: לא) |
 | `GET /api/ofek/market/factors?from=YYYYMM&to=YYYYMM&asOf=` | גורמי השוק החודשיים ותנועות מתחילת החודש. דולר — בנק ישראל; מדדים — רק כש־`OFEK_INDEX_SOURCE=globes` |
 

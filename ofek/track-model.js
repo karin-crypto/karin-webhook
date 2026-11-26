@@ -390,6 +390,50 @@ function depositTimingStats(monthlyReturns, { splitMonths = 3, horizons = [12, 3
 }
 
 /**
+ * Volatility outlook for the coming month, from the track's own history.
+ * Research (2012–2026): after a negative month the next month's move tends
+ * to be larger, in EITHER direction; the direction itself is not predictable.
+ * `currentMonthEstimate` (percent) lets the caller use an early estimate of
+ * a month whose official figure is not out yet. Descriptive statistic — a
+ * research-stage indicator under Module 9.6, not an approved forecast.
+ */
+function riskOutlook(monthlyReturns, { currentMonthEstimate = null, largeMove = 2 } = {}) {
+  const r = (monthlyReturns || []).map((v) => (v && typeof v === "object" ? v.ret : v)).filter((v) => typeof v === "number" && Number.isFinite(v));
+  if (r.length < 36) throw new TrackModelError(`נדרשים לפחות 36 חודשי תשואה (יש ${r.length})`);
+  const after = { negative: [], positive: [] };
+  for (let i = 1; i < r.length; i++) after[r[i - 1] < 0 ? "negative" : "positive"].push(r[i]);
+  const stats = (next) => ({
+    n: next.length,
+    meanAbsMove: next.length ? round(mean(next.map(Math.abs))) : null,
+    largeMoveShare: next.length ? round(mean(next.map((v) => (Math.abs(v) > largeMove ? 1 : 0))), 3) : null,
+    negativeShare: next.length ? round(mean(next.map((v) => (v < 0 ? 1 : 0))), 3) : null,
+  });
+  const neg = stats(after.negative);
+  const pos = stats(after.positive);
+  const usedEstimate = typeof currentMonthEstimate === "number" && Number.isFinite(currentMonthEstimate);
+  const last = usedEstimate ? currentMonthEstimate : r[r.length - 1];
+  const elevated = last < 0;
+  const enough = neg.n >= 12 && pos.n >= 12;
+  const ratio = enough && pos.largeMoveShare > 0 ? round(neg.largeMoveShare / pos.largeMoveShare, 1) : null;
+  const pctText = (x) => `${Math.round(x * 100)}%`;
+  return {
+    ok: true,
+    state: !enough ? "insufficient_history" : elevated ? "elevated_volatility" : "normal_volatility",
+    basedOn: { lastMonthReturn: round(last), isEarlyEstimate: usedEstimate },
+    largeMoveThreshold: largeMove,
+    afterNegativeMonth: neg,
+    afterPositiveMonth: pos,
+    largeMoveRatio: ratio,
+    statement: !enough
+      ? "אין מספיק היסטוריה כדי להעריך את רמת התנודתיות."
+      : elevated
+        ? `החודש האחרון${usedEstimate ? " (לפי אומדן מוקדם)" : ""} שלילי. בהיסטוריה של המסלול, אחרי חודש שלילי הייתה תנועה של יותר מ-${largeMove}% (למעלה או למטה) ב-${pctText(neg.largeMoveShare)} מהמקרים, לעומת ${pctText(pos.largeMoveShare)} אחרי חודש חיובי. הכיוון אינו צפוי: החודש הבא היה שלילי ב-${pctText(neg.negativeShare)} מהמקרים, לעומת ${pctText(pos.negativeShare)}.`
+        : `החודש האחרון${usedEstimate ? " (לפי אומדן מוקדם)" : ""} חיובי. בהיסטוריה של המסלול, אחרי חודש חיובי הייתה תנועה של יותר מ-${largeMove}% ב-${pctText(pos.largeMoveShare)} מהמקרים.`,
+    note: "סטטיסטיקה תיאורית מההיסטוריה של המסלול. אינדיקטור בשלב מחקרי (מודול 9.6) — אינו תחזית מאושרת ואינו חוזה כיוון.",
+  };
+}
+
+/**
  * Can last month's market moves predict this month's track return?
  * Walk-forward, compared with the historical-mean forecast.
  */
@@ -452,5 +496,5 @@ function findBaselineModel(baseline, { category, fundId } = {}) {
 module.exports = {
   FACTORS, FACTOR_NAMES, SCENARIOS, TrackModelError,
   fitFactorModel, walkForwardFit, scenarioImpact, scenarioTable, nowcast,
-  attributeDifference, depositTimingStats, predictabilityTest, findBaselineModel,
+  attributeDifference, depositTimingStats, riskOutlook, predictabilityTest, findBaselineModel,
 };

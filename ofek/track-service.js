@@ -168,6 +168,9 @@ async function analyzeFund({ dataset, fundId, window = 60, factorRows = null, mt
   let depositTiming = null;
   if (history.rows.length >= 36) depositTiming = tm.depositTimingStats(history.rows.map((r) => r.ret), { splitMonths });
 
+  let volatilityOutlook = null;
+  if (history.rows.length >= 36) volatilityOutlook = tm.riskOutlook(history.rows.map((r) => r.ret), earlyEstimate ? { currentMonthEstimate: earlyEstimate.estimate } : {});
+
   return {
     ok: true,
     fund: { fundId: history.fundId, dataset, name: history.fundName, company: history.company, historyFrom: history.rows[0].period, lastOfficialMonth: last, lastOfficialReturn: history.rows[history.rows.length - 1].ret, totalAssetsMillions: history.rows[history.rows.length - 1].totalAssets },
@@ -175,6 +178,7 @@ async function analyzeFund({ dataset, fundId, window = 60, factorRows = null, mt
     scenarios: tm.scenarioTable(model),
     earlyEstimate,
     depositTiming,
+    volatilityOutlook,
     sources,
     notice: "המודל מסביר ומעריך את תשואת המסלול לפי תנועות השוק. אינו חוזה את כיוון השוק ואינו המלצה אישית. תשואות ברמת המסלול; חשבון הלקוח מושפע גם מדמי ניהול ומועדי הפקדה.",
   };

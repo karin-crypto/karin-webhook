@@ -153,6 +153,27 @@ test("track model: deposit-timing statistics", () => {
   assert.throws(() => tm.depositTimingStats(Array(40).fill(1), { splitMonths: 1 }), /splitMonths/);
 });
 
+test("track model: volatility outlook describes history and never claims a direction", () => {
+  // calm after gains, wild (both ways) after losses
+  const series = [];
+  for (let i = 0; i < 30; i++) series.push(1, 0.8, -1.5, i % 2 ? 3 : -3);
+  const out = tm.riskOutlook(series);
+  assert.equal(out.basedOn.lastMonthReturn, 3);
+  assert.equal(out.state, "normal_volatility");
+  assert.ok(out.afterNegativeMonth.largeMoveShare > 0.4 && out.afterPositiveMonth.largeMoveShare < 0.1);
+  assert.equal(out.largeMoveRatio, null); // no large move ever followed a gain, so no ratio is quoted
+  const mixed = tm.riskOutlook([...series, 1, 2.5, 1, 2.6, 1, 2.7]);
+  assert.ok(mixed.largeMoveRatio > 4);
+  const afterDrop = tm.riskOutlook(series, { currentMonthEstimate: -1.2 });
+  assert.equal(afterDrop.state, "elevated_volatility");
+  assert.equal(afterDrop.basedOn.isEarlyEstimate, true);
+  assert.match(afterDrop.statement, /הכיוון אינו צפוי/);
+  assert.match(afterDrop.statement, /לפי אומדן מוקדם/);
+  assert.match(afterDrop.note, /אינו תחזית מאושרת/);
+  assert.equal(tm.riskOutlook(Array(40).fill(1)).state, "insufficient_history"); // never a negative month
+  assert.throws(() => tm.riskOutlook([1, -1]), /לפחות 36/);
+});
+
 test("track model: last month's markets do not predict independent returns", () => {
   const r = tm.predictabilityTest(synthetic(160, 3));
   assert.equal(r.verdict, "no_predictive_value");
@@ -374,6 +395,8 @@ test("fund analysis: model, accuracy, scenarios, early estimate and deposit timi
   assert.ok(r.earlyEstimate.range.low < r.earlyEstimate.estimate);
   assert.equal(r.depositTiming.months, 120);
   assert.match(r.notice, /אינו חוזה/);
+  assert.equal(r.volatilityOutlook.basedOn.isEarlyEstimate, true);
+  assert.ok(["elevated_volatility", "normal_volatility"].includes(r.volatilityOutlook.state));
 
   // without supplied factors and without the opt-in index source the analysis refuses rather than guessing
   await assert.rejects(service.analyzeFund({ dataset: "gemel", fundId: 77, fetchImpl, env: {} }), (e) => e.status === 409);

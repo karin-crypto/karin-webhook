@@ -141,9 +141,9 @@ const TOOL_DEFS = [
   {
     name: "deposit_timing_stats",
     description:
-      "Historical statistics for the question 'deposit now or spread it out?': lump sum vs spreading over N months, what followed negative months, share of positive holding periods (12/36/60 months), worst drawdowns and recovery times. " +
+      "Historical statistics for the question 'deposit now or spread it out?': lump sum vs spreading over N months, what followed negative months, share of positive holding periods (12/36/60 months), worst drawdowns and recovery times, plus a volatility outlook for the coming month (after a negative month moves are larger in either direction; pass currentMonthEstimate if this month's early estimate is known). " +
       "Pass monthlyReturns (percent, oldest first) or dataset + fundId to load the official history. Statistics only — not a personal recommendation.",
-    input_schema: obj({ monthlyReturns: numArr, dataset: { type: "string", enum: ["gemel", "pension", "insurance"] }, fundId: { type: "integer" }, splitMonths: { type: "integer" } }),
+    input_schema: obj({ monthlyReturns: numArr, dataset: { type: "string", enum: ["gemel", "pension", "insurance"] }, fundId: { type: "integer" }, splitMonths: { type: "integer" }, currentMonthEstimate: { type: "number" } }),
   },
   {
     name: "explain_track_month",
@@ -237,7 +237,7 @@ function createToolExecutor({ ledger, now = () => new Date(), fetchImpl }) {
         returns = h.rows.map((r) => r.ret);
         fund = { fundId: h.fundId, name: h.fundName, from: h.rows.length ? h.rows[0].period : null, to: h.rows.length ? h.rows[h.rows.length - 1].period : null };
       }
-      return { fund, ...trackModel.depositTimingStats(returns, { splitMonths: i.splitMonths || 3 }) };
+      return { fund, ...trackModel.depositTimingStats(returns, { splitMonths: i.splitMonths || 3 }), volatilityOutlook: trackModel.riskOutlook(returns, typeof i.currentMonthEstimate === "number" ? { currentMonthEstimate: i.currentMonthEstimate } : {}) };
     },
   };
 

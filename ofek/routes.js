@@ -445,6 +445,11 @@ function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_AD
     res.json(trackModel.depositTimingStats(b.monthlyReturns, { splitMonths: b.splitMonths || 3, ...(b.horizons ? { horizons: b.horizons } : {}) }));
   }));
 
+  router.post("/track-model/volatility-outlook", wrap(async (req, res) => {
+    const b = req.body || {};
+    res.json(trackModel.riskOutlook(b.monthlyReturns, { currentMonthEstimate: typeof b.currentMonthEstimate === "number" ? b.currentMonthEstimate : null, ...(b.largeMove ? { largeMove: b.largeMove } : {}) }));
+  }));
+
   router.post("/track-model/predictability", wrap(async (req, res) => {
     const b = req.body || {};
     res.json(trackModel.predictabilityTest(b.rows, b.minTrain ? { minTrain: b.minTrain } : {}));
