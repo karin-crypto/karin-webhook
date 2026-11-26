@@ -23,6 +23,9 @@ const { createIndicatorRegistry } = require("./indicators");
 const { createReportAnalyzer } = require("./reports");
 const { recordsToTracks, parseCsv, fetchCkan, RESOURCES } = require("./connectors/gemelnet");
 const { buildDcf, buildComps } = require("./valuation");
+const trackModel = require("./track-model");
+const trackService = require("./track-service");
+const marketData = require("./connectors/market");
 const { createAgent } = require("./agent");
 const research = require("./research");
 
@@ -35,7 +38,7 @@ function tokenMatches(given, expected) {
 function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_ADMIN_TOKEN, runResearch = research.runResearch, reportClient, fetchImpl, agentClient } = {}) {
   const router = express.Router();
   const registry = createIndicatorRegistry(ledger);
-  const agent = createAgent(agentClient === undefined ? { ledger } : { ledger, client: agentClient });
+  const agent = createAgent({ ledger, ...(agentClient === undefined ? {} : { client: agentClient }), ...(fetchImpl ? { fetchImpl } : {}) });
   const jobs = new Map(); // jobId -> { status, startedAt, result?, error? } (in memory)
   const reports = createReportAnalyzer(ledger, reportClient === undefined ? {} : { client: reportClient });
 
@@ -371,6 +374,74 @@ function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_AD
     const r = buildComps(req.body || {});
     res.status(r.ok ? 200 : 400).json(r);
   });
+
+  /* ---- track model: market-factor sensitivities, scenarios, early estimates ---- */
+  router.get("/track-model/baseline", (req, res) => {
+    const r = trackService.baselineSummary({ product: req.query.product });
+    res.status(r.ok ? 200 : 500).json(r);
+  });
+
+  router.get("/track-model/scenarios", (_req, res) => {
+    res.json({ ok: true, factors: trackModel.FACTORS, scenarios: trackModel.SCENARIOS, note: "גודל הזעזועים הוא הדגמה שנקבעה בשיקול דעת — לא תחזית ולא הסתברות." });
+  });
+
+  router.post("/track-model/fit", wrap(async (req, res) => {
+    const b = req.body || {};
+    const opts = b.factors ? { factors: b.factors } : {};
+    const model = trackModel.fitFactorModel(b.rows, opts);
+    let accuracy = null;
+    if (b.walkForward !== false) {
+      try {
+        accuracy = trackModel.walkForwardFit(b.rows, { ...opts, minTrain: b.minTrain || 36, window: b.window || null });
+      } catch (err) {
+        accuracy = { ok: false, error: err.message };
+      }
+    }
+    res.json({ ok: true, model, accuracy });
+  }));
+
+  router.post("/track-model/scenario", wrap(async (req, res) => {
+    const b = req.body || {};
+    const { model, origin, label } = trackService.resolveModel(b);
+    const scenario = b.shocks ? { shocks: b.shocks, he: b.description } : b.scenario;
+    res.json({ ok: true, model: { label: label || null, origin, betas: model.betas }, ...(scenario ? { result: trackModel.scenarioImpact(model, scenario) } : { table: trackModel.scenarioTable(model) }) });
+  }));
+
+  router.post("/track-model/nowcast", wrap(async (req, res) => {
+    const b = req.body || {};
+    const { model, origin, label } = trackService.resolveModel(b);
+    if (!b.asOf || !b.source) throw new trackModel.TrackModelError("asOf ו־source חובה: מאיזה תאריך ומאיזה מקור נלקחו תנועות השוק");
+    res.json({ ok: true, model: { label: label || null, origin }, asOf: b.asOf, source: b.source, ...trackModel.nowcast(model, b.factors, { elapsedShare: b.elapsedShare == null ? 1 : b.elapsedShare }) });
+  }));
+
+  router.post("/track-model/attribution", wrap(async (req, res) => {
+    const b = req.body || {};
+    const { model, origin, label } = trackService.resolveModel(b);
+    res.json({ model: { label: label || null, origin }, ...trackModel.attributeDifference(model, b.periodA, b.periodB, { labels: b.labels || ["A", "B"] }) });
+  }));
+
+  router.post("/track-model/deposit-timing", wrap(async (req, res) => {
+    const b = req.body || {};
+    res.json(trackModel.depositTimingStats(b.monthlyReturns, { splitMonths: b.splitMonths || 3, ...(b.horizons ? { horizons: b.horizons } : {}) }));
+  }));
+
+  router.post("/track-model/predictability", wrap(async (req, res) => {
+    const b = req.body || {};
+    res.json(trackModel.predictabilityTest(b.rows, b.minTrain ? { minTrain: b.minTrain } : {}));
+  }));
+
+  router.post("/track-model/fund", wrap(async (req, res) => {
+    const b = req.body || {};
+    res.json(await trackService.analyzeFund({
+      dataset: b.dataset, fundId: b.fundId, window: b.window || 60, factorRows: b.factorRows || null, mtdFactors: b.mtdFactors || null, asOf: b.asOf || null, splitMonths: b.splitMonths || 3,
+      ...(fetchImpl ? { fetchImpl } : {}),
+    }));
+  }));
+
+  router.get("/market/factors", wrap(async (req, res) => {
+    const r = await marketData.fetchFactorHistory({ from: req.query.from, to: req.query.to, asOf: req.query.asOf || null, ...(fetchImpl ? { fetchImpl } : {}) });
+    res.json({ ok: true, ...r });
+  }));
 
   /* ---- OFEK QUALITY GATE (9.6.13) ---- */
   router.post("/quality-gate", wrap(async (req, res) => {

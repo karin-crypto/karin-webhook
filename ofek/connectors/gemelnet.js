@@ -43,6 +43,13 @@ const RESOURCES = {
   insurance: "c6c62cc7-fe02-4b18-8f3e-813abfbb4647",
 };
 
+// Older files of the same datasets (monthly history before 2024).
+const HISTORY_RESOURCES = {
+  gemel: ["91c849ed-ddc4-472b-bd09-0f5486cea35c", "2016d770-f094-4a2e-983e-797c26479720"],
+  pension: ["a66926f3-e396-4984-a4db-75486751c2f7", "4694d5a7-5284-4f3d-a2cb-5887f43fb55e"],
+  insurance: ["584e6b69-174f-46c9-b8db-03925b4c68c6", "672090ba-7893-4496-a07c-dc7e822cbf18"],
+};
+
 /** Minimal RFC-4180 CSV parser (quoted fields, escaped quotes, CRLF). */
 function parseCsv(text) {
   const rows = [];
@@ -186,4 +193,28 @@ async function fetchCkan({ resourceId, filters = {}, q, maxRows = 50000, pageSiz
   return { records: out, total, truncated: total > maxRows };
 }
 
-module.exports = { recordsToTracks, parseCsv, fetchCkan, DEFAULT_MAPPING, RESOURCES, toMonth };
+/**
+ * Full monthly return history of one track (by FUND_ID) across the current
+ * and the older files of a dataset. Returns rows sorted by period, one per
+ * month: { period: 'YYYYMM', ret (percent), totalAssets, fundName }.
+ */
+async function fetchFundHistory({ dataset, fundId, includeOlder = true, fetchImpl = fetch } = {}) {
+  if (!RESOURCES[dataset]) throw new Error(`dataset: ${Object.keys(RESOURCES).join(" | ")}`);
+  const id = Number(fundId);
+  if (!Number.isInteger(id) || id <= 0) throw new Error("fundId: מספר הקופה/המסלול ברשות שוק ההון");
+  const resources = [...(includeOlder ? HISTORY_RESOURCES[dataset] : []), RESOURCES[dataset]];
+  const byPeriod = new Map();
+  for (const resourceId of resources) {
+    const { records } = await fetchCkan({ resourceId, filters: { FUND_ID: id }, maxRows: 1000, pageSize: 1000, fetchImpl });
+    for (const r of records) {
+      const period = String(r.REPORT_PERIOD || "").replace(/\D/g, "").slice(0, 6);
+      const ret = typeof r.MONTHLY_YIELD === "number" ? r.MONTHLY_YIELD : r.MONTHLY_YIELD == null || r.MONTHLY_YIELD === "" ? NaN : Number(r.MONTHLY_YIELD);
+      if (period.length !== 6 || !Number.isFinite(ret)) continue;
+      byPeriod.set(period, { period, ret, totalAssets: typeof r.TOTAL_ASSETS === "number" ? r.TOTAL_ASSETS : null, fundName: String(r.FUND_NAME || "").replace(/\s+/g, " ").trim(), company: r.MANAGING_CORPORATION || null });
+    }
+  }
+  const rows = [...byPeriod.values()].sort((a, b) => (a.period < b.period ? -1 : 1));
+  return { fundId: id, dataset, fundName: rows.length ? rows[rows.length - 1].fundName : null, company: rows.length ? rows[rows.length - 1].company : null, rows };
+}
+
+module.exports = { recordsToTracks, parseCsv, fetchCkan, fetchFundHistory, DEFAULT_MAPPING, RESOURCES, HISTORY_RESOURCES, toMonth };

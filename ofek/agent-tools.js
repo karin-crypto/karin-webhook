@@ -21,6 +21,9 @@ const { validateCard, HORIZONS } = require("./forecast-card");
 const { pointMetrics, incrementalValueTest } = require("./metrics");
 const { runQualityGate } = require("./quality-gate");
 const { createIndicatorRegistry } = require("./indicators");
+const trackModel = require("./track-model");
+const trackService = require("./track-service");
+const { fetchFundHistory } = require("./connectors/gemelnet");
 
 const obj = (properties, required = []) => ({ type: "object", properties, required });
 const anyObj = { type: "object" };
@@ -101,6 +104,41 @@ const TOOL_DEFS = [
     description: "OFEK QUALITY GATE (9.6.13) dry run on draft content meant for publication (post, market_review, client_report, video). Shows which checks would block. Approval is always missing in a dry run — that check is expected to fail.",
     input_schema: obj({ contentType: { type: "string", enum: ["post", "market_review", "client_report", "video"] }, text: { type: "string" }, sources: { type: "array", items: anyObj }, dataPoints: { type: "array", items: anyObj }, forecastIds: { type: "array", items: { type: "string" } } }, ["contentType", "text"]),
   },
+  {
+    name: "track_model_baseline",
+    description:
+      "OFEK TRACK MODEL baseline: how sensitive each track category (general, equity, age-based, bonds, S&P trackers — provident/study funds, pension, insurance policies) and each large general/equity track is to five market factors " +
+      `(${trackModel.FACTOR_NAMES.join(", ")}), with out-of-sample accuracy (MAE, 90% error) and the data cut-off. Optional product filter (Hebrew substring, e.g. 'השתלמות', 'ביטוח', 'פנסיה').`,
+    input_schema: obj({ product: { type: "string" } }),
+  },
+  {
+    name: "track_scenario_impact",
+    description:
+      "Expected effect (percentage points, within a month) of a market scenario on a track. Identify the track by fundId or category from track_model_baseline, or pass betas. " +
+      `Named scenarios: ${Object.keys(trackModel.SCENARIOS).join(", ")}; or custom shocks in percent, e.g. { ta125: -8, usd: 3 }. Without scenario/shocks returns the full scenario table. Shock sizes are illustrations, not forecasts.`,
+    input_schema: obj({ fundId: { type: "integer" }, category: { type: "string" }, betas: anyObj, alpha: { type: "number" }, scenario: { type: "string" }, shocks: anyObj }),
+  },
+  {
+    name: "track_early_estimate",
+    description:
+      "Early estimate of a track's return for a month whose official figure is not published yet, from month-to-date market moves YOU VERIFIED (percent): factors { ta125, spx (in USD), usd (USD/ILS change), gov, corp }. " +
+      "asOf (date of the market data) and source are required. elapsedShare = share of the month that has passed (1 if the month ended). Always present the result as an early estimate with its range.",
+    input_schema: obj({ fundId: { type: "integer" }, category: { type: "string" }, betas: anyObj, alpha: { type: "number" }, factors: anyObj, asOf: { type: "string" }, source: { type: "string" }, elapsedShare: { type: "number" } }, ["factors", "asOf", "source"]),
+  },
+  {
+    name: "analyze_fund_track",
+    description:
+      "Full analysis of ONE track by its Capital Market Authority fund id: official monthly history from data.gov.il, factor model fitted on the last `window` months, out-of-sample accuracy, scenario table, deposit-timing statistics, and (with asOf) a month-to-date early estimate. " +
+      "dataset: gemel (provident/study/investment funds) | pension | insurance (savings policies). Needs the automatic index source; if it is not enabled the tool says so — then use track_model_baseline instead.",
+    input_schema: obj({ dataset: { type: "string", enum: ["gemel", "pension", "insurance"] }, fundId: { type: "integer" }, window: { type: "integer" }, asOf: { type: "string" } }, ["dataset", "fundId"]),
+  },
+  {
+    name: "deposit_timing_stats",
+    description:
+      "Historical statistics for the question 'deposit now or spread it out?': lump sum vs spreading over N months, what followed negative months, share of positive holding periods (12/36/60 months), worst drawdowns and recovery times. " +
+      "Pass monthlyReturns (percent, oldest first) or dataset + fundId to load the official history. Statistics only — not a personal recommendation.",
+    input_schema: obj({ monthlyReturns: numArr, dataset: { type: "string", enum: ["gemel", "pension", "insurance"] }, fundId: { type: "integer" }, splitMonths: { type: "integer" } }),
+  },
 ];
 
 /** Trim large tool results so they don't flood the context. */
@@ -109,7 +147,8 @@ function compact(result, max = 20000) {
   return s.length <= max ? s : s.slice(0, max) + `… [קוצר: ${s.length} תווים]`;
 }
 
-function createToolExecutor({ ledger, now = () => new Date() }) {
+function createToolExecutor({ ledger, now = () => new Date(), fetchImpl }) {
+  const fx = fetchImpl ? { fetchImpl } : {};
   const registry = createIndicatorRegistry(ledger);
 
   const handlers = {
@@ -153,6 +192,28 @@ function createToolExecutor({ ledger, now = () => new Date() }) {
       return { ok: true, proposalId: entry.id, status: "pending_approval", persistent: ledger.persistent, warnings: v.warnings, note: "הוגש לאישור קארין — עדיין אינו תחזית רשומה" };
     },
     quality_gate_check: (i) => runQualityGate({ ...i, manual: {}, approval: {} }, { now: now() }),
+    track_model_baseline: (i) => trackService.baselineSummary({ product: i.product }),
+    track_scenario_impact: (i) => {
+      const { model, origin, label } = trackService.resolveModel(i);
+      const scenario = i.shocks ? { shocks: i.shocks } : i.scenario;
+      return { track: label || null, modelOrigin: origin, ...(scenario ? trackModel.scenarioImpact(model, scenario) : { ok: true, table: trackModel.scenarioTable(model) }) };
+    },
+    track_early_estimate: (i) => {
+      if (!i.asOf || !i.source) throw new Error("asOf ו־source חובה");
+      const { model, origin, label } = trackService.resolveModel(i);
+      return { track: label || null, modelOrigin: origin, asOf: i.asOf, source: i.source, ...trackModel.nowcast(model, i.factors, { elapsedShare: i.elapsedShare == null ? 1 : i.elapsedShare }) };
+    },
+    analyze_fund_track: (i) => trackService.analyzeFund({ dataset: i.dataset, fundId: i.fundId, window: i.window || 60, asOf: i.asOf || null, today: now(), ...fx }),
+    deposit_timing_stats: async (i) => {
+      let returns = i.monthlyReturns;
+      let fund = null;
+      if (!returns && i.dataset && i.fundId) {
+        const h = await fetchFundHistory({ dataset: i.dataset, fundId: i.fundId, ...fx });
+        returns = h.rows.map((r) => r.ret);
+        fund = { fundId: h.fundId, name: h.fundName, from: h.rows.length ? h.rows[0].period : null, to: h.rows.length ? h.rows[h.rows.length - 1].period : null };
+      }
+      return { fund, ...trackModel.depositTimingStats(returns, { splitMonths: i.splitMonths || 3 }) };
+    },
   };
 
   return {
