@@ -21,8 +21,12 @@ const { checkVideo } = require("./video-check");
 const { runQualityGate } = require("./quality-gate");
 const { createIndicatorRegistry } = require("./indicators");
 const { createReportAnalyzer } = require("./reports");
-const { recordsToTracks, parseCsv, fetchCkan } = require("./connectors/gemelnet");
+const { recordsToTracks, parseCsv, fetchCkan, RESOURCES } = require("./connectors/gemelnet");
 const { buildDcf, buildComps } = require("./valuation");
+const trackModel = require("./track-model");
+const trackService = require("./track-service");
+const trackExplain = require("./track-explain");
+const marketData = require("./connectors/market");
 const { createAgent } = require("./agent");
 const research = require("./research");
 
@@ -35,7 +39,7 @@ function tokenMatches(given, expected) {
 function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_ADMIN_TOKEN, runResearch = research.runResearch, reportClient, fetchImpl, agentClient } = {}) {
   const router = express.Router();
   const registry = createIndicatorRegistry(ledger);
-  const agent = createAgent(agentClient === undefined ? { ledger } : { ledger, client: agentClient });
+  const agent = createAgent({ ledger, ...(agentClient === undefined ? {} : { client: agentClient }), ...(fetchImpl ? { fetchImpl } : {}) });
   const jobs = new Map(); // jobId -> { status, startedAt, result?, error? } (in memory)
   const reports = createReportAnalyzer(ledger, reportClient === undefined ? {} : { client: reportClient });
 
@@ -320,7 +324,7 @@ function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_AD
     else if (b.source === "csv") records = parseCsv(b.csv || "");
     else if (b.source === "ckan") {
       fetched = await fetchCkan({
-        resourceId: b.resourceId || process.env.GEMELNET_RESOURCE_ID, filters: b.filters, q: b.q, maxRows: b.maxRows,
+        resourceId: b.resourceId || (Object.hasOwn(RESOURCES, String(b.dataset)) ? RESOURCES[b.dataset] : null) || process.env.GEMELNET_RESOURCE_ID || RESOURCES.gemel, filters: b.filters, q: b.q, maxRows: b.maxRows,
         ...(fetchImpl ? { fetchImpl } : {}),
       });
       records = fetched.records;
@@ -329,7 +333,7 @@ function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_AD
 
     let out;
     try {
-      out = recordsToTracks(records, { mapping: b.mapping, unit: b.unit, returnsBasis: b.returnsBasis, source: b.sourceLabel, asOf: b.asOf });
+      out = recordsToTracks(records, { mapping: b.mapping, unit: b.unit, exposureUnit: b.exposureUnit, returnsBasis: b.returnsBasis, source: b.sourceLabel, asOf: b.asOf });
     } catch (err) {
       return res.status(400).json({ ok: false, error: err.message });
     }
@@ -342,7 +346,7 @@ function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_AD
     res.json({
       ok: true, records: records.length, truncated: fetched ? fetched.truncated : false,
       tracks: out.tracks, skipped: out.skipped, warnings: out.warnings, comparison,
-      notice: "מיפוי העמודות ברירת המחדל לא אומת מול ייצוא חי — בדקו את הקופה הראשונה מול האתר לפני שימוש.",
+      notice: "מיפוי העמודות אומת מול מאגרי רשות שוק ההון ב־data.gov.il (25.11.2026). חשיפות למניות ולמט\"ח מומרות מסכום לאחוז מהנכסים.",
     });
   }));
 
@@ -371,6 +375,122 @@ function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_AD
     const r = buildComps(req.body || {});
     res.status(r.ok ? 200 : 400).json(r);
   });
+
+  /* ---- track model: market-factor sensitivities, scenarios, early estimates ---- */
+  router.get("/track-model/baseline", (req, res) => {
+    const r = trackService.baselineSummary({ product: req.query.product });
+    res.status(r.ok ? 200 : 500).json(r);
+  });
+
+  router.get("/track-model/funds", (req, res) => {
+    const r = trackService.searchFunds({ q: req.query.q, dataset: req.query.dataset, limit: req.query.limit });
+    res.status(r.ok ? 200 : 500).json(r);
+  });
+
+  router.get("/track-model/scenarios", (_req, res) => {
+    res.json({ ok: true, factors: trackModel.FACTORS, scenarios: trackModel.SCENARIOS, note: "גודל הזעזועים הוא הדגמה שנקבעה בשיקול דעת — לא תחזית ולא הסתברות." });
+  });
+
+  router.post("/track-model/fit", wrap(async (req, res) => {
+    const b = req.body || {};
+    const opts = b.factors ? { factors: b.factors } : {};
+    const model = trackModel.fitFactorModel(b.rows, opts);
+    let accuracy = null;
+    if (b.walkForward !== false) {
+      try {
+        accuracy = trackModel.walkForwardFit(b.rows, { ...opts, minTrain: b.minTrain || 36, window: b.window || null });
+      } catch (err) {
+        accuracy = { ok: false, error: err.message };
+      }
+    }
+    res.json({ ok: true, model, accuracy });
+  }));
+
+  router.post("/track-model/scenario", wrap(async (req, res) => {
+    const b = req.body || {};
+    const { model, origin, label } = trackService.resolveModel(b);
+    const scenario = b.shocks ? { shocks: b.shocks, he: b.description } : b.scenario;
+    res.json({ ok: true, model: { label: label || null, origin, betas: model.betas }, ...(scenario ? { result: trackModel.scenarioImpact(model, scenario) } : { table: trackModel.scenarioTable(model) }) });
+  }));
+
+  router.post("/track-model/nowcast", wrap(async (req, res) => {
+    const b = req.body || {};
+    const { model, origin, label } = trackService.resolveModel(b);
+    if (!b.asOf || !b.source) throw new trackModel.TrackModelError("asOf ו־source חובה: מאיזה תאריך ומאיזה מקור נלקחו תנועות השוק");
+    res.json({ ok: true, model: { label: label || null, origin }, asOf: b.asOf, source: b.source, ...trackModel.nowcast(model, b.factors, { elapsedShare: b.elapsedShare == null ? 1 : b.elapsedShare }) });
+  }));
+
+  router.post("/track-model/explain", wrap(async (req, res) => {
+    const b = req.body || {};
+    const { model, origin, label } = trackService.resolveModel(b);
+    if (!b.asOf || !b.source) throw new trackModel.TrackModelError("asOf ו־source חובה: מאיזה תאריך ומאיזה מקור נלקחו תנועות השוק");
+    res.json({
+      model: { label: label || null, origin }, source: b.source,
+      ...trackExplain.explainMonth({ model, factors: b.factors, actual: typeof b.actual === "number" ? b.actual : null, partial: !!b.partial, asOf: b.asOf, trackLabel: b.trackLabel || "המסלול", elapsedShare: b.elapsedShare == null ? 1 : b.elapsedShare }),
+    });
+  }));
+
+  router.get("/track-model/playbook", (_req, res) => {
+    res.json({ ok: true, playbook: trackExplain.scenarioPlaybook(trackService.mainModels()), note: "גודל הזעזועים הוא הדגמה. ההשפעות — לפי הרגישות ההיסטורית (60 החודשים האחרונים), בנקודות אחוז." });
+  });
+
+  router.post("/track-model/attribution", wrap(async (req, res) => {
+    const b = req.body || {};
+    const { model, origin, label } = trackService.resolveModel(b);
+    res.json({ model: { label: label || null, origin }, ...trackModel.attributeDifference(model, b.periodA, b.periodB, { labels: b.labels || ["A", "B"] }) });
+  }));
+
+  router.post("/track-model/deposit-timing", wrap(async (req, res) => {
+    const b = req.body || {};
+    res.json(trackModel.depositTimingStats(b.monthlyReturns, { splitMonths: b.splitMonths || 3, ...(b.horizons ? { horizons: b.horizons } : {}) }));
+  }));
+
+  router.post("/track-model/volatility-outlook", wrap(async (req, res) => {
+    const b = req.body || {};
+    res.json(trackModel.riskOutlook(b.monthlyReturns, { currentMonthEstimate: typeof b.currentMonthEstimate === "number" ? b.currentMonthEstimate : null, ...(b.largeMove ? { largeMove: b.largeMove } : {}) }));
+  }));
+
+  router.post("/track-model/predictability", wrap(async (req, res) => {
+    const b = req.body || {};
+    res.json(trackModel.predictabilityTest(b.rows, b.minTrain ? { minTrain: b.minTrain } : {}));
+  }));
+
+  router.post("/track-model/fund", wrap(async (req, res) => {
+    const b = req.body || {};
+    res.json(await trackService.analyzeFund({
+      dataset: b.dataset, fundId: b.fundId, window: b.window || 60, factorRows: b.factorRows || null, mtdFactors: b.mtdFactors || null, asOf: b.asOf || null, splitMonths: b.splitMonths || 3,
+      ...(fetchImpl ? { fetchImpl } : {}),
+    }));
+  }));
+
+  // Daily watch. GET fetches the market data itself; POST takes verified moves from the caller.
+  router.get("/track-model/watch", wrap(async (req, res) => {
+    res.json(await trackService.fetchMarketWatch({ asOf: req.query.asOf || null, ...(fetchImpl ? { fetchImpl } : {}) }));
+  }));
+
+  router.post("/track-model/watch", wrap(async (req, res) => {
+    const b = req.body || {};
+    if (!b.asOf || !b.source) throw new trackModel.TrackModelError("asOf ו־source חובה: מאיזה תאריך ומאיזה מקור נלקחו תנועות השוק");
+    res.json({ source: b.source, ...trackService.marketWatch({ factors: b.factors, asOf: b.asOf, elapsedShare: b.elapsedShare == null ? trackService.monthShare(b.asOf) : b.elapsedShare }) });
+  }));
+
+  router.post("/track-model/forecast", wrap(async (req, res) => {
+    const b = req.body || {};
+    res.json(await trackService.forecastFund({
+      fundId: b.fundId, dataset: b.dataset, category: b.category, annualFee: b.annualFee || 0, assumptions: b.assumptions || {}, trackLabel: b.trackLabel || null,
+      includeHistory: b.includeHistory !== false, ...(fetchImpl ? { fetchImpl } : {}),
+    }));
+  }));
+
+  router.post("/track-model/year-over-year", wrap(async (req, res) => {
+    const b = req.body || {};
+    res.json(await trackService.yearOverYear({ dataset: b.dataset, fundId: b.fundId, factorRows: b.factorRows || null, trackLabel: b.trackLabel || "המסלול", ...(fetchImpl ? { fetchImpl } : {}) }));
+  }));
+
+  router.get("/market/factors", wrap(async (req, res) => {
+    const r = await marketData.fetchFactorHistory({ from: req.query.from, to: req.query.to, asOf: req.query.asOf || null, ...(fetchImpl ? { fetchImpl } : {}) });
+    res.json({ ok: true, ...r });
+  }));
 
   /* ---- OFEK QUALITY GATE (9.6.13) ---- */
   router.post("/quality-gate", wrap(async (req, res) => {

@@ -1,0 +1,398 @@
+"use strict";
+
+/**
+ * Glue between the data connectors and ofek/track-model.js: build a full
+ * analysis of ONE track (by its Capital Market Authority fund id) from
+ * official monthly returns and market factors.
+ */
+
+const path = require("path");
+const fs = require("fs");
+const tm = require("./track-model");
+const { fetchFundHistory } = require("./connectors/gemelnet");
+const market = require("./connectors/market");
+const explain = require("./track-explain");
+const forecastEngine = require("./track-forecast");
+
+let baselineCache;
+/** Stored research baseline (category and large-fund sensitivities). */
+function loadBaseline() {
+  if (baselineCache === undefined) {
+    try {
+      baselineCache = JSON.parse(fs.readFileSync(path.join(__dirname, "data", "track-model-baseline.json"), "utf8"));
+    } catch {
+      baselineCache = null;
+    }
+  }
+  return baselineCache;
+}
+
+/** Short listing of the baseline for the agent / API. */
+function baselineSummary({ product } = {}) {
+  const b = loadBaseline();
+  if (!b) return { ok: false, error: "קובץ הבסיס של מודל המסלולים חסר" };
+  const keep = (x) => !product || String(x.product).includes(product);
+  const slim = (x) => ({ betas: x.betas, alpha: x.alpha, r2: x.r2, mae: x.accuracy ? x.accuracy.mae : null, p90AbsError: x.accuracy ? x.accuracy.p90AbsError : null, naiveMeanMae: x.accuracy ? x.accuracy.naiveMeanMae : null });
+  return {
+    ok: true,
+    version: b.version, computedAt: b.computedAt, dataThrough: b.dataThrough, factors: b.factors, method: b.method, sources: b.sources, limitations: b.limitations,
+    categories: b.categories.filter(keep).map((c) => ({ category: c.category, ...slim(c) })),
+    funds: b.funds.filter(keep).map((f) => ({ fundId: f.fundId, name: f.name, product: f.product, assetsBn: f.assetsBn, ...slim(f) })),
+  };
+}
+
+let fundsCache;
+/** Sensitivities for every active track (compact file, ~1,260 tracks). */
+function loadFunds() {
+  if (fundsCache === undefined) {
+    try {
+      fundsCache = JSON.parse(fs.readFileSync(path.join(__dirname, "data", "track-model-funds.json"), "utf8"));
+    } catch {
+      fundsCache = null;
+    }
+  }
+  return fundsCache;
+}
+
+const DATASET_HE = { gemel: "גמל / השתלמות", pension: "פנסיה", insurance: "פוליסות ביטוח" };
+
+/** Compact fund entry -> the model shape track-model.js works with. */
+function fundToModel(f, file) {
+  if (!f.basis) return null;
+  return {
+    kind: "fund", fundId: f.id, dataset: f.ds, name: f.name, product: f.product, category: f.cat || null,
+    alpha: f.a,
+    betas: Object.fromEntries(file.factorOrder.map((n, i) => [n, f.b[i]])),
+    r2: f.r2 == null ? null : f.r2,
+    residualSd: f.s == null ? null : f.s,
+    basis: f.basis, basisNote: file.basisNote[f.basis],
+    accuracy: f.p90 == null ? null : { mae: f.mae == null ? null : f.mae, p90AbsError: f.p90, naiveMeanMae: f.naive == null ? null : f.naive, n: f.accN || null, basis: f.p90Basis || "walk-forward, חלון מתגלגל של 60 חודשים" },
+  };
+}
+
+/** Search tracks by name words, id, dataset. Largest first. */
+function searchFunds({ q = "", dataset, limit = 20 } = {}) {
+  const file = loadFunds();
+  if (!file) return { ok: false, error: "קובץ המסלולים חסר" };
+  const terms = String(q).trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const hits = file.funds.filter((f) => {
+    if (dataset && f.ds !== dataset) return false;
+    if (!terms.length) return true;
+    const hay = `${f.id} ${f.name} ${f.product} ${f.catLabel || ""}`.toLowerCase();
+    return terms.every((t) => hay.includes(t));
+  });
+  return {
+    ok: true, total: hits.length, dataThrough: file.dataThrough,
+    funds: hits.slice(0, Math.max(1, Math.min(Number(limit) || 20, 100))).map((f) => ({
+      fundId: f.id, dataset: f.ds, datasetLabel: DATASET_HE[f.ds], name: f.name, product: f.product, category: f.catLabel || null,
+      assetsMillions: f.aum, equityPct: f.eqPct == null ? null : f.eqPct, fxPct: f.fxPct == null ? null : f.fxPct,
+      historyMonths: f.n, hasModel: !!f.basis, modelBasis: f.basis ? file.basisNote[f.basis] : "אין מספיק נתונים למודל", mae: f.mae == null ? null : f.mae,
+    })),
+  };
+}
+
+function findFundModel({ fundId, dataset } = {}) {
+  const file = loadFunds();
+  if (!file || fundId == null) return null;
+  const hits = file.funds.filter((f) => String(f.id) === String(fundId) && (!dataset || f.ds === dataset));
+  if (!hits.length) return null;
+  if (hits.length > 1) throw new tm.TrackModelError(`מספר ${fundId} קיים ביותר ממאגר אחד (${hits.map((h) => h.ds).join(", ")}) — ציינו dataset`);
+  const m = fundToModel(hits[0], file);
+  if (!m) throw new tm.TrackModelError(`למסלול ${hits[0].name} אין מספיק נתונים למודל`);
+  return { model: m, file };
+}
+
+/**
+ * Resolve the model a caller refers to: explicit { betas }, a fund id
+ * (any active track), or a baseline category.
+ */
+function resolveModel({ model, betas, alpha, fundId, dataset, category } = {}) {
+  if (model && model.betas) return { model, origin: "supplied" };
+  if (betas) return { model: { betas, alpha: alpha || 0 }, origin: "supplied" };
+  const fund = findFundModel({ fundId, dataset });
+  if (fund) return { model: fund.model, origin: `baseline ${fund.file.version} (${fund.file.computedAt}, נתונים עד ${fund.file.dataThrough})`, label: fund.model.name };
+  const hit = tm.findBaselineModel(loadBaseline(), { fundId, category });
+  if (!hit) throw new tm.TrackModelError("לא נמצא מודל: העבירו betas, או fundId / category קיימים (GET /track-model/funds?q=…, GET /track-model/baseline)");
+  const b = loadBaseline();
+  return { model: hit, origin: `baseline ${b.version} (${b.computedAt}, נתונים עד ${b.dataThrough})`, label: hit.name || hit.category };
+}
+
+/** Main categories from the baseline, for the scenario playbook. */
+const MAIN_CATEGORIES = ["גמל/השתלמות · כללי", "גמל/השתלמות · מניות", "גמל/השתלמות · עד 50", "גמל/השתלמות · 60 ומעלה", "גמל/השתלמות · אשראי ואג\"ח", "ביטוח · כללי", "ביטוח · מניות", "ביטוח · עוקב S&P 500", "פנסיה מקיפה · עד 50", "פנסיה מקיפה · 60 ומעלה"];
+function mainModels() {
+  const b = loadBaseline();
+  if (!b) return [];
+  return MAIN_CATEGORIES.map((c) => b.categories.find((x) => x.category === c)).filter(Boolean).map((c) => ({ label: c.category, model: c }));
+}
+
+// Rough size of an ordinary monthly move per factor (percent) — judgmental, used only to compare directions.
+const TYPICAL_MOVE = { ta125: 4, spx: 4, usd: 2, gov: 1, corp: 1 };
+
+/** How unusual a monthly figure is, against the category's own history. */
+function unusualLevel(value, dist, range = null) {
+  if (!dist) return { level: "unknown", he: "אין היסטוריה להשוואה" };
+  if (value < 0 && range && range.high >= 0) return { level: "within_noise", he: "ירידה קלה, בתוך טווח הטעות של האומדן" };
+  if (value <= dist.q05) return { level: "very_unusual", he: "ירידה חריגה מאוד (חודש כזה קורה בערך פעם ב-20 חודשים)" };
+  if (value <= dist.q10) return { level: "unusual", he: "ירידה חריגה (בערך פעם ב-10 חודשים)" };
+  if (value < 0 && value <= dist.q25) return { level: "weak", he: "חודש חלש (בערך אחד מכל ארבעה חודשים)" };
+  if (value < 0) return { level: "slightly_negative", he: "ירידה קלה, בטווח הרגיל" };
+  return { level: "normal", he: "בטווח הרגיל" };
+}
+
+/**
+ * Daily watch: where every main track type stands this month, how unusual
+ * that is, which market environment is unfolding and which playbook
+ * scenarios it resembles. `factors` = month-to-date market moves (percent).
+ */
+function marketWatch({ factors, asOf, elapsedShare = 1, since = null, lastObservation = null } = {}) {
+  const b = loadBaseline();
+  if (!b) throw new tm.TrackModelError("קובץ הבסיס של מודל המסלולים חסר");
+  const environment = explain.classifyEnvironment(factors);
+  const rows = b.categories.map((c) => {
+    const n = tm.nowcast(c, factors, { elapsedShare });
+    const u = unusualLevel(n.estimate, c.monthlyDistribution, n.range);
+    return { category: c.category, estimate: n.estimate, range: n.range, level: u.level, levelText: u.he, shortHistory: !!c.shortHistory, contributions: n.contributions };
+  }).sort((x, y) => x.estimate - y.estimate);
+  const order = ["very_unusual", "unusual", "weak", "slightly_negative", "within_noise", "normal", "unknown"];
+  const main = rows.filter((r) => MAIN_CATEGORIES.includes(r.category));
+  const worst = main.reduce((w, r) => (order.indexOf(r.level) < order.indexOf(w) ? r.level : w), "normal");
+  // closest named scenarios: direction of the moves (each scaled by a typical monthly move) vs the scenario's shocks
+  const scaled = (v) => tm.FACTOR_NAMES.map((f) => (v[f] || 0) / TYPICAL_MOVE[f]);
+  const fv = scaled(factors);
+  const norm = (a) => Math.sqrt(a.reduce((t, x) => t + x * x, 0));
+  const quiet = Math.max(...fv.map(Math.abs)) < 0.75;
+  const matching = quiet ? [] : Object.entries(tm.SCENARIOS)
+    .map(([key, sc]) => {
+      const sv = scaled(sc.shocks);
+      return { scenario: key, description: sc.he, similarity: Number((fv.reduce((t, x, i) => t + x * sv[i], 0) / (norm(fv) * norm(sv))).toFixed(2)), talkingPoints: explain.PLAYBOOK_TEXT[key].talking };
+    })
+    .filter((m) => m.similarity >= 0.6)
+    .sort((x, y) => y.similarity - x.similarity)
+    .slice(0, 2);
+  const general = rows.find((r) => r.category === "גמל/השתלמות · כללי");
+  return {
+    ok: true,
+    asOf, since, lastObservation, partialMonth: elapsedShare < 1,
+    marketMoves: factors,
+    environment,
+    alert: { level: worst, attention: ["very_unusual", "unusual"].includes(worst), text: !["very_unusual", "unusual"].includes(worst) ? "אין כרגע חריגה שמצדיקה פנייה יזומה למבוטחים." : "יש סוגי מסלולים עם ירידה חריגה החודש — כדאי להכין הסבר למבוטחים." },
+    matchingScenarios: matching,
+    categories: rows,
+    generalTrackExplanation: general ? explain.explainMonth({ model: b.categories.find((c) => c.category === general.category), factors, partial: elapsedShare < 1, asOf, trackLabel: "המסלול הכללי", elapsedShare }) : null,
+    note: "אומדנים מוקדמים לפי תנועות השוק — לא תשואות רשמיות. רמת החריגות נמדדת מול החודשים ההיסטוריים של אותו סוג מסלול. פנייה למבוטחים — רק באישור קארין.",
+  };
+}
+
+/** Share of the calendar month that has passed on a YYYY-MM-DD date. */
+function monthShare(asOf) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(asOf || ""))) return 1;
+  const [y, m, d] = asOf.split("-").map(Number);
+  return Math.min(1, d / new Date(Date.UTC(y, m, 0)).getUTCDate());
+}
+
+/** Daily watch with market data fetched automatically (needs the index source). */
+async function fetchMarketWatch({ asOf, fetchImpl, env = process.env, today = new Date() } = {}) {
+  const b = loadBaseline();
+  if (!b) throw new tm.TrackModelError("קובץ הבסיס של מודל המסלולים חסר");
+  const date = asOf || market.israelDate(today);
+  // the month before the as-of month is the last complete one
+  const [y, m] = date.split("-").map(Number);
+  const prev = m === 1 ? `${y - 1}12` : `${y}${String(m - 1).padStart(2, "0")}`;
+  const fetched = await market.fetchFactorHistory({ from: prev, to: prev, asOf: date, env, today, ...(fetchImpl ? { fetchImpl } : {}) });
+  const w = marketWatch({ factors: fetched.monthToDate.factors, asOf: date, elapsedShare: monthShare(date), since: fetched.monthToDate.since, lastObservation: fetched.monthToDate.lastObservation });
+  return { ...w, sources: fetched.sources, modelDataThrough: b.dataThrough };
+}
+
+let factorHistoryCache;
+function loadFactorHistory() {
+  if (factorHistoryCache === undefined) {
+    try {
+      factorHistoryCache = JSON.parse(fs.readFileSync(path.join(__dirname, "data", "factor-history.json"), "utf8"));
+    } catch {
+      factorHistoryCache = null;
+    }
+  }
+  return factorHistoryCache;
+}
+function yieldSnapshot() {
+  try {
+    return { ...JSON.parse(fs.readFileSync(path.join(__dirname, "data", "yield-snapshot.json"), "utf8")), live: false };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Multi-year forecast for one track (by fund id) or a track category:
+ * expected yearly return range for 1, 3, 5 and 10 years, loss probability,
+ * the anchors and assumptions behind it, a plain summary, a client-message
+ * draft and forecast-card drafts. Yields come live from the Bank of Israel,
+ * with a dated stored snapshot as fallback (the result says which).
+ */
+async function forecastFund({ fundId, dataset, category, annualFee = 0, assumptions = {}, trackLabel = null, includeHistory = true, fetchImpl, today = new Date() } = {}) {
+  const history = loadFactorHistory();
+  if (!history) throw new tm.TrackModelError("קובץ היסטוריית גורמי השוק חסר");
+  const { model, origin, label } = resolveModel({ fundId, dataset, category });
+  const base = loadBaseline();
+  const cat = model.kind === "fund" && model.category && base ? base.categories.find((c) => c.category === model.category) : null;
+
+  let yields;
+  let yieldWarning = null;
+  try {
+    yields = await market.fetchYieldCurve({ today, ...(fetchImpl ? { fetchImpl } : {}) });
+  } catch (err) {
+    yields = yieldSnapshot();
+    if (!yields) throw err;
+    yieldWarning = `המשיכה החיה מבנק ישראל נכשלה (${err.message}); נעשה שימוש בנתון שמור מ-${yields.asOf}.`;
+  }
+
+  const forecast = forecastEngine.forecastTrack({ model, history, yields, assumptions, categoryAlpha: cat ? cat.alpha : null, annualFee: Number(annualFee) || 0 });
+  const name = trackLabel || label || "המסלול";
+  const text = explain.explainForecast({ forecast, trackLabel: name });
+
+  // the track's own record, when its official history is reachable
+  let ownRecord = null;
+  if (includeHistory && model.kind === "fund") {
+    try {
+      const h = await fetchFundHistory({ dataset: model.dataset, fundId: model.fundId, ...(fetchImpl ? { fetchImpl } : {}) });
+      if (h.rows.length >= 36) {
+        const d = tm.depositTimingStats(h.rows.map((r) => r.ret));
+        ownRecord = { from: h.rows[0].period, to: h.rows[h.rows.length - 1].period, months: h.rows.length, holding: d.holding, worstDrawdowns: d.worstDrawdowns.slice(0, 3), negativeMonthsShare: d.negativeMonthsShare, note: "מה שקרה בפועל במסלול בעבר — תיאור, לא תחזית." };
+      }
+    } catch { /* the forecast does not depend on it */ }
+  }
+
+  const dataAsOf = `${yields.asOf}-01`.slice(0, 10);
+  const cards = {};
+  for (const key of ["1y", "5y"]) cards[key] = forecastEngine.toForecastCard(forecast, { asset: `${name} — תשואה מצטברת ל-${forecast.horizons.find((x) => x.key === key).label}`, key, dataAsOf });
+  return {
+    track: { label: name, fundId: model.fundId || null, dataset: model.dataset || null, category: model.category || null, modelOrigin: origin, modelBasis: model.basisNote || null },
+    ...forecast,
+    ...text,
+    ownRecord,
+    forecastCardDrafts: cards,
+    warnings: [yieldWarning, model.basis && model.basis !== "own" ? `המודל של המסלול נשען על היסטוריה קצרה (${model.basisNote}) — התחזית פחות מבוססת.` : null].filter(Boolean),
+    notice: "תחזית = טווח תשואה אפשרי לפי מודל והנחות מוצהרות. אינה הבטחה, אינה המלצה ואינה ייעוץ מותאם אישית. רישום התחזית ביומן ושליחה ללקוח — רק באישור קארין.",
+  };
+}
+
+/**
+ * This year against the same months of last year, for one track: official
+ * returns, the market moves in both periods, the gap split by factor, and a
+ * plain explanation with a client-message draft.
+ * factorRows: optional [{ period, factors }] covering both periods;
+ * otherwise fetched (needs the index source).
+ */
+async function yearOverYear({ dataset, fundId, factorRows = null, trackLabel = "המסלול", fetchImpl, env = process.env, today = new Date() } = {}) {
+  const fx = fetchImpl ? { fetchImpl } : {};
+  const history = await fetchFundHistory({ dataset, fundId, ...fx });
+  if (!history.rows.length) throw new tm.TrackModelError(`לא נמצאו נתונים למסלול ${fundId}`);
+  const last = history.rows[history.rows.length - 1].period;
+  const year = Number(last.slice(0, 4));
+  const toMonth = Number(last.slice(4));
+  const periods = (y) => Array.from({ length: toMonth }, (_, i) => `${y}${String(i + 1).padStart(2, "0")}`);
+  const cur = periods(year);
+  const prev = periods(year - 1);
+  const byPeriod = new Map(history.rows.map((r) => [r.period, r.ret]));
+  const missing = [...prev, ...cur].filter((p) => !byPeriod.has(p));
+  if (missing.length) throw new tm.TrackModelError(`למסלול חסרים נתונים רשמיים בחודשים: ${missing.join(", ")} — אין השוואה מלאה בין השנים`);
+
+  let factors = factorRows;
+  let sources = ["רשות שוק ההון — data.gov.il (תשואות חודשיות רשמיות)"];
+  if (!factors) {
+    const fetched = await market.fetchFactorHistory({ from: prev[0], to: cur[cur.length - 1], env, today, ...fx });
+    factors = fetched.rows;
+    sources = sources.concat(fetched.sources);
+  } else sources.push("גורמי שוק — סופקו על ידי המשתמש");
+  const fmap = new Map(factors.map((f) => [String(f.period), f.factors]));
+  const noFactor = [...prev, ...cur].filter((p) => !fmap.has(p));
+  if (noFactor.length) throw new tm.TrackModelError(`חסרים גורמי שוק לחודשים: ${noFactor.join(", ")}`);
+
+  const { model, origin } = resolveModel({ fundId, dataset });
+  const rows = (ps) => ps.map((p) => ({ period: p, ret: byPeriod.get(p), factors: fmap.get(p) }));
+  const labels = [String(year - 1), String(year)];
+  const attribution = tm.attributeDifference(model, rows(prev), rows(cur), { labels });
+  const compoundMove = (ps, f) => Number(((ps.reduce((acc, p) => acc * (1 + fmap.get(p)[f] / 100), 1) - 1) * 100).toFixed(2));
+  const factorMoves = { [labels[0]]: {}, [labels[1]]: {} };
+  for (const f of Object.keys(model.betas)) {
+    factorMoves[labels[0]][f] = compoundMove(prev, f);
+    factorMoves[labels[1]][f] = compoundMove(cur, f);
+  }
+  return {
+    fund: { fundId: history.fundId, dataset, name: history.fundName, lastOfficialMonth: last },
+    model: { origin, basis: model.basisNote || null },
+    ...explain.explainYearOverYear({ attribution, factorMoves, years: labels, fromMonth: 1, toMonth, trackLabel }),
+    sources,
+    notice: "פירוק לפי הרגישות ההיסטורית של המסלול לגורמי השוק. תשואות ברמת המסלול; חשבון הלקוח מושפע גם מדמי ניהול ומועדי הפקדה.",
+  };
+}
+
+/**
+ * Full analysis of one track.
+ *   dataset: gemel | pension | insurance; fundId: CMA fund id
+ *   window:  months used for the coefficients (default 60)
+ *   factorRows: optional [{ period, factors }] supplied by the caller;
+ *               otherwise fetched (needs OFEK_INDEX_SOURCE=globes)
+ *   asOf:    optional YYYY-MM-DD for a month-to-date early estimate
+ */
+async function analyzeFund({ dataset, fundId, window = 60, factorRows = null, mtdFactors = null, asOf = null, splitMonths = 3, fetchImpl, env = process.env, today = new Date() } = {}) {
+  if (!(Number.isInteger(window) && window >= 24 && window <= 180)) throw new tm.TrackModelError("window: בין 24 ל־180 חודשים");
+  const fx = fetchImpl ? { fetchImpl } : {};
+  const history = await fetchFundHistory({ dataset, fundId, ...fx });
+  if (history.rows.length < 30) throw new tm.TrackModelError(`למסלול ${fundId} יש רק ${history.rows.length} חודשי נתונים — מעט מדי למודל`);
+  const last = history.rows[history.rows.length - 1].period;
+
+  let unpublished = []; // complete months whose official figure is not out yet
+  let factors = factorRows;
+  let monthToDate = mtdFactors ? { asOf, factors: mtdFactors, supplied: true } : null;
+  let sources = ["רשות שוק ההון — data.gov.il (תשואות חודשיות רשמיות)"];
+  if (!factors) {
+    const want = history.rows.slice(-Math.min(history.rows.length, window + 72));
+    const fetched = await market.fetchFactorHistory({ from: want[0].period, to: last, asOf, env, today, ...fx });
+    factors = fetched.rows;
+    if (fetched.monthToDate) monthToDate = fetched.monthToDate;
+    unpublished = fetched.unpublishedMonths || [];
+    sources = sources.concat(fetched.sources);
+  } else sources.push("גורמי שוק — סופקו על ידי המשתמש");
+
+  const byPeriod = new Map(factors.map((f) => [String(f.period), f.factors]));
+  const rows = history.rows.filter((r) => byPeriod.has(r.period)).map((r) => ({ period: r.period, ret: r.ret, factors: byPeriod.get(r.period) }));
+  if (rows.length < 30) throw new tm.TrackModelError(`רק ${rows.length} חודשים עם תשואה וגורמי שוק יחד — מעט מדי למודל`);
+
+  const fit = tm.fitFactorModel(rows.slice(-window));
+  let accuracy = null;
+  if (rows.length >= Math.min(window, 36) + 12) {
+    const wf = tm.walkForwardFit(rows, { minTrain: Math.min(window, rows.length - 12), window });
+    accuracy = { n: wf.n, from: wf.from, to: wf.to, mae: wf.mae, p90AbsError: wf.p90AbsError, bias: wf.bias, naiveMeanMae: wf.naiveMeanMae, skillVsNaive: wf.skillVsNaive, recent: wf.recent.slice(-12) };
+  }
+  const model = { alpha: fit.alpha, betas: fit.betas, accuracy };
+
+  let earlyEstimate = null;
+  if (monthToDate && monthToDate.factors) {
+    earlyEstimate = { ...tm.nowcast(model, monthToDate.factors, { elapsedShare: monthShare(monthToDate.asOf) }), asOf: monthToDate.asOf || null, since: monthToDate.since || null, marketMoves: monthToDate.factors, lastObservation: monthToDate.lastObservation || null };
+  }
+
+  // each complete month without an official figure gets its own full-month estimate
+  const unpublishedEstimates = unpublished.map((u) => ({ period: u.period, ...tm.nowcast(model, u.factors), marketMoves: u.factors }));
+
+  let depositTiming = null;
+  if (history.rows.length >= 36) depositTiming = tm.depositTimingStats(history.rows.map((r) => r.ret), { splitMonths });
+
+  let volatilityOutlook = null;
+  if (history.rows.length >= 36) volatilityOutlook = tm.riskOutlook(history.rows.map((r) => r.ret), earlyEstimate ? { currentMonthEstimate: earlyEstimate.estimate } : {});
+
+  return {
+    ok: true,
+    fund: { fundId: history.fundId, dataset, name: history.fundName, company: history.company, historyFrom: history.rows[0].period, lastOfficialMonth: last, lastOfficialReturn: history.rows[history.rows.length - 1].ret, totalAssetsMillions: history.rows[history.rows.length - 1].totalAssets },
+    model: { ...fit, accuracy },
+    scenarios: tm.scenarioTable(model),
+    earlyEstimate,
+    unpublishedMonths: unpublishedEstimates,
+    depositTiming,
+    volatilityOutlook,
+    sources,
+    notice: "המודל מסביר ומעריך את תשואת המסלול לפי תנועות השוק. אינו חוזה את כיוון השוק ואינו המלצה אישית. תשואות ברמת המסלול; חשבון הלקוח מושפע גם מדמי ניהול ומועדי הפקדה.",
+  };
+}
+
+module.exports = { loadBaseline, loadFunds, loadFactorHistory, baselineSummary, resolveModel, searchFunds, analyzeFund, yearOverYear, forecastFund, mainModels, marketWatch, fetchMarketWatch, unusualLevel, monthShare };

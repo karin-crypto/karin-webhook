@@ -58,7 +58,18 @@ function validDate(d) {
  * }
  * context: { now, approvers, knownForecastIds: Set }
  */
-function runQualityGate(input = {}, { now = new Date(), approvers, knownForecastIds = null } = {}) {
+/**
+ * The office's own published contact details (signature line) are not client
+ * data. Listed in OFEK_OFFICE_CONTACTS (comma separated phone numbers and
+ * emails) or passed as `officeContacts`; compared ignoring spaces and dashes.
+ */
+const contactKey = (v) => String(v).toLowerCase().replace(/[\s-]/g, "").replace(/^\+972/, "0");
+function officeContactSet(list) {
+  const raw = list || String(process.env.OFEK_OFFICE_CONTACTS || "").split(",");
+  return new Set(raw.map(contactKey).filter(Boolean));
+}
+
+function runQualityGate(input = {}, { now = new Date(), approvers, knownForecastIds = null, officeContacts } = {}) {
   const allowed = (approvers || (process.env.OFEK_APPROVERS || process.env.OFEK_VIDEO_APPROVERS || "karin").split(","))
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean);
@@ -116,7 +127,8 @@ function runQualityGate(input = {}, { now = new Date(), approvers, knownForecast
   add(7, "אין נרטיב מפחיד או מלהיב", sensational.length === 0, sensational.length ? `ביטויים: ${sensational.join(", ")}` : null);
 
   // 8. No identifying client details.
-  const pii = findPii(text);
+  const own = officeContactSet(officeContacts);
+  const pii = findPii(text).filter((p) => !own.has(contactKey(p.match)));
   add(8, "אין פרטים מזהים של לקוחות", pii.length === 0, pii.length ? pii.map((p) => `${p.type}: ${p.match}`).join(", ") : null);
 
   // 9. Disclosure and regulatory requirements.

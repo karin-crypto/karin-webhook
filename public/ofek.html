@@ -29,12 +29,23 @@
   ul.trace { margin:0; padding-inline-start: 18px; font-size:.9rem; }
   .pill { display:inline-block; border:1px solid var(--line); border-radius:999px; padding:0 8px; font-size:.8rem; margin-inline-end:4px; }
   .prop { border-top:1px solid var(--line); padding-top:10px; margin-top:10px; }
+  .grid5 { display:grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap:8px; }
+  @media (max-width: 640px) { .grid5 { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+  .grid5 label { font-weight:400; font-size:.85rem; margin:0 0 2px; }
+  input[type=number], input[type=date] { width:100%; padding:8px; border:1px solid var(--line); border-radius:8px; background:transparent; color:inherit; font:inherit; }
+  .hit { display:block; width:100%; text-align:right; background:transparent; color:inherit; border:1px solid var(--line); margin-top:6px; font-weight:400; }
+  .hit:hover { border-color: var(--accent); }
+  .tbl { border-collapse:collapse; width:100%; margin-top:8px; font-size:.95rem; }
+  .tbl td, .tbl th { border-bottom:1px solid var(--line); padding:6px 8px; text-align:right; }
+  .tbl td.num { direction:ltr; text-align:left; font-variant-numeric: tabular-nums; white-space:nowrap; }
+  .copybox { white-space:pre-wrap; border:1px dashed var(--line); border-radius:8px; padding:12px; margin-top:8px; background: color-mix(in srgb, var(--accent) 6%, transparent); }
+  .neg { color: var(--bad); } .posv { color: var(--accent); }
 </style>
 </head>
 <body>
 <main>
   <h1>אופק — סוכן מחקר השקעות</h1>
-  <p class="sub">כלי פנימי לצוות. הסוכן אוסף, מאמת, מריץ מודלים וכותב דוח. תחזיות מוגשות כהצעות ונרשמות רק באישור קארין.</p>
+  <p class="sub">כלי פנימי לצוות. הסוכן אוסף, מאמת, מריץ מודלים וכותב דוח. תחזיות מוגשות כהצעות ונרשמות רק באישור קארין. הטוקן נדרש גם לחלק המסלולים שבהמשך העמוד.</p>
 
   <section class="card">
     <label for="token">טוקן גישה</label>
@@ -56,6 +67,67 @@
     <ul class="trace" id="trace"></ul>
     <h3>מקורות</h3>
     <ul class="trace" id="sources"></ul>
+  </section>
+
+  <section class="card">
+    <strong>מסלול: תרחישים, אומדן מוקדם והסבר</strong>
+    <p class="muted" style="margin:4px 0 0">חיפוש מסלול (גמל, השתלמות, פנסיה, פוליסה), מה יקרה לו בכל תרחיש שוק, ואומדן מוקדם עם הסבר וטיוטת הודעה. לא דורש את מנוע ה־AI.</p>
+    <div class="row">
+      <button id="wrun" class="secondary">מבט יומי על כל סוגי המסלולים</button>
+      <span id="wstatus" class="status"></span>
+    </div>
+    <div id="wout" hidden>
+      <p id="walert" style="margin:10px 0 4px;font-weight:600"></p>
+      <p id="wenv" class="muted" style="margin:0"></p>
+      <div id="wscen"></div>
+      <div id="wtable"></div>
+    </div>
+    <label for="tq">חיפוש מסלול</label>
+    <div class="row" style="margin-top:0">
+      <input id="tq" type="text" placeholder="לדוגמה: הפניקס כללי, מיטב השתלמות מניות" style="flex:1;min-width:200px">
+      <button id="tsearch" class="secondary">חפש</button>
+    </div>
+    <div id="thits"></div>
+    <div id="tsel" hidden>
+      <h3 id="tname" style="margin:14px 0 2px"></h3>
+      <div id="tinfo" class="muted"></div>
+      <div id="tscen"></div>
+      <h3 style="margin:16px 0 4px">תנועות השוק בתקופה (באחוזים)</h3>
+      <div class="grid5">
+        <div><label for="f_ta125">ת"א 125</label><input id="f_ta125" type="number" step="0.01"></div>
+        <div><label for="f_spx">S&amp;P 500 (בדולרים)</label><input id="f_spx" type="number" step="0.01"></div>
+        <div><label for="f_usd">דולר מול שקל</label><input id="f_usd" type="number" step="0.01"></div>
+        <div><label for="f_gov">אג"ח ממשלתיות</label><input id="f_gov" type="number" step="0.01"></div>
+        <div><label for="f_corp">אג"ח חברות</label><input id="f_corp" type="number" step="0.01"></div>
+      </div>
+      <div class="row">
+        <div><label for="tasof" style="font-weight:400;font-size:.85rem;margin:0">נכון לתאריך</label><input id="tasof" type="date"></div>
+        <div style="flex:1;min-width:160px"><label for="tsrc" style="font-weight:400;font-size:.85rem;margin:0">מקור הנתונים</label><input id="tsrc" type="text" placeholder="לדוגמה: בורסה, בנק ישראל"></div>
+        <label class="muted" style="font-weight:400;margin:0"><input type="checkbox" id="tpartial" checked> החודש עוד לא הסתיים</label>
+      </div>
+      <div class="row">
+        <button id="tfetch" class="secondary">משוך נתוני שוק אוטומטית</button>
+        <button id="texplain">הסבר וטיוטת הודעה</button>
+        <button id="tyoy" class="secondary">השנה מול שנה שעברה</button>
+        <button id="tfc" class="secondary">תחזית למסלול</button>
+        <label class="muted" style="font-weight:400;margin:0" for="tfee">דמי ניהול שנתיים של הלקוח (%, לא חובה):</label>
+        <input id="tfee" type="number" step="0.05" min="0" max="4" style="width:90px">
+        <span id="tstatus" class="status"></span>
+      </div>
+      <div id="tfcout" hidden>
+        <h3 style="margin:16px 0 4px">תחזית למסלול <span class="pill">הערכה מחקרית — לא הבטחה</span></h3>
+        <div id="tfctable"></div>
+        <p id="tfcanchors" class="muted" style="margin:8px 0 0"></p>
+        <p id="tfcwarn" class="warn" style="margin:6px 0 0"></p>
+      </div>
+      <div id="tout" hidden>
+        <h3 style="margin:16px 0 4px">הסבר מקצועי</h3>
+        <p id="tsummary" style="margin:0"></p>
+        <h3 style="margin:16px 0 4px">טיוטת הודעה למבוטח <span class="pill">טיוטה — נשלחת רק באישור קארין</span></h3>
+        <div id="tdraft" class="copybox"></div>
+        <div class="row"><button id="tcopy" class="secondary">העתק</button></div>
+      </div>
+    </div>
   </section>
 
   <section class="card">
@@ -147,6 +219,130 @@
     if (!r.persistent) $("status").textContent += " · אין מסד נתונים — הרישום בזיכרון בלבד";
     if (r.proposals.length) loadProps();
   }
+
+  /* ---- track model ---- */
+  let track = null;
+  const FACTOR_IDS = ["ta125", "spx", "usd", "gov", "corp"];
+  const num = (v, d = 1) => {
+    if (v == null) return "—";
+    const r = Number(Number(v).toFixed(d)); // -0.04 is shown as 0.0, without a sign
+    return `<span class="${r < 0 ? "neg" : r > 0 ? "posv" : ""}">${r > 0 ? "+" : ""}${r.toFixed(d)}%</span>`;
+  };
+  // today's date in Israel (toISOString would give the UTC date, which is still "yesterday" after midnight)
+  $("tasof").value = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+
+  $("wrun").addEventListener("click", async () => {
+    $("wstatus").className = "status"; $("wstatus").textContent = "מושך נתוני שוק ומחשב…";
+    try {
+      const w = await api("/track-model/watch?asOf=" + $("tasof").value);
+      const il = (d) => (d ? d.slice(8) + "." + d.slice(5, 7) + "." + d.slice(0, 4) : "");
+      $("wout").hidden = false;
+      $("walert").className = w.alert.attention ? "warn" : "";
+      $("walert").textContent = w.alert.text;
+      $("wenv").textContent = "סביבת השוק מתחילת החודש (עד " + il(w.asOf) + "): " + w.environment.tags.map((t) => t.he).join(", ") + ".";
+      $("wscen").innerHTML = w.matchingScenarios.map((m) => `<p style="margin:8px 0 0"><span class="pill">תרחיש דומה</span>${esc(m.description)}<br><span class="muted">${esc(m.talkingPoints)}</span></p>`).join("");
+      $("wtable").innerHTML = `<table class="tbl"><tr><th>סוג מסלול</th><th>אומדן מוקדם לחודש</th><th>טווח סביר</th><th>ביחס להיסטוריה</th></tr>` +
+        w.categories.map((c) => `<tr><td>${esc(c.category)}</td><td class="num">${num(c.estimate)}</td><td style="white-space:nowrap">${c.range ? `<bdi dir="ltr">${c.range.low}%</bdi> עד <bdi dir="ltr">${c.range.high}%</bdi>` : "—"}</td><td>${esc(c.levelText)}</td></tr>`).join("") + "</table>";
+      FACTOR_IDS.forEach((f) => { $("f_" + f).value = w.marketMoves[f].toFixed(2); });
+      $("tsrc").value = (w.sources || []).join("; ");
+      $("wstatus").textContent = "אומדנים מוקדמים — לא תשואות רשמיות";
+    } catch (e) { $("wstatus").className = "status warn"; $("wstatus").textContent = e.message; }
+  });
+
+  async function searchTracks() {
+    const q = $("tq").value.trim();
+    if (!q) return;
+    $("thits").textContent = "מחפש…";
+    try {
+      const r = await api("/track-model/funds?limit=12&q=" + encodeURIComponent(q));
+      $("thits").innerHTML = r.funds.length
+        ? r.funds.map((f, i) => `<button class="hit" data-i="${i}">${esc(f.name)} <span class="muted">· ${esc(f.datasetLabel)} · ${esc(f.product)} · ${(f.assetsMillions / 1000).toFixed(1)} מיליארד ₪${f.hasModel ? "" : " · אין מספיק נתונים למודל"}</span></button>`).join("")
+        : "לא נמצאו מסלולים";
+      $("thits").hits = r.funds;
+    } catch (e) { $("thits").textContent = e.message; }
+  }
+  $("tsearch").addEventListener("click", searchTracks);
+  $("tq").addEventListener("keydown", (ev) => { if (ev.key === "Enter") searchTracks(); });
+
+  $("thits").addEventListener("click", async (ev) => {
+    const b = ev.target.closest("button.hit"); if (!b) return;
+    track = $("thits").hits[Number(b.dataset.i)];
+    $("tsel").hidden = false; $("tout").hidden = true;
+    $("tname").textContent = track.name;
+    $("tinfo").textContent = [track.datasetLabel, track.product, track.equityPct == null ? null : `חשיפה למניות ${track.equityPct}%`, track.fxPct == null ? null : `חשיפה למט"ח ${track.fxPct}%`, track.mae == null ? track.modelBasis : `טעות ממוצעת של המודל ${track.mae} נק' אחוז בחודש`].filter(Boolean).join(" · ");
+    $("tscen").innerHTML = "";
+    if (!track.hasModel) { $("tscen").textContent = "למסלול הזה אין מספיק נתונים למודל."; return; }
+    try {
+      const r = await api("/track-model/scenario", { method: "POST", body: JSON.stringify({ fundId: track.fundId, dataset: track.dataset }) });
+      $("tscen").innerHTML = `<table class="tbl"><tr><th>תרחיש (הדגמה, לא תחזית)</th><th>השפעה צפויה על המסלול</th><th>טווח סביר</th></tr>` +
+        r.table.map((t) => `<tr><td>${esc(t.description)}</td><td class="num">${num(t.impact)}</td><td style="white-space:nowrap">${t.range ? `<bdi dir="ltr">${t.range.low}%</bdi> עד <bdi dir="ltr">${t.range.high}%</bdi>` : "—"}</td></tr>`).join("") + "</table>";
+    } catch (e) { $("tscen").textContent = e.message; }
+  });
+
+  $("tfetch").addEventListener("click", async () => {
+    $("tstatus").className = "status"; $("tstatus").textContent = "מושך נתונים…";
+    try {
+      // the month before the as-of month; the server measures month-to-date from its end
+      const d = $("tasof").value; const y = Number(d.slice(0, 4)); const m = Number(d.slice(5, 7));
+      const prev = m === 1 ? `${y - 1}12` : `${y}${String(m - 1).padStart(2, "0")}`;
+      const r = await api(`/market/factors?from=${prev}&to=${prev}&asOf=${d}`);
+      FACTOR_IDS.forEach((f) => { $("f_" + f).value = r.monthToDate.factors[f].toFixed(2); });
+      $("tsrc").value = r.sources.join("; ");
+      const il = (d) => d.slice(8) + "." + d.slice(5, 7) + "." + d.slice(0, 4);
+      $("tstatus").textContent = "נתוני שוק מ־" + il(r.monthToDate.since) + " עד " + il(r.monthToDate.asOf);
+    } catch (e) { $("tstatus").className = "status warn"; $("tstatus").textContent = e.message; }
+  });
+
+  $("texplain").addEventListener("click", async () => {
+    if (!track || !track.hasModel) return;
+    const factors = {};
+    for (const f of FACTOR_IDS) {
+      const v = parseFloat($("f_" + f).value);
+      if (!Number.isFinite(v)) { $("tstatus").className = "status bad"; $("tstatus").textContent = "נא למלא את כל חמש תנועות השוק"; return; }
+      factors[f] = v;
+    }
+    if (!$("tsrc").value.trim()) { $("tstatus").className = "status bad"; $("tstatus").textContent = "נא לציין את מקור הנתונים"; return; }
+    $("tstatus").className = "status"; $("tstatus").textContent = "מחשב…";
+    try {
+      const r = await api("/track-model/explain", { method: "POST", body: JSON.stringify({ fundId: track.fundId, dataset: track.dataset, factors, asOf: $("tasof").value, source: $("tsrc").value.trim(), partial: $("tpartial").checked, trackLabel: "המסלול" }) });
+      $("tout").hidden = false;
+      $("tsummary").textContent = r.summary;
+      $("tdraft").textContent = r.clientDraft.text;
+      $("tstatus").textContent = "";
+    } catch (e) { $("tstatus").className = "status bad"; $("tstatus").textContent = e.message; }
+  });
+  $("tyoy").addEventListener("click", async () => {
+    if (!track || !track.hasModel) return;
+    $("tstatus").className = "status"; $("tstatus").textContent = "משווה בין השנים…";
+    try {
+      const r = await api("/track-model/year-over-year", { method: "POST", body: JSON.stringify({ fundId: track.fundId, dataset: track.dataset, trackLabel: "המסלול" }) });
+      $("tout").hidden = false;
+      $("tsummary").textContent = r.summary;
+      $("tdraft").textContent = r.clientDraft.text;
+      $("tstatus").textContent = "";
+    } catch (e) { $("tstatus").className = "status warn"; $("tstatus").textContent = e.message; }
+  });
+  $("tfc").addEventListener("click", async () => {
+    if (!track || !track.hasModel) return;
+    $("tstatus").className = "status"; $("tstatus").textContent = "מחשב תחזית…";
+    try {
+      const fee = parseFloat($("tfee").value);
+      const r = await api("/track-model/forecast", { method: "POST", body: JSON.stringify({ fundId: track.fundId, dataset: track.dataset, annualFee: Number.isFinite(fee) ? fee : 0 }) });
+      const ltr = (x) => `<bdi dir="ltr">${x}%</bdi>`;
+      $("tfcout").hidden = false;
+      $("tfctable").innerHTML = `<table class="tbl"><tr><th>אופק</th><th>תשואה שנתית ממוצעת — טווח סביר</th><th>מרכז</th><th>תשואה מצטברת — טווח</th><th>סיכוי משוער להפסד</th></tr>` +
+        r.horizons.map((h) => `<tr><td>${esc(h.label)}${h.backtested ? "" : " <span class=\"muted\">(לא נבדק היסטורית)</span>"}</td><td style="white-space:nowrap">${ltr(h.annualized.low)} עד ${ltr(h.annualized.high)}</td><td class="num">${ltr(h.annualized.central)}</td><td style="white-space:nowrap">${ltr(h.cumulative.low)} עד ${ltr(h.cumulative.high)}</td><td class="num">${Math.round(h.lossProbability * 100)}%</td></tr>`).join("") + "</table>";
+      $("tfcanchors").textContent = (r.inputs.annualFee ? `אחרי דמי ניהול של ${r.inputs.annualFee}% בשנה. ` : "לפני דמי ניהול. ") + `עוגן היסטורי: ${r.anchors.historical.annual}% בשנה · עוגן לפי תשואות האג"ח: ${r.anchors.yieldBased.annual}% בשנה · ${r.anchors.centreRule}. תשואות אג"ח ממשלתיות (${r.inputs.yields.asOf}): 5 שנים ${r.inputs.yields.y5}%, 10 שנים ${r.inputs.yields.y10}%. הנחות: פרמיית מניות ${r.inputs.assumptions.equityPremium}%, מרווח אג"ח חברות ${r.inputs.assumptions.corporateSpread}%. בבדיקה היסטורית כ-${Math.round(r.calibration.insideShare * 100)}% מהתוצאות נפלו בטווח.` + (r.anchors.historicalCap ? " " + r.anchors.historicalCap + "." : "");
+      $("tfcwarn").textContent = (r.warnings || []).join(" ");
+      $("tout").hidden = false;
+      $("tsummary").textContent = r.summary;
+      $("tdraft").textContent = r.clientDraft.text;
+      $("tstatus").textContent = "";
+    } catch (e) { $("tstatus").className = "status warn"; $("tstatus").textContent = e.message; }
+  });
+  $("tcopy").addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText($("tdraft").textContent); $("tcopy").textContent = "הועתק"; setTimeout(() => { $("tcopy").textContent = "העתק"; }, 1500); } catch { /* clipboard blocked */ }
+  });
 
   async function loadProps() {
     try {

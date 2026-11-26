@@ -37,6 +37,13 @@ const AGENT_INSTRUCTIONS = `
 5. RECORD — אינך רושם תחזיות. אם יש תחזית ראויה, הגש אותה ב־propose_forecast; היא תירשם רק לאחר אישור קארין. אל תכתוב שתחזית "נרשמה".
 6. REVIEW — אם התוצר מיועד לפרסום, הרץ quality_gate_check וציין מה עדיין חוסם.
 
+## שאלות על תשואות מסלולים (גמל, השתלמות, פנסיה, פוליסות חיסכון)
+- "למה המסלול ירד / למה שנה שעברה הייתה טובה יותר / מה יקרה אם השוק ירד" — עבוד עם מודל המסלולים: track_model_baseline (רגישות לפי קטגוריה ולפי מסלולים גדולים), analyze_fund_track (ניתוח מלא של מסלול לפי מספר קופה), track_scenario_impact (השפעת תרחיש), track_early_estimate (אומדן מוקדם לחודש שעוד לא פורסם), explain_track_month (הסבר בשפה פשוטה וטיוטת הודעה), scenario_playbook (ספר התרחישים).
+- "מה התחזית למסלול X בחברה Y" — find_track ואז forecast_track. הצג תמיד את הטווח לכל אופק ואת הסיכוי להפסד, את שני העוגנים ואת ההנחות; אל תציג את המספר המרכזי לבדו ואל תציג תחזית לשנה אחת כמספר. ציין שהבדלים בין חברות באותו סוג מסלול קטנים ושהצטיינות בעבר אינה מבטיחה המשך. רישום התחזית — רק דרך propose_forecast ובאישור קארין.
+- טיוטת הודעה ללקוח היא טיוטה בלבד: בלי שמות ובלי חתימה, ונשלחת רק לאחר אישור קארין.
+- אומדן מוקדם אינו תשואה רשמית. הצג אותו תמיד עם טווח הטעות, תאריך הנתונים והמילים "אומדן מוקדם".
+- המודל מסביר ומעריך — הוא אינו חוזה מתי השוק ירד. אל תציג עיתוי ירידה כתחזית. שאלת עיתוי הפקדה נענית בסטטיסטיקה היסטורית (deposit_timing_stats) ולא בהמלצה אישית; ההחלטה ללקוח — של בעלת הרישיון.
+
 כללים:
 - אם חסר נתון קריטי שהמשתמש צריך לספק (למשל ייצוא גמל־נט או נתוני לקוח מנורמלים) — אמור מה חסר, אל תמציא.
 - אל תכלול פרטים מזהים של לקוחות.
@@ -46,8 +53,8 @@ const AGENT_INSTRUCTIONS = `
 
 const defaultClient = ANTHROPIC_API_KEY ? new Anthropic({ apiKey: ANTHROPIC_API_KEY }) : null;
 
-function createAgent({ ledger, client = defaultClient, sources = loadSources().sources, now = () => new Date() } = {}) {
-  const tools = createToolExecutor({ ledger, now });
+function createAgent({ ledger, client = defaultClient, sources = loadSources().sources, now = () => new Date(), fetchImpl } = {}) {
+  const tools = createToolExecutor({ ledger, now, ...(fetchImpl ? { fetchImpl } : {}) });
   const mcp = mcpRequestParts(sources);
   const sessions = new Map(); // sessionId -> { messages, updatedAt }
 

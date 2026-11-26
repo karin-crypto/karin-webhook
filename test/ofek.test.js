@@ -314,6 +314,20 @@ test("quality gate (9.6.13): pass, pass with notes, blocked", () => {
   assert.ok(v.video.failed.includes("date"));
 });
 
+test("quality gate: the office's own signature contacts are not client details", () => {
+  const { runQualityGate } = require("../ofek/quality-gate");
+  const text = "עדכון כללי ללא נתונים. המידע אינו מהווה ייעוץ. לפרטים: 050-123-4567 · office@example.co.il";
+  const check8 = (r) => r.checks.find((c) => c.n === 8);
+  const plain = runQualityGate({ contentType: "post", text }, { now: NOW });
+  assert.equal(check8(plain).pass, false);
+  const own = runQualityGate({ contentType: "post", text }, { now: NOW, officeContacts: ["0501234567", "Office@Example.co.il"] });
+  assert.equal(check8(own).pass, true);
+  // a client's phone next to the office signature is still caught
+  const mixed = runQualityGate({ contentType: "post", text: text + " לקוח: 052-765-4321" }, { now: NOW, officeContacts: ["0501234567", "office@example.co.il"] });
+  assert.equal(check8(mixed).pass, false);
+  assert.match(check8(mixed).detail, /052-765-4321/);
+});
+
 test("indicator registry (9.6.1/9.6.6): lifecycle, approvals, experiments", async () => {
   const ledger = createLedger({ backend: memoryBackend() });
   const reg = createIndicatorRegistry(ledger);
@@ -376,6 +390,11 @@ test("gemel-net import: CSV parsing, mapping, units, validation", () => {
   const a = out.tracks.find((t) => t.fundId === "101");
   assert.deepEqual(a.monthlyReturns, [{ month: "2024-01", r: 0.015 }, { month: "2024-02", r: -0.005 }]);
   assert.equal(a.feeOnBalance, 0.006);
+  // Real data.gov.il rows report exposures as amounts; they become % of assets.
+  const live = recordsToTracks([{ FUND_ID: 50, FUND_NAME: "כללי", REPORT_PERIOD: 202610, MONTHLY_YIELD: -1.26, TOTAL_ASSETS: 37791.67, STOCK_MARKET_EXPOSURE: 18744.67, FOREIGN_CURRENCY_EXPOSURE: 6991.46 }], { returnsBasis: "gross", source: "ביטוח־נט" });
+  assert.equal(live.tracks[0].equityExposure, 49.6);
+  assert.equal(live.tracks[0].fxExposure, 18.5);
+  assert.equal(recordsToTracks([{ FUND_ID: 1, REPORT_PERIOD: 202610, MONTHLY_YIELD: 1, TOTAL_ASSETS: 100, STOCK_MARKET_EXPOSURE: 40 }], { returnsBasis: "gross", source: "x", exposureUnit: "percent" }).tracks[0].equityExposure, 40);
   assert.equal(out.skipped.length, 1);
   assert.throws(() => recordsToTracks(rows, { source: "x" }), /returnsBasis/);
   assert.throws(() => recordsToTracks([{ ID: 1 }], { returnsBasis: "net", source: "x" }), /עמודות חובה/);
