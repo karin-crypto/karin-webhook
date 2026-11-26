@@ -14,6 +14,7 @@ const { createToolExecutor, TOOL_DEFS } = require("../ofek/agent-tools");
 const { createOfekRouter } = require("../ofek/routes");
 const { mulberry32 } = require("../ofek/metrics");
 
+const round3 = (x) => Number(x.toFixed(3));
 const TRUE = { alpha: 0.1, betas: { ta125: 0.2, spx: 0.25, usd: 0.1, gov: 0.05, corp: 0.3 } };
 
 /** Standard normal from a seeded uniform generator (Box-Muller). */
@@ -139,6 +140,10 @@ test("track model: deposit-timing statistics", () => {
   assert.equal(dd.worstDrawdowns[0].recoveredAfterMonths, 12);
   assert.equal(dd.afterNegativeMonth.n, 1);
   assert.equal(dd.afterNegativeMonth.meanNextMonth, 1);
+  assert.equal(dd.afterNegativeMonth.meanAbsNextMonth, 1);
+  assert.equal(dd.afterNegativeMonth.moveAbove2Share, 0);
+  assert.equal(dd.afterPositiveMonth.negativeShare, round3(1 / 46));
+  assert.equal(dd.afterPositiveMonth.moveAbove2Share, round3(1 / 46)); // the -10% month itself
   assert.match(dd.note, /אינה המלצה אישית/);
 
   const falling = tm.depositTimingStats([...Array(36).fill(1), -2, -3]);

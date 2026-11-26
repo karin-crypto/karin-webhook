@@ -329,6 +329,15 @@ function depositTimingStats(monthlyReturns, { splitMonths = 3, horizons = [12, 3
   const afterPos = [];
   for (let i = 1; i < r.length; i++) (r[i - 1] < 0 ? afterNeg : afterPos).push(r[i]);
 
+  // what followed: average return, average size of the move, and how often it was large or negative
+  const followStats = (next) => ({
+    n: next.length,
+    meanNextMonth: next.length ? round(mean(next)) : null,
+    meanAbsNextMonth: next.length ? round(mean(next.map(Math.abs))) : null,
+    moveAbove2Share: next.length ? round(mean(next.map((v) => (Math.abs(v) > 2 ? 1 : 0))), 3) : null,
+    negativeShare: next.length ? round(mean(next.map((v) => (v < 0 ? 1 : 0))), 3) : null,
+  });
+
   const holding = horizons.filter((h) => r.length >= h + 12).map((h) => {
     const w = [];
     for (let i = 0; i + h <= r.length; i++) w.push(compound(r.slice(i, i + h)));
@@ -368,8 +377,9 @@ function depositTimingStats(monthlyReturns, { splitMonths = 3, horizons = [12, 3
       best5pct: round(quantile(diffs, 0.95)),
       note: "יתרון ההפקדה החד־פעמית על פני פריסה, בנקודות אחוז, בסוף תקופת הפריסה. הכסף שממתין להפקדה מחושב ללא תשואה.",
     },
-    afterNegativeMonth: { n: afterNeg.length, meanNextMonth: afterNeg.length ? round(mean(afterNeg)) : null },
-    afterPositiveMonth: { n: afterPos.length, meanNextMonth: afterPos.length ? round(mean(afterPos)) : null },
+    afterNegativeMonth: followStats(afterNeg),
+    afterPositiveMonth: followStats(afterPos),
+    volatilityNote: "במחקר 2012–2026: אחרי חודש שלילי, החודש הבא תנודתי יותר (לשני הכיוונים) — אך הכיוון עצמו אינו צפוי.",
     monthlyVolatility: round(sd(r)),
     negativeMonthsShare: round(mean(r.map((v) => (v < 0 ? 1 : 0))), 3),
     holding,
