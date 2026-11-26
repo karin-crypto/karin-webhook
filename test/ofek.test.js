@@ -376,6 +376,11 @@ test("gemel-net import: CSV parsing, mapping, units, validation", () => {
   const a = out.tracks.find((t) => t.fundId === "101");
   assert.deepEqual(a.monthlyReturns, [{ month: "2024-01", r: 0.015 }, { month: "2024-02", r: -0.005 }]);
   assert.equal(a.feeOnBalance, 0.006);
+  // Real data.gov.il rows report exposures as amounts; they become % of assets.
+  const live = recordsToTracks([{ FUND_ID: 50, FUND_NAME: "כללי", REPORT_PERIOD: 202610, MONTHLY_YIELD: -1.26, TOTAL_ASSETS: 37791.67, STOCK_MARKET_EXPOSURE: 18744.67, FOREIGN_CURRENCY_EXPOSURE: 6991.46 }], { returnsBasis: "gross", source: "ביטוח־נט" });
+  assert.equal(live.tracks[0].equityExposure, 49.6);
+  assert.equal(live.tracks[0].fxExposure, 18.5);
+  assert.equal(recordsToTracks([{ FUND_ID: 1, REPORT_PERIOD: 202610, MONTHLY_YIELD: 1, TOTAL_ASSETS: 100, STOCK_MARKET_EXPOSURE: 40 }], { returnsBasis: "gross", source: "x", exposureUnit: "percent" }).tracks[0].equityExposure, 40);
   assert.equal(out.skipped.length, 1);
   assert.throws(() => recordsToTracks(rows, { source: "x" }), /returnsBasis/);
   assert.throws(() => recordsToTracks([{ ID: 1 }], { returnsBasis: "net", source: "x" }), /עמודות חובה/);

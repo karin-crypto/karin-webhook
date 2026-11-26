@@ -8,10 +8,14 @@
  *   - csv:     a CSV export
  *   - ckan:    the data.gov.il CKAN datastore API (resource id from env/config)
  *
- * The default column mapping follows the public data.gov.il Gemel-Net
- * datasets as best known, but it has NOT been verified against a live export
- * from this environment — every field name can be overridden via `mapping`.
- * Nothing is fetched or filled in that the source did not provide.
+ * The default column mapping was verified on 25.11.2026 against the live
+ * data.gov.il datasets of the Capital Market Authority (Gemel-Net,
+ * Pension-Net, Bituach-Net); every field name can still be overridden via
+ * `mapping`. Nothing is fetched or filled in that the source did not provide.
+ *
+ * Note: the source reports STOCK_MARKET_EXPOSURE and
+ * FOREIGN_CURRENCY_EXPOSURE as amounts (₪ millions), not percentages. They
+ * are converted here to a percentage of TOTAL_ASSETS.
  */
 
 const DEFAULT_MAPPING = {
@@ -31,6 +35,13 @@ const DEFAULT_MAPPING = {
 };
 
 const DATA_GOV_IL = "https://data.gov.il/api/3/action/datastore_search";
+
+// data.gov.il resource ids, "2024 to date" files (checked 25.11.2026).
+const RESOURCES = {
+  gemel: "a30dcbea-a1d2-482c-ae29-8f781f5025fb",
+  pension: "6d47d6b5-cb08-488b-b333-f1e717b1e1bd",
+  insurance: "c6c62cc7-fe02-4b18-8f3e-813abfbb4647",
+};
 
 /** Minimal RFC-4180 CSV parser (quoted fields, escaped quotes, CRLF). */
 function parseCsv(text) {
@@ -77,9 +88,9 @@ function toNum(v) {
 
 /**
  * records -> { tracks, skipped, warnings }
- * options: { mapping, unit: 'percent' | 'decimal', returnsBasis, source, asOf, riskLevelOf(row) }
+ * options: { mapping, unit: 'percent' | 'decimal', exposureUnit: 'amount' | 'percent', returnsBasis, source, asOf, riskLevelOf(row) }
  */
-function recordsToTracks(records, { mapping = {}, unit = "percent", returnsBasis, source, asOf, riskLevelOf } = {}) {
+function recordsToTracks(records, { mapping = {}, unit = "percent", exposureUnit = "amount", returnsBasis, source, asOf, riskLevelOf } = {}) {
   const map = { ...DEFAULT_MAPPING, ...mapping };
   const scale = unit === "percent" ? 0.01 : 1;
   if (!["gross", "net"].includes(returnsBasis)) {
@@ -120,8 +131,11 @@ function recordsToTracks(records, { mapping = {}, unit = "percent", returnsBasis
     }
     const fee = toNum(row[map.feeOnBalance]);
     const dep = toNum(row[map.feeOnDeposit]);
-    const eq = toNum(row[map.equityExposure]);
-    const fx = toNum(row[map.fxExposure]);
+    // Exposures arrive as amounts in the same unit as total assets.
+    const assets = toNum(row[map.totalAssets]);
+    const pctOfAssets = (v) => (v === null || !assets ? null : Number(((100 * v) / assets).toFixed(1)));
+    const eq = exposureUnit === "percent" ? toNum(row[map.equityExposure]) : pctOfAssets(toNum(row[map.equityExposure]));
+    const fx = exposureUnit === "percent" ? toNum(row[map.fxExposure]) : pctOfAssets(toNum(row[map.fxExposure]));
     const risk = riskLevelOf ? riskLevelOf(row) : row[map.track] || row[map.classification] || null;
     return {
       fundId: id,
@@ -135,6 +149,7 @@ function recordsToTracks(records, { mapping = {}, unit = "percent", returnsBasis
       // Fees and exposures are reported in percent in the source.
       feeOnBalance: fee === null ? null : Number((fee * 0.01).toFixed(6)),
       feeOnDeposit: dep === null ? null : Number((dep * 0.01).toFixed(6)),
+      totalAssets: assets,
       equityExposure: eq,
       fxExposure: fx,
       latestPeriod: f.latest.month,
@@ -171,4 +186,4 @@ async function fetchCkan({ resourceId, filters = {}, q, maxRows = 50000, pageSiz
   return { records: out, total, truncated: total > maxRows };
 }
 
-module.exports = { recordsToTracks, parseCsv, fetchCkan, DEFAULT_MAPPING, toMonth };
+module.exports = { recordsToTracks, parseCsv, fetchCkan, DEFAULT_MAPPING, RESOURCES, toMonth };

@@ -21,7 +21,7 @@ const { checkVideo } = require("./video-check");
 const { runQualityGate } = require("./quality-gate");
 const { createIndicatorRegistry } = require("./indicators");
 const { createReportAnalyzer } = require("./reports");
-const { recordsToTracks, parseCsv, fetchCkan } = require("./connectors/gemelnet");
+const { recordsToTracks, parseCsv, fetchCkan, RESOURCES } = require("./connectors/gemelnet");
 const { buildDcf, buildComps } = require("./valuation");
 const { createAgent } = require("./agent");
 const research = require("./research");
@@ -320,7 +320,7 @@ function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_AD
     else if (b.source === "csv") records = parseCsv(b.csv || "");
     else if (b.source === "ckan") {
       fetched = await fetchCkan({
-        resourceId: b.resourceId || process.env.GEMELNET_RESOURCE_ID, filters: b.filters, q: b.q, maxRows: b.maxRows,
+        resourceId: b.resourceId || RESOURCES[b.dataset] || process.env.GEMELNET_RESOURCE_ID || RESOURCES.gemel, filters: b.filters, q: b.q, maxRows: b.maxRows,
         ...(fetchImpl ? { fetchImpl } : {}),
       });
       records = fetched.records;
@@ -329,7 +329,7 @@ function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_AD
 
     let out;
     try {
-      out = recordsToTracks(records, { mapping: b.mapping, unit: b.unit, returnsBasis: b.returnsBasis, source: b.sourceLabel, asOf: b.asOf });
+      out = recordsToTracks(records, { mapping: b.mapping, unit: b.unit, exposureUnit: b.exposureUnit, returnsBasis: b.returnsBasis, source: b.sourceLabel, asOf: b.asOf });
     } catch (err) {
       return res.status(400).json({ ok: false, error: err.message });
     }
@@ -342,7 +342,7 @@ function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_AD
     res.json({
       ok: true, records: records.length, truncated: fetched ? fetched.truncated : false,
       tracks: out.tracks, skipped: out.skipped, warnings: out.warnings, comparison,
-      notice: "מיפוי העמודות ברירת המחדל לא אומת מול ייצוא חי — בדקו את הקופה הראשונה מול האתר לפני שימוש.",
+      notice: "מיפוי העמודות אומת מול מאגרי רשות שוק ההון ב־data.gov.il (25.11.2026). חשיפות למניות ולמט\"ח מומרות מסכום לאחוז מהנכסים.",
     });
   }));
 
