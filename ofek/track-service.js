@@ -11,6 +11,7 @@ const fs = require("fs");
 const tm = require("./track-model");
 const { fetchFundHistory } = require("./connectors/gemelnet");
 const market = require("./connectors/market");
+const explain = require("./track-explain");
 
 let baselineCache;
 /** Stored research baseline (category and large-fund sensitivities). */
@@ -122,6 +123,84 @@ function mainModels() {
   return MAIN_CATEGORIES.map((c) => b.categories.find((x) => x.category === c)).filter(Boolean).map((c) => ({ label: c.category, model: c }));
 }
 
+// Rough size of an ordinary monthly move per factor (percent) — judgmental, used only to compare directions.
+const TYPICAL_MOVE = { ta125: 4, spx: 4, usd: 2, gov: 1, corp: 1 };
+
+/** How unusual a monthly figure is, against the category's own history. */
+function unusualLevel(value, dist, range = null) {
+  if (!dist) return { level: "unknown", he: "אין היסטוריה להשוואה" };
+  if (value < 0 && range && range.high >= 0) return { level: "within_noise", he: "ירידה קלה, בתוך טווח הטעות של האומדן" };
+  if (value <= dist.q05) return { level: "very_unusual", he: "ירידה חריגה מאוד (חודש כזה קורה בערך פעם ב-20 חודשים)" };
+  if (value <= dist.q10) return { level: "unusual", he: "ירידה חריגה (בערך פעם ב-10 חודשים)" };
+  if (value < 0 && value <= dist.q25) return { level: "weak", he: "חודש חלש (בערך אחד מכל ארבעה חודשים)" };
+  if (value < 0) return { level: "slightly_negative", he: "ירידה קלה, בטווח הרגיל" };
+  return { level: "normal", he: "בטווח הרגיל" };
+}
+
+/**
+ * Daily watch: where every main track type stands this month, how unusual
+ * that is, which market environment is unfolding and which playbook
+ * scenarios it resembles. `factors` = month-to-date market moves (percent).
+ */
+function marketWatch({ factors, asOf, elapsedShare = 1, since = null, lastObservation = null } = {}) {
+  const b = loadBaseline();
+  if (!b) throw new tm.TrackModelError("קובץ הבסיס של מודל המסלולים חסר");
+  const environment = explain.classifyEnvironment(factors);
+  const rows = b.categories.map((c) => {
+    const n = tm.nowcast(c, factors, { elapsedShare });
+    const u = unusualLevel(n.estimate, c.monthlyDistribution, n.range);
+    return { category: c.category, estimate: n.estimate, range: n.range, level: u.level, levelText: u.he, shortHistory: !!c.shortHistory, contributions: n.contributions };
+  }).sort((x, y) => x.estimate - y.estimate);
+  const order = ["very_unusual", "unusual", "weak", "slightly_negative", "within_noise", "normal", "unknown"];
+  const main = rows.filter((r) => MAIN_CATEGORIES.includes(r.category));
+  const worst = main.reduce((w, r) => (order.indexOf(r.level) < order.indexOf(w) ? r.level : w), "normal");
+  // closest named scenarios: direction of the moves (each scaled by a typical monthly move) vs the scenario's shocks
+  const scaled = (v) => tm.FACTOR_NAMES.map((f) => (v[f] || 0) / TYPICAL_MOVE[f]);
+  const fv = scaled(factors);
+  const norm = (a) => Math.sqrt(a.reduce((t, x) => t + x * x, 0));
+  const quiet = Math.max(...fv.map(Math.abs)) < 0.75;
+  const matching = quiet ? [] : Object.entries(tm.SCENARIOS)
+    .map(([key, sc]) => {
+      const sv = scaled(sc.shocks);
+      return { scenario: key, description: sc.he, similarity: Number((fv.reduce((t, x, i) => t + x * sv[i], 0) / (norm(fv) * norm(sv))).toFixed(2)), talkingPoints: explain.PLAYBOOK_TEXT[key].talking };
+    })
+    .filter((m) => m.similarity >= 0.6)
+    .sort((x, y) => y.similarity - x.similarity)
+    .slice(0, 2);
+  const general = rows.find((r) => r.category === "גמל/השתלמות · כללי");
+  return {
+    ok: true,
+    asOf, since, lastObservation, partialMonth: elapsedShare < 1,
+    marketMoves: factors,
+    environment,
+    alert: { level: worst, attention: ["very_unusual", "unusual"].includes(worst), text: !["very_unusual", "unusual"].includes(worst) ? "אין כרגע חריגה שמצדיקה פנייה יזומה למבוטחים." : "יש סוגי מסלולים עם ירידה חריגה החודש — כדאי להכין הסבר למבוטחים." },
+    matchingScenarios: matching,
+    categories: rows,
+    generalTrackExplanation: general ? explain.explainMonth({ model: b.categories.find((c) => c.category === general.category), factors, partial: elapsedShare < 1, asOf, trackLabel: "המסלול הכללי", elapsedShare }) : null,
+    note: "אומדנים מוקדמים לפי תנועות השוק — לא תשואות רשמיות. רמת החריגות נמדדת מול החודשים ההיסטוריים של אותו סוג מסלול. פנייה למבוטחים — רק באישור קארין.",
+  };
+}
+
+/** Share of the calendar month that has passed on a YYYY-MM-DD date. */
+function monthShare(asOf) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(asOf || ""))) return 1;
+  const [y, m, d] = asOf.split("-").map(Number);
+  return Math.min(1, d / new Date(Date.UTC(y, m, 0)).getUTCDate());
+}
+
+/** Daily watch with market data fetched automatically (needs the index source). */
+async function fetchMarketWatch({ asOf, fetchImpl, env = process.env, today = new Date() } = {}) {
+  const b = loadBaseline();
+  if (!b) throw new tm.TrackModelError("קובץ הבסיס של מודל המסלולים חסר");
+  const date = asOf || today.toISOString().slice(0, 10);
+  // the month before the as-of month is the last complete one
+  const [y, m] = date.split("-").map(Number);
+  const prev = m === 1 ? `${y - 1}12` : `${y}${String(m - 1).padStart(2, "0")}`;
+  const fetched = await market.fetchFactorHistory({ from: prev, to: prev, asOf: date, env, today, ...(fetchImpl ? { fetchImpl } : {}) });
+  const w = marketWatch({ factors: fetched.monthToDate.factors, asOf: date, elapsedShare: monthShare(date), since: fetched.monthToDate.since, lastObservation: fetched.monthToDate.lastObservation });
+  return { ...w, sources: fetched.sources, modelDataThrough: b.dataThrough };
+}
+
 /**
  * Full analysis of one track.
  *   dataset: gemel | pension | insurance; fundId: CMA fund id
@@ -162,7 +241,7 @@ async function analyzeFund({ dataset, fundId, window = 60, factorRows = null, mt
 
   let earlyEstimate = null;
   if (monthToDate && monthToDate.factors) {
-    earlyEstimate = { ...tm.nowcast(model, monthToDate.factors), asOf: monthToDate.asOf || null, since: monthToDate.since || null, marketMoves: monthToDate.factors, lastObservation: monthToDate.lastObservation || null };
+    earlyEstimate = { ...tm.nowcast(model, monthToDate.factors, { elapsedShare: monthShare(monthToDate.asOf) }), asOf: monthToDate.asOf || null, since: monthToDate.since || null, marketMoves: monthToDate.factors, lastObservation: monthToDate.lastObservation || null };
   }
 
   let depositTiming = null;
@@ -184,4 +263,4 @@ async function analyzeFund({ dataset, fundId, window = 60, factorRows = null, mt
   };
 }
 
-module.exports = { loadBaseline, loadFunds, baselineSummary, resolveModel, searchFunds, analyzeFund, mainModels };
+module.exports = { loadBaseline, loadFunds, baselineSummary, resolveModel, searchFunds, analyzeFund, mainModels, marketWatch, fetchMarketWatch, unusualLevel, monthShare };

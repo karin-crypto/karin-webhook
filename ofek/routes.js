@@ -463,6 +463,17 @@ function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_AD
     }));
   }));
 
+  // Daily watch. GET fetches the market data itself; POST takes verified moves from the caller.
+  router.get("/track-model/watch", wrap(async (req, res) => {
+    res.json(await trackService.fetchMarketWatch({ asOf: req.query.asOf || null, ...(fetchImpl ? { fetchImpl } : {}) }));
+  }));
+
+  router.post("/track-model/watch", wrap(async (req, res) => {
+    const b = req.body || {};
+    if (!b.asOf || !b.source) throw new trackModel.TrackModelError("asOf ו־source חובה: מאיזה תאריך ומאיזה מקור נלקחו תנועות השוק");
+    res.json({ source: b.source, ...trackService.marketWatch({ factors: b.factors, asOf: b.asOf, elapsedShare: b.elapsedShare == null ? trackService.monthShare(b.asOf) : b.elapsedShare }) });
+  }));
+
   router.get("/market/factors", wrap(async (req, res) => {
     const r = await marketData.fetchFactorHistory({ from: req.query.from, to: req.query.to, asOf: req.query.asOf || null, ...(fetchImpl ? { fetchImpl } : {}) });
     res.json({ ok: true, ...r });

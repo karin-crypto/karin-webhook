@@ -288,6 +288,35 @@ test("all-track file: every active track is searchable and almost all have a usa
   assert.throws(() => service.resolveModel({ fundId: none.id, dataset: none.ds }), /אין מספיק נתונים/);
 });
 
+test("daily watch: estimates per track type, how unusual, matching scenarios, no false alarms", () => {
+  const nov = service.marketWatch({ factors: { ta125: -3.34, spx: -5.24, usd: 6.93, gov: 0.33, corp: -0.86 }, asOf: "2026-11-26", elapsedShare: service.monthShare("2026-11-26") });
+  assert.equal(nov.partialMonth, true);
+  assert.equal(nov.alert.attention, true);
+  assert.ok(nov.categories.length >= 20);
+  assert.ok(nov.categories.every((c, i) => i === 0 || c.estimate >= nov.categories[i - 1].estimate)); // weakest first
+  const cat = (w, name) => w.categories.find((c) => c.category === name);
+  assert.ok(cat(nov, "גמל/השתלמות · מניות").estimate < cat(nov, "גמל/השתלמות · כללי").estimate);
+  assert.ok(cat(nov, "ביטוח · עוקב S&P 500").estimate > 0); // the weaker shekel outweighs the fall in US stocks
+  assert.equal(cat(nov, "גמל/השתלמות · אשראי ואג\"ח").level, "within_noise"); // a tiny fall is not called a weak month
+  assert.ok(nov.matchingScenarios.length <= 2 && nov.matchingScenarios.some((m) => m.scenario === "global_selloff"));
+  assert.match(nov.generalTrackExplanation.clientDraft.text, /^היי/);
+  assert.match(nov.note, /רק באישור קארין/);
+
+  const calm = service.marketWatch({ factors: { ta125: 0.5, spx: 1, usd: -0.3, gov: 0.1, corp: 0.2 }, asOf: "2026-12-31" });
+  assert.equal(calm.alert.attention, false);
+  assert.deepEqual(calm.matchingScenarios, []);
+  assert.equal(calm.partialMonth, false);
+
+  const shekel = service.marketWatch({ factors: { ta125: 0.5, spx: 1, usd: -5, gov: 0.1, corp: 0.2 }, asOf: "2026-12-31" });
+  assert.equal(shekel.matchingScenarios[0].scenario, "shekel_stronger_5");
+  assert.equal(cat(shekel, "ביטוח · עוקב S&P 500").level, "very_unusual");
+  assert.equal(cat(shekel, "גמל/השתלמות · אג\"ח ממשלות").level, "normal");
+
+  assert.equal(service.monthShare("2026-11-15"), 0.5);
+  assert.equal(service.monthShare("2026-02-28"), 1);
+  assert.equal(service.unusualLevel(-3, null).level, "unknown");
+});
+
 /* ---------- connectors with a fake network ---------- */
 
 const CLOSES = {
@@ -462,12 +491,17 @@ test("routes and agent tools: track model end to end", async () => {
     assert.equal(fund.body.earlyEstimate, null);
     assert.equal((await post("/track-model/fund", { dataset: "gemel", fundId: 77 })).status, 409); // index source not enabled
     assert.equal((await fetch(`${base}/market/factors?from=202609&to=202610`, { headers })).status, 409);
+    assert.equal((await fetch(`${base}/track-model/watch?asOf=2026-11-26`, { headers })).status, 409); // needs the index source
+    const watch = await post("/track-model/watch", { factors: mtd, asOf: "2026-11-26", source: "בדיקה" });
+    assert.equal(watch.status, 200);
+    assert.ok(watch.body.categories.length >= 20 && watch.body.partialMonth === true);
+    assert.equal((await post("/track-model/watch", { factors: mtd })).status, 400);
   } finally {
     server.close();
   }
 
   // the same capabilities as agent tools
-  for (const name of ["find_track", "track_model_baseline", "track_scenario_impact", "track_early_estimate", "analyze_fund_track", "deposit_timing_stats", "explain_track_month", "scenario_playbook"]) {
+  for (const name of ["find_track", "track_model_baseline", "track_scenario_impact", "track_early_estimate", "analyze_fund_track", "deposit_timing_stats", "explain_track_month", "scenario_playbook", "market_watch"]) {
     assert.ok(TOOL_DEFS.some((t) => t.name === name), name);
   }
   const tools = createToolExecutor({ ledger, fetchImpl });
@@ -482,6 +516,10 @@ test("routes and agent tools: track model end to end", async () => {
   assert.equal(told.isError, false);
   assert.equal(told.result.clientDraft.status, "draft");
   assert.equal((await tools.execute("scenario_playbook", {})).result.playbook.length, Object.keys(tm.SCENARIOS).length);
+  const watched = await tools.execute("market_watch", { factors: { ta125: -3, spx: -5, usd: 7, gov: 0.3, corp: -0.9 }, asOf: "2026-11-26", source: "בדיקה" });
+  assert.equal(watched.isError, false);
+  assert.equal(watched.result.alert.attention, true);
+  assert.equal((await tools.execute("market_watch", {})).isError, true); // automatic fetch needs the index source
   const timing = await tools.execute("deposit_timing_stats", { dataset: "gemel", fundId: 77 });
   assert.equal(timing.result.fund.fundId, 77);
   assert.equal(timing.result.months, 120);

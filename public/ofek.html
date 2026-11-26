@@ -72,6 +72,16 @@
   <section class="card">
     <strong>מסלול: תרחישים, אומדן מוקדם והסבר</strong>
     <p class="muted" style="margin:4px 0 0">חיפוש מסלול (גמל, השתלמות, פנסיה, פוליסה), מה יקרה לו בכל תרחיש שוק, ואומדן מוקדם עם הסבר וטיוטת הודעה. לא דורש את מנוע ה־AI.</p>
+    <div class="row">
+      <button id="wrun" class="secondary">מבט יומי על כל סוגי המסלולים</button>
+      <span id="wstatus" class="status"></span>
+    </div>
+    <div id="wout" hidden>
+      <p id="walert" style="margin:10px 0 4px;font-weight:600"></p>
+      <p id="wenv" class="muted" style="margin:0"></p>
+      <div id="wscen"></div>
+      <div id="wtable"></div>
+    </div>
     <label for="tq">חיפוש מסלול</label>
     <div class="row" style="margin-top:0">
       <input id="tq" type="text" placeholder="לדוגמה: הפניקס כללי, מיטב השתלמות מניות" style="flex:1;min-width:200px">
@@ -202,8 +212,31 @@
 
   /* ---- track model ---- */
   let track = null;
-  const num = (v, d = 1) => (v == null ? "—" : `<span class="${v < 0 ? "neg" : v > 0 ? "posv" : ""}">${v > 0 ? "+" : ""}${Number(v).toFixed(d)}%</span>`);
+  const FACTOR_IDS = ["ta125", "spx", "usd", "gov", "corp"];
+  const num = (v, d = 1) => {
+    if (v == null) return "—";
+    const r = Number(Number(v).toFixed(d)); // -0.04 is shown as 0.0, without a sign
+    return `<span class="${r < 0 ? "neg" : r > 0 ? "posv" : ""}">${r > 0 ? "+" : ""}${r.toFixed(d)}%</span>`;
+  };
   $("tasof").value = new Date().toISOString().slice(0, 10);
+
+  $("wrun").addEventListener("click", async () => {
+    $("wstatus").className = "status"; $("wstatus").textContent = "מושך נתוני שוק ומחשב…";
+    try {
+      const w = await api("/track-model/watch?asOf=" + $("tasof").value);
+      const il = (d) => (d ? d.slice(8) + "." + d.slice(5, 7) + "." + d.slice(0, 4) : "");
+      $("wout").hidden = false;
+      $("walert").className = w.alert.attention ? "warn" : "";
+      $("walert").textContent = w.alert.text;
+      $("wenv").textContent = "סביבת השוק מתחילת החודש (עד " + il(w.asOf) + "): " + w.environment.tags.map((t) => t.he).join(", ") + ".";
+      $("wscen").innerHTML = w.matchingScenarios.map((m) => `<p style="margin:8px 0 0"><span class="pill">תרחיש דומה</span>${esc(m.description)}<br><span class="muted">${esc(m.talkingPoints)}</span></p>`).join("");
+      $("wtable").innerHTML = `<table class="tbl"><tr><th>סוג מסלול</th><th>אומדן מוקדם לחודש</th><th>טווח סביר</th><th>ביחס להיסטוריה</th></tr>` +
+        w.categories.map((c) => `<tr><td>${esc(c.category)}</td><td class="num">${num(c.estimate)}</td><td style="white-space:nowrap">${c.range ? `<bdi dir="ltr">${c.range.low}%</bdi> עד <bdi dir="ltr">${c.range.high}%</bdi>` : "—"}</td><td>${esc(c.levelText)}</td></tr>`).join("") + "</table>";
+      FACTOR_IDS.forEach((f) => { $("f_" + f).value = w.marketMoves[f].toFixed(2); });
+      $("tsrc").value = (w.sources || []).join("; ");
+      $("wstatus").textContent = "אומדנים מוקדמים — לא תשואות רשמיות";
+    } catch (e) { $("wstatus").className = "status warn"; $("wstatus").textContent = e.message; }
+  });
 
   async function searchTracks() {
     const q = $("tq").value.trim();
@@ -231,11 +264,10 @@
     try {
       const r = await api("/track-model/scenario", { method: "POST", body: JSON.stringify({ fundId: track.fundId, dataset: track.dataset }) });
       $("tscen").innerHTML = `<table class="tbl"><tr><th>תרחיש (הדגמה, לא תחזית)</th><th>השפעה צפויה על המסלול</th><th>טווח סביר</th></tr>` +
-        r.table.map((t) => `<tr><td>${esc(t.description)}</td><td class="num">${num(t.impact)}</td><td>${t.range ? `<bdi dir="ltr">${t.range.low}%</bdi> עד <bdi dir="ltr">${t.range.high}%</bdi>` : "—"}</td></tr>`).join("") + "</table>";
+        r.table.map((t) => `<tr><td>${esc(t.description)}</td><td class="num">${num(t.impact)}</td><td style="white-space:nowrap">${t.range ? `<bdi dir="ltr">${t.range.low}%</bdi> עד <bdi dir="ltr">${t.range.high}%</bdi>` : "—"}</td></tr>`).join("") + "</table>";
     } catch (e) { $("tscen").textContent = e.message; }
   });
 
-  const FACTOR_IDS = ["ta125", "spx", "usd", "gov", "corp"];
   $("tfetch").addEventListener("click", async () => {
     $("tstatus").className = "status"; $("tstatus").textContent = "מושך נתונים…";
     try {

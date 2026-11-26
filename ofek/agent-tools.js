@@ -153,6 +153,13 @@ const TOOL_DEFS = [
     input_schema: obj({ fundId: { type: "integer" }, category: { type: "string" }, betas: anyObj, alpha: { type: "number" }, factors: anyObj, actual: { type: "number" }, partial: { type: "boolean" }, asOf: { type: "string" }, source: { type: "string" }, trackLabel: { type: "string" } }, ["factors", "asOf", "source"]),
   },
   {
+    name: "market_watch",
+    description:
+      "Daily watch across all track types: month-to-date early estimate per category, how unusual it is against that category's history, the market environment, the playbook scenarios it resembles, and whether clients may need a proactive explanation. " +
+      "Pass VERIFIED month-to-date moves in factors { ta125, spx, usd, gov, corp } with asOf and source; or omit factors to fetch them automatically (works only when the index source is enabled).",
+    input_schema: obj({ factors: anyObj, asOf: { type: "string" }, source: { type: "string" } }),
+  },
+  {
     name: "scenario_playbook",
     description: "Scenario playbook: for each named market scenario — what happens, talking points, and the expected impact (percentage points) on the main track categories. Use it to prepare explanations before or as a scenario unfolds.",
     input_schema: obj({}),
@@ -226,6 +233,11 @@ function createToolExecutor({ ledger, now = () => new Date(), fetchImpl }) {
       if (!i.asOf || !i.source) throw new Error("asOf ו־source חובה");
       const { model, origin, label } = trackService.resolveModel(i);
       return { track: label || null, modelOrigin: origin, source: i.source, ...trackExplain.explainMonth({ model, factors: i.factors, actual: typeof i.actual === "number" ? i.actual : null, partial: !!i.partial, asOf: i.asOf, trackLabel: i.trackLabel || "המסלול" }) };
+    },
+    market_watch: (i) => {
+      if (!i.factors) return trackService.fetchMarketWatch({ asOf: i.asOf || null, today: now(), ...fx });
+      if (!i.asOf || !i.source) throw new Error("asOf ו־source חובה כשמעבירים factors");
+      return { source: i.source, ...trackService.marketWatch({ factors: i.factors, asOf: i.asOf, elapsedShare: trackService.monthShare(i.asOf) }) };
     },
     scenario_playbook: () => ({ ok: true, playbook: trackExplain.scenarioPlaybook(trackService.mainModels()) }),
     analyze_fund_track: (i) => trackService.analyzeFund({ dataset: i.dataset, fundId: i.fundId, window: i.window || 60, asOf: i.asOf || null, today: now(), ...fx }),
