@@ -202,6 +202,57 @@ async function fetchMarketWatch({ asOf, fetchImpl, env = process.env, today = ne
 }
 
 /**
+ * This year against the same months of last year, for one track: official
+ * returns, the market moves in both periods, the gap split by factor, and a
+ * plain explanation with a client-message draft.
+ * factorRows: optional [{ period, factors }] covering both periods;
+ * otherwise fetched (needs the index source).
+ */
+async function yearOverYear({ dataset, fundId, factorRows = null, trackLabel = "המסלול", fetchImpl, env = process.env, today = new Date() } = {}) {
+  const fx = fetchImpl ? { fetchImpl } : {};
+  const history = await fetchFundHistory({ dataset, fundId, ...fx });
+  if (!history.rows.length) throw new tm.TrackModelError(`לא נמצאו נתונים למסלול ${fundId}`);
+  const last = history.rows[history.rows.length - 1].period;
+  const year = Number(last.slice(0, 4));
+  const toMonth = Number(last.slice(4));
+  const periods = (y) => Array.from({ length: toMonth }, (_, i) => `${y}${String(i + 1).padStart(2, "0")}`);
+  const cur = periods(year);
+  const prev = periods(year - 1);
+  const byPeriod = new Map(history.rows.map((r) => [r.period, r.ret]));
+  const missing = [...prev, ...cur].filter((p) => !byPeriod.has(p));
+  if (missing.length) throw new tm.TrackModelError(`למסלול חסרים נתונים רשמיים בחודשים: ${missing.join(", ")} — אין השוואה מלאה בין השנים`);
+
+  let factors = factorRows;
+  let sources = ["רשות שוק ההון — data.gov.il (תשואות חודשיות רשמיות)"];
+  if (!factors) {
+    const fetched = await market.fetchFactorHistory({ from: prev[0], to: cur[cur.length - 1], env, today, ...fx });
+    factors = fetched.rows;
+    sources = sources.concat(fetched.sources);
+  } else sources.push("גורמי שוק — סופקו על ידי המשתמש");
+  const fmap = new Map(factors.map((f) => [String(f.period), f.factors]));
+  const noFactor = [...prev, ...cur].filter((p) => !fmap.has(p));
+  if (noFactor.length) throw new tm.TrackModelError(`חסרים גורמי שוק לחודשים: ${noFactor.join(", ")}`);
+
+  const { model, origin } = resolveModel({ fundId, dataset });
+  const rows = (ps) => ps.map((p) => ({ period: p, ret: byPeriod.get(p), factors: fmap.get(p) }));
+  const labels = [String(year - 1), String(year)];
+  const attribution = tm.attributeDifference(model, rows(prev), rows(cur), { labels });
+  const compoundMove = (ps, f) => Number(((ps.reduce((acc, p) => acc * (1 + fmap.get(p)[f] / 100), 1) - 1) * 100).toFixed(2));
+  const factorMoves = { [labels[0]]: {}, [labels[1]]: {} };
+  for (const f of Object.keys(model.betas)) {
+    factorMoves[labels[0]][f] = compoundMove(prev, f);
+    factorMoves[labels[1]][f] = compoundMove(cur, f);
+  }
+  return {
+    fund: { fundId: history.fundId, dataset, name: history.fundName, lastOfficialMonth: last },
+    model: { origin, basis: model.basisNote || null },
+    ...explain.explainYearOverYear({ attribution, factorMoves, years: labels, fromMonth: 1, toMonth, trackLabel }),
+    sources,
+    notice: "פירוק לפי הרגישות ההיסטורית של המסלול לגורמי השוק. תשואות ברמת המסלול; חשבון הלקוח מושפע גם מדמי ניהול ומועדי הפקדה.",
+  };
+}
+
+/**
  * Full analysis of one track.
  *   dataset: gemel | pension | insurance; fundId: CMA fund id
  *   window:  months used for the coefficients (default 60)
@@ -263,4 +314,4 @@ async function analyzeFund({ dataset, fundId, window = 60, factorRows = null, mt
   };
 }
 
-module.exports = { loadBaseline, loadFunds, baselineSummary, resolveModel, searchFunds, analyzeFund, mainModels, marketWatch, fetchMarketWatch, unusualLevel, monthShare };
+module.exports = { loadBaseline, loadFunds, baselineSummary, resolveModel, searchFunds, analyzeFund, yearOverYear, mainModels, marketWatch, fetchMarketWatch, unusualLevel, monthShare };

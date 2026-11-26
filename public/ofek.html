@@ -108,6 +108,7 @@
       <div class="row">
         <button id="tfetch" class="secondary">משוך נתוני שוק אוטומטית</button>
         <button id="texplain">הסבר וטיוטת הודעה</button>
+        <button id="tyoy" class="secondary">השנה מול שנה שעברה</button>
         <span id="tstatus" class="status"></span>
       </div>
       <div id="tout" hidden>
@@ -297,6 +298,17 @@
       $("tdraft").textContent = r.clientDraft.text;
       $("tstatus").textContent = "";
     } catch (e) { $("tstatus").className = "status bad"; $("tstatus").textContent = e.message; }
+  });
+  $("tyoy").addEventListener("click", async () => {
+    if (!track || !track.hasModel) return;
+    $("tstatus").className = "status"; $("tstatus").textContent = "משווה בין השנים…";
+    try {
+      const r = await api("/track-model/year-over-year", { method: "POST", body: JSON.stringify({ fundId: track.fundId, dataset: track.dataset, trackLabel: "המסלול" }) });
+      $("tout").hidden = false;
+      $("tsummary").textContent = r.summary;
+      $("tdraft").textContent = r.clientDraft.text;
+      $("tstatus").textContent = "";
+    } catch (e) { $("tstatus").className = "status warn"; $("tstatus").textContent = e.message; }
   });
   $("tcopy").addEventListener("click", async () => {
     try { await navigator.clipboard.writeText($("tdraft").textContent); $("tcopy").textContent = "הועתק"; setTimeout(() => { $("tcopy").textContent = "העתק"; }, 1500); } catch { /* clipboard blocked */ }

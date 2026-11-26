@@ -135,6 +135,75 @@ function explainMonth({ model, factors, actual = null, partial = false, asOf = n
   };
 }
 
+const MONTHS_HE = ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"];
+
+// How each factor is described when two periods are compared (Hebrew verb agrees with the subject).
+const YOY_SUBJECT = {
+  ta125: { he: 'הבורסה בתל אביב (מדד ת"א 125)', up: "עלתה", down: "ירדה" },
+  spx: { he: 'המניות בארה"ב (מדד S&P 500)', up: "עלו", down: "ירדו" },
+  usd: { he: "הדולר מול השקל", up: "עלה", down: "ירד" },
+  gov: { he: "אגרות החוב הממשלתיות", up: "עלו", down: "ירדו" },
+  corp: { he: "אגרות החוב של החברות", up: "עלו", down: "ירדו" },
+};
+const pctAbs = (x) => `${Math.abs(x).toFixed(Math.abs(x) >= 10 ? 0 : 1)}%`;
+function yoySentence(f, a, b, ya, yb) {
+  const sub = YOY_SUBJECT[f];
+  const verb = (x) => (x >= 0 ? sub.up : sub.down);
+  return Math.sign(a || 1) === Math.sign(b || 1)
+    ? `${sub.he} ${verb(a)} ${pctAbs(a)} ב-${ya}, לעומת ${pctAbs(b)} ב-${yb}`
+    : `${sub.he} ${verb(a)} ${pctAbs(a)} ב-${ya}, ו${verb(b)} ${pctAbs(b)} ב-${yb}`;
+}
+const YOY_WORDING = YOY_SUBJECT;
+
+/**
+ * "Why is this year weaker (or stronger) than last year?" in plain words.
+ *   attribution: result of track-model attributeDifference (labels = the two years)
+ *   factorMoves: { [year]: { ta125, spx, usd, gov, corp } } compounded moves over the same months
+ */
+function explainYearOverYear({ attribution, factorMoves, years, fromMonth, toMonth, trackLabel = "המסלול" } = {}) {
+  const [ya, yb] = years.map(String);
+  const a = attribution[ya];
+  const b = attribution[yb];
+  const span = fromMonth === toMonth ? MONTHS_HE[fromMonth - 1] : `${MONTHS_HE[fromMonth - 1]} עד ${MONTHS_HE[toMonth - 1]}`;
+  const weaker = attribution.gap < 0;
+  const sign = weaker ? -1 : 1;
+  const ranked = Object.entries(attribution.byFactor)
+    .filter(([f, v]) => YOY_WORDING[f] && Math.abs(v) >= 0.3)
+    .map(([f, v]) => ({ factor: f, contribution: v, sentence: yoySentence(f, factorMoves[ya][f], factorMoves[yb][f], ya, yb) }))
+    .sort((x, y) => Math.abs(y.contribution) - Math.abs(x.contribution));
+  const drivers = ranked.filter((r) => Math.sign(r.contribution) === sign);
+  const offsets = ranked.filter((r) => Math.sign(r.contribution) === -sign);
+  const explainedShare = Math.abs(attribution.gap) > 0.1 ? 1 - Math.abs(attribution.unexplained) / Math.abs(attribution.gap) : null;
+
+  const perf = (x) => `${x.actualReturn < 0 ? "ירד" : "עלה"} ${Math.abs(x.actualReturn).toFixed(1)}%`;
+  const summary = [];
+  summary.push(`${trackLabel}: ב${span} ${ya} ${perf(a)}, וב${span} ${yb} ${perf(b)} — פער של ${Math.abs(attribution.gap).toFixed(1)} נקודות אחוז ${weaker ? "לרעת" : "לטובת"} ${yb}.`);
+  if (drivers.length) summary.push(`הגורמים העיקריים: ${drivers.map((d) => `${d.sentence} (כ-${Math.abs(d.contribution).toFixed(1)} נק' אחוז מהפער)`).join("; ")}.`);
+  if (offsets.length) summary.push(`בכיוון ההפוך: ${offsets.map((d) => `${d.sentence} (קיזוז של כ-${Math.abs(d.contribution).toFixed(1)} נק' אחוז)`).join("; ")}.`);
+  if (Math.abs(attribution.unexplained) >= 0.5) summary.push(`כ-${Math.abs(attribution.unexplained).toFixed(1)} נקודות אחוז מהפער אינן מוסברות בתנועות השוק (בחירת נכסים, נכסים לא סחירים, שינוי חשיפות, ריבית דריבית).`);
+  if (attribution.warnings && attribution.warnings.length) summary.push(attribution.warnings.join(" "));
+
+  const lines = [`היי, בדקתי. ב${span} ${ya} ${trackLabel} ${perf(a)}, ובאותם חודשים ב-${yb} ${perf(b)}.`];
+  if (drivers.length) lines.push(`ההבדל נובע בעיקר מהשוק ולא מהמסלול: ${drivers.slice(0, 2).map((d) => d.sentence).join(", ו")}.`);
+  else lines.push("ההבדל אינו נובע מתנועה בולטת אחת בשוק.");
+  if (weaker && a.actualReturn >= 10) lines.push(`${ya} הייתה שנה חריגה לטובה.`);
+
+  return {
+    ok: true,
+    years: [ya, yb], months: { from: fromMonth, to: toMonth, label: span },
+    returns: { [ya]: a.actualReturn, [yb]: b.actualReturn }, gap: attribution.gap,
+    factorMoves, byFactor: attribution.byFactor, unexplained: attribution.unexplained, explainedShare: explainedShare == null ? null : Number(explainedShare.toFixed(2)),
+    drivers, offsets,
+    summary: summary.join(" "),
+    clientDraft: {
+      status: "draft",
+      requiresApproval: true,
+      text: lines.join(" "),
+      rules: "טיוטה בלבד. נשלחת ללקוח רק לאחר אישור קארין. אין בה שמות, חתימה או המלצה; \"מה כדאי לעשות\" נקבע על ידי בעלת הרישיון לפי מצב הלקוח.",
+    },
+  };
+}
+
 /**
  * Scenario playbook: for each named scenario, what happens, which track
  * types are hit most, and talking points — with the computed impact for the
@@ -190,4 +259,4 @@ function scenarioPlaybook(models) {
   }));
 }
 
-module.exports = { explainMonth, classifyEnvironment, scenarioPlaybook, PLAYBOOK_TEXT };
+module.exports = { explainMonth, explainYearOverYear, classifyEnvironment, scenarioPlaybook, PLAYBOOK_TEXT, MONTHS_HE };

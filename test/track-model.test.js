@@ -434,6 +434,43 @@ test("fund analysis: model, accuracy, scenarios, early estimate and deposit timi
   await assert.rejects(service.analyzeFund({ dataset: "gemel", fundId: 78, factorRows, fetchImpl }), /מעט מדי/);
 });
 
+test("year over year: same months in both years, gap split by factor, draft without names", async () => {
+  const rows = synthetic(30); // 201501 .. 201706 -> compares January-June 2016 with January-June 2017
+  const fetchImpl = fakeFetch({ funds: { 50: { [RESOURCES.insurance]: fundRecords(rows, 50, "מסלול בדיקה כללי") } } });
+  const factorRows = rows.map((r) => ({ period: r.period, factors: r.factors }));
+  const r = await service.yearOverYear({ dataset: "insurance", fundId: 50, factorRows, fetchImpl });
+  assert.deepEqual(r.years, ["2016", "2017"]);
+  assert.equal(r.months.label, "ינואר עד יוני");
+  assert.equal(r.fund.lastOfficialMonth, "201706");
+  const sum = Object.values(r.byFactor).reduce((t, v) => t + v, 0) + r.unexplained;
+  assert.ok(Math.abs(sum - r.gap) < 0.05, `sum ${sum} gap ${r.gap}`);
+  assert.equal(typeof r.factorMoves["2016"].ta125, "number");
+  assert.ok([...r.drivers, ...r.offsets].every((d) => Math.abs(d.contribution) >= 0.3));
+  assert.match(r.summary, /נקודות אחוז/);
+  assert.ok(r.clientDraft.text.startsWith("היי"));
+  assert.equal(r.clientDraft.requiresApproval, true);
+  for (const banned of ["קארין", "בברכה", "כדאי לך", "מומלץ"]) assert.equal(r.clientDraft.text.includes(banned), false, banned);
+
+  // a year with a missing month is refused rather than compared unevenly
+  const gap = rows.filter((x) => x.period !== "201603");
+  const holed = fakeFetch({ funds: { 50: { [RESOURCES.insurance]: fundRecords(gap, 50) } } });
+  await assert.rejects(service.yearOverYear({ dataset: "insurance", fundId: 50, factorRows, fetchImpl: holed }), /חסרים נתונים רשמיים/);
+  await assert.rejects(service.yearOverYear({ dataset: "insurance", fundId: 50, factorRows: factorRows.slice(0, 20), fetchImpl }), /חסרים גורמי שוק/);
+  await assert.rejects(service.yearOverYear({ dataset: "insurance", fundId: 50, fetchImpl, env: {} }), (e) => e.status === 409);
+
+  // wording: verb agrees with the subject, and opposite directions are spelled out
+  const text = explain.explainYearOverYear({
+    attribution: { 2025: { actualReturn: 12.1 }, 2026: { actualReturn: -1.5 }, gap: -13.6, byFactor: { ta125: -6, spx: -4, usd: 1.2, gov: 0.1, corp: -0.2 }, unexplained: -4.7, warnings: [] },
+    factorMoves: { 2025: { ta125: 38, spx: 16.3, usd: -11, gov: 5, corp: 6 }, 2026: { ta125: 7.4, spx: -3.2, usd: -2.3, gov: 2, corp: 3 } },
+    years: [2025, 2026], fromMonth: 1, toMonth: 10,
+  });
+  assert.match(text.summary, /הבורסה בתל אביב \(מדד ת"א 125\) עלתה 38% ב-2025, לעומת 7\.4% ב-2026/);
+  assert.match(text.summary, /המניות בארה"ב \(מדד S&P 500\) עלו 16% ב-2025, וירדו 3\.2% ב-2026/);
+  assert.match(text.clientDraft.text, /ובאותם חודשים ב-2026 ירד 1\.5%/);
+  assert.match(text.clientDraft.text, /2025 הייתה שנה חריגה לטובה/);
+  assert.deepEqual(text.offsets.map((o) => o.factor), ["usd"]);
+});
+
 test("routes and agent tools: track model end to end", async () => {
   const rows = synthetic(120);
   const fetchImpl = fakeFetch({ funds: { 77: { [RESOURCES.gemel]: fundRecords(rows, 77) } } });
@@ -503,7 +540,7 @@ test("routes and agent tools: track model end to end", async () => {
   }
 
   // the same capabilities as agent tools
-  for (const name of ["find_track", "track_model_baseline", "track_scenario_impact", "track_early_estimate", "analyze_fund_track", "deposit_timing_stats", "explain_track_month", "scenario_playbook", "market_watch"]) {
+  for (const name of ["find_track", "track_model_baseline", "track_scenario_impact", "track_early_estimate", "analyze_fund_track", "deposit_timing_stats", "explain_track_month", "explain_year_over_year", "scenario_playbook", "market_watch"]) {
     assert.ok(TOOL_DEFS.some((t) => t.name === name), name);
   }
   const tools = createToolExecutor({ ledger, fetchImpl });

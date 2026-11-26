@@ -153,6 +153,13 @@ const TOOL_DEFS = [
     input_schema: obj({ fundId: { type: "integer" }, category: { type: "string" }, betas: anyObj, alpha: { type: "number" }, factors: anyObj, actual: { type: "number" }, partial: { type: "boolean" }, asOf: { type: "string" }, source: { type: "string" }, trackLabel: { type: "string" } }, ["factors", "asOf", "source"]),
   },
   {
+    name: "explain_year_over_year",
+    description:
+      "Answers 'why is this year weaker (or stronger) than last year?' for ONE track: official return for January-to-latest-month in both years, the market moves in each period, the gap split by market factor and the part markets do not explain, plus a client-message DRAFT (no names; needs Karin's approval). " +
+      "Needs the automatic index source; get the fund id from find_track.",
+    input_schema: obj({ dataset: { type: "string", enum: ["gemel", "pension", "insurance"] }, fundId: { type: "integer" }, trackLabel: { type: "string" } }, ["dataset", "fundId"]),
+  },
+  {
     name: "market_watch",
     description:
       "Daily watch across all track types: month-to-date early estimate per category, how unusual it is against that category's history, the market environment, the playbook scenarios it resembles, and whether clients may need a proactive explanation. " +
@@ -234,6 +241,7 @@ function createToolExecutor({ ledger, now = () => new Date(), fetchImpl }) {
       const { model, origin, label } = trackService.resolveModel(i);
       return { track: label || null, modelOrigin: origin, source: i.source, ...trackExplain.explainMonth({ model, factors: i.factors, actual: typeof i.actual === "number" ? i.actual : null, partial: !!i.partial, asOf: i.asOf, trackLabel: i.trackLabel || "המסלול" }) };
     },
+    explain_year_over_year: (i) => trackService.yearOverYear({ dataset: i.dataset, fundId: i.fundId, trackLabel: i.trackLabel || "המסלול", today: now(), ...fx }),
     market_watch: (i) => {
       if (!i.factors) return trackService.fetchMarketWatch({ asOf: i.asOf || null, today: now(), ...fx });
       if (!i.asOf || !i.source) throw new Error("asOf ו־source חובה כשמעבירים factors");
