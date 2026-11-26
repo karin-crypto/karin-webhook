@@ -234,6 +234,38 @@ test("track explanations: drivers, offsets, environment and a client draft that 
   assert.ok(weak.impacts.find((i) => i.track === "ביטוח · עוקב S&P 500").impact > 3);
 });
 
+test("all-track file: every active track is searchable and almost all have a usable model", () => {
+  const file = service.loadFunds();
+  assert.ok(file.funds.length >= 1200);
+  const withModel = file.funds.filter((f) => f.basis);
+  assert.ok(withModel.length / file.funds.length > 0.95);
+  for (const f of withModel) {
+    assert.equal(f.b.length, 5, f.name);
+    assert.ok(f.b.every((v) => Number.isFinite(v)) && Number.isFinite(f.a), f.name);
+    assert.ok(file.basisNote[f.basis], f.basis);
+  }
+  assert.equal(file.funds.some((f) => /1;[pP]/.test(f.name)), false); // source typo for "S&P" is repaired
+
+  const hits = service.searchFunds({ q: "הפניקס כללי", limit: 5 });
+  assert.equal(hits.funds[0].fundId, 50); // largest first
+  assert.equal(hits.funds[0].dataset, "insurance");
+  assert.ok(hits.funds.length <= 5 && hits.total >= hits.funds.length);
+  assert.ok(service.searchFunds({ q: "מיטב השתלמות", dataset: "gemel" }).funds.every((f) => f.dataset === "gemel"));
+  assert.equal(service.searchFunds({ q: "אין מסלול כזה בכלל" }).total, 0);
+
+  // the same id can exist in two datasets: the caller must say which
+  assert.throws(() => service.resolveModel({ fundId: 103 }), /ציינו dataset/);
+  assert.match(service.resolveModel({ fundId: 103, dataset: "gemel" }).label, /מיטב/);
+  // a track with a short history borrows from its category and says so
+  const short = file.funds.find((f) => f.basis === "blend");
+  const m = service.resolveModel({ fundId: short.id, dataset: short.ds }).model;
+  assert.match(m.basisNote, /היסטוריה קצרה/);
+  assert.ok(m.accuracy && m.accuracy.p90AbsError > 0);
+  // a track with no usable data is refused, not guessed
+  const none = file.funds.find((f) => !f.basis);
+  assert.throws(() => service.resolveModel({ fundId: none.id, dataset: none.ds }), /אין מספיק נתונים/);
+});
+
 /* ---------- connectors with a fake network ---------- */
 
 const CLOSES = {
@@ -368,6 +400,9 @@ test("routes and agent tools: track model end to end", async () => {
     const scen = await (await fetch(`${base}/track-model/scenarios`, { headers })).json();
     assert.ok(scen.scenarios.local_shock);
 
+    const found = await (await fetch(`${base}/track-model/funds?limit=3&q=${encodeURIComponent("הפניקס כללי")}`, { headers })).json();
+    assert.equal(found.funds[0].fundId, 50);
+    assert.equal(found.funds.length, 3);
     const table = await post("/track-model/scenario", { fundId: 50 });
     assert.equal(table.body.table.length, Object.keys(tm.SCENARIOS).length);
     const one = await post("/track-model/scenario", { category: "גמל/השתלמות · מניות", shocks: { ta125: -10 } });
@@ -408,10 +443,12 @@ test("routes and agent tools: track model end to end", async () => {
   }
 
   // the same capabilities as agent tools
-  for (const name of ["track_model_baseline", "track_scenario_impact", "track_early_estimate", "analyze_fund_track", "deposit_timing_stats", "explain_track_month", "scenario_playbook"]) {
+  for (const name of ["find_track", "track_model_baseline", "track_scenario_impact", "track_early_estimate", "analyze_fund_track", "deposit_timing_stats", "explain_track_month", "scenario_playbook"]) {
     assert.ok(TOOL_DEFS.some((t) => t.name === name), name);
   }
   const tools = createToolExecutor({ ledger, fetchImpl });
+  const located = await tools.execute("find_track", { q: "הפניקס כללי" });
+  assert.equal(located.result.funds[0].fundId, 50);
   const impact = await tools.execute("track_scenario_impact", { fundId: 50, scenario: "global_selloff" });
   assert.equal(impact.isError, false);
   assert.ok(impact.result.impact < -2 && /הפניקס/.test(impact.result.track));

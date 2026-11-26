@@ -1,5 +1,5 @@
 {
- "version": "track-model-1.0",
+ "version": "track-model-1.1",
  "computedAt": "2026-11-26",
  "dataThrough": "202610",
  "factors": {
@@ -27,6 +27,7 @@
    "product": "ביטוח",
    "track": "50–60",
    "historyMonths": 123,
+   "shortHistory": false,
    "alpha": 0.0639,
    "betas": {
     "ta125": 0.1772,
@@ -62,6 +63,7 @@
    "product": "ביטוח",
    "track": "60 ומעלה",
    "historyMonths": 126,
+   "shortHistory": false,
    "alpha": 0.0881,
    "betas": {
     "ta125": 0.1021,
@@ -97,6 +99,7 @@
    "product": "ביטוח",
    "track": "כללי",
    "historyMonths": 178,
+   "shortHistory": false,
    "alpha": 0.0835,
    "betas": {
     "ta125": 0.1735,
@@ -132,6 +135,7 @@
    "product": "ביטוח",
    "track": "מניות",
    "historyMonths": 178,
+   "shortHistory": false,
    "alpha": -0.0547,
    "betas": {
     "ta125": 0.356,
@@ -167,6 +171,7 @@
    "product": "ביטוח",
    "track": "עד 50",
    "historyMonths": 124,
+   "shortHistory": false,
    "alpha": 0.0668,
    "betas": {
     "ta125": 0.2201,
@@ -202,6 +207,7 @@
    "product": "ביטוח",
    "track": "עוקב S&P 500",
    "historyMonths": 65,
+   "shortHistory": false,
    "alpha": -0.0468,
    "betas": {
     "ta125": 0.0412,
@@ -228,6 +234,7 @@
    "product": "גמל/השתלמות",
    "track": "50–60",
    "historyMonths": 130,
+   "shortHistory": false,
    "alpha": 0.0738,
    "betas": {
     "ta125": 0.1703,
@@ -263,6 +270,7 @@
    "product": "גמל/השתלמות",
    "track": "60 ומעלה",
    "historyMonths": 142,
+   "shortHistory": false,
    "alpha": 0.0958,
    "betas": {
     "ta125": 0.0958,
@@ -298,6 +306,7 @@
    "product": "גמל/השתלמות",
    "track": "אג\"ח ממשלות",
    "historyMonths": 173,
+   "shortHistory": false,
    "alpha": -0.0031,
    "betas": {
     "ta125": -0.007,
@@ -333,6 +342,7 @@
    "product": "גמל/השתלמות",
    "track": "אשראי ואג\"ח",
    "historyMonths": 178,
+   "shortHistory": false,
    "alpha": 0.1422,
    "betas": {
     "ta125": 0.0169,
@@ -368,6 +378,7 @@
    "product": "גמל/השתלמות",
    "track": "הלכה",
    "historyMonths": 149,
+   "shortHistory": false,
    "alpha": 0.0174,
    "betas": {
     "ta125": 0.1669,
@@ -403,6 +414,7 @@
    "product": "גמל/השתלמות",
    "track": "כללי",
    "historyMonths": 178,
+   "shortHistory": false,
    "alpha": 0.082,
    "betas": {
     "ta125": 0.1612,
@@ -438,6 +450,7 @@
    "product": "גמל/השתלמות",
    "track": "כספי (שקלי)",
    "historyMonths": 178,
+   "shortHistory": false,
    "alpha": 0.0748,
    "betas": {
     "ta125": -0.0062,
@@ -473,6 +486,7 @@
    "product": "גמל/השתלמות",
    "track": "מניות",
    "historyMonths": 151,
+   "shortHistory": false,
    "alpha": -0.0148,
    "betas": {
     "ta125": 0.3761,
@@ -504,10 +518,65 @@
    }
   },
   {
+   "category": "גמל/השתלמות · מניות סחיר",
+   "product": "גמל/השתלמות",
+   "track": "מניות סחיר",
+   "historyMonths": 34,
+   "shortHistory": true,
+   "alpha": 0.3323,
+   "betas": {
+    "ta125": 0.5675,
+    "spx": 0.4173,
+    "usd": -0.0374,
+    "gov": -0.7861,
+    "corp": -0.463
+   },
+   "standardErrors": {
+    "ta125": 0.0937,
+    "spx": 0.1004,
+    "usd": 0.1731,
+    "gov": 0.4871,
+    "corp": 0.575
+   },
+   "r2": 0.8441,
+   "fitFrom": "202401",
+   "fitTo": "202610",
+   "n": 34,
+   "accuracy": null
+  },
+  {
+   "category": "גמל/השתלמות · משולב סחיר",
+   "product": "גמל/השתלמות",
+   "track": "משולב סחיר",
+   "historyMonths": 34,
+   "shortHistory": true,
+   "alpha": 0.4095,
+   "betas": {
+    "ta125": 0.1571,
+    "spx": 0.3707,
+    "usd": 0.1621,
+    "gov": -0.009,
+    "corp": -0.319
+   },
+   "standardErrors": {
+    "ta125": 0.0648,
+    "spx": 0.0694,
+    "usd": 0.1197,
+    "gov": 0.3367,
+    "corp": 0.3975
+   },
+   "r2": 0.6777,
+   "fitFrom": "202401",
+   "fitTo": "202610",
+   "n": 34,
+   "accuracy": null
+  },
+  {
    "category": "גמל/השתלמות · עד 50",
    "product": "גמל/השתלמות",
    "track": "עד 50",
    "historyMonths": 130,
+   "shortHistory": false,
    "alpha": 0.0547,
    "betas": {
     "ta125": 0.2073,
@@ -539,10 +608,92 @@
    }
   },
   {
+   "category": "גמל/השתלמות · עוקב S&P 500",
+   "product": "גמל/השתלמות",
+   "track": "עוקב S&P 500",
+   "historyMonths": 34,
+   "shortHistory": true,
+   "alpha": 0.2819,
+   "betas": {
+    "ta125": -0.0261,
+    "spx": 0.9669,
+    "usd": 0.9474,
+    "gov": -0.1357,
+    "corp": -0.1842
+   },
+   "standardErrors": {
+    "ta125": 0.0464,
+    "spx": 0.0497,
+    "usd": 0.0857,
+    "gov": 0.241,
+    "corp": 0.2845
+   },
+   "r2": 0.9352,
+   "fitFrom": "202401",
+   "fitTo": "202610",
+   "n": 34,
+   "accuracy": null
+  },
+  {
+   "category": "גמל/השתלמות · עוקב מדדי מניות",
+   "product": "גמל/השתלמות",
+   "track": "עוקב מדדי מניות",
+   "historyMonths": 34,
+   "shortHistory": true,
+   "alpha": 0.208,
+   "betas": {
+    "ta125": -0.0226,
+    "spx": 1.0227,
+    "usd": 0.5197,
+    "gov": -0.6906,
+    "corp": 0.2942
+   },
+   "standardErrors": {
+    "ta125": 0.1056,
+    "spx": 0.1131,
+    "usd": 0.195,
+    "gov": 0.5487,
+    "corp": 0.6477
+   },
+   "r2": 0.7747,
+   "fitFrom": "202401",
+   "fitTo": "202610",
+   "n": 34,
+   "accuracy": null
+  },
+  {
+   "category": "גמל/השתלמות · עוקב מדדים גמיש",
+   "product": "גמל/השתלמות",
+   "track": "עוקב מדדים גמיש",
+   "historyMonths": 34,
+   "shortHistory": true,
+   "alpha": 0.291,
+   "betas": {
+    "ta125": -0.0485,
+    "spx": 0.4623,
+    "usd": 0.446,
+    "gov": 0.1611,
+    "corp": -0.3236
+   },
+   "standardErrors": {
+    "ta125": 0.0644,
+    "spx": 0.069,
+    "usd": 0.119,
+    "gov": 0.3348,
+    "corp": 0.3951
+   },
+   "r2": 0.6352,
+   "fitFrom": "202401",
+   "fitTo": "202610",
+   "n": 34,
+   "accuracy": null
+  },
+  {
    "category": "פנסיה מקיפה · 50–60",
    "product": "פנסיה מקיפה",
    "track": "50–60",
    "historyMonths": 126,
+   "shortHistory": false,
    "alpha": 0.2381,
    "betas": {
     "ta125": 0.1583,
@@ -578,6 +729,7 @@
    "product": "פנסיה מקיפה",
    "track": "60 ומעלה",
    "historyMonths": 125,
+   "shortHistory": false,
    "alpha": 0.2458,
    "betas": {
     "ta125": 0.0878,
@@ -613,6 +765,7 @@
    "product": "פנסיה מקיפה",
    "track": "כללי",
    "historyMonths": 175,
+   "shortHistory": false,
    "alpha": 0.2431,
    "betas": {
     "ta125": 0.1738,
@@ -648,6 +801,7 @@
    "product": "פנסיה מקיפה",
    "track": "מניות",
    "historyMonths": 156,
+   "shortHistory": false,
    "alpha": 0.1401,
    "betas": {
     "ta125": 0.2646,
@@ -683,6 +837,7 @@
    "product": "פנסיה מקיפה",
    "track": "עד 50",
    "historyMonths": 130,
+   "shortHistory": false,
    "alpha": 0.2394,
    "betas": {
     "ta125": 0.1904,
@@ -718,6 +873,7 @@
    "product": "פנסיה מקיפה",
    "track": "עוקב S&P 500",
    "historyMonths": 70,
+   "shortHistory": false,
    "alpha": 0.1234,
    "betas": {
     "ta125": 0.0425,

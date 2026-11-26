@@ -210,7 +210,7 @@ async function fetchFundHistory({ dataset, fundId, includeOlder = true, fetchImp
       const period = String(r.REPORT_PERIOD || "").replace(/\D/g, "").slice(0, 6);
       const ret = typeof r.MONTHLY_YIELD === "number" ? r.MONTHLY_YIELD : r.MONTHLY_YIELD == null || r.MONTHLY_YIELD === "" ? NaN : Number(r.MONTHLY_YIELD);
       if (period.length !== 6 || !Number.isFinite(ret)) continue;
-      byPeriod.set(period, { period, ret, totalAssets: typeof r.TOTAL_ASSETS === "number" ? r.TOTAL_ASSETS : null, fundName: String(r.FUND_NAME || "").replace(/\s+/g, " ").trim(), company: r.MANAGING_CORPORATION || null });
+      byPeriod.set(period, { period, ret, totalAssets: typeof r.TOTAL_ASSETS === "number" ? r.TOTAL_ASSETS : null, fundName: String(r.FUND_NAME || "").replace(/[sS]1;[pP]/g, "S&P").replace(/\s+/g, " ").trim(), company: r.MANAGING_CORPORATION || null });
     }
   }
   const rows = [...byPeriod.values()].sort((a, b) => (a.period < b.period ? -1 : 1));

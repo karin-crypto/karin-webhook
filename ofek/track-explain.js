@@ -12,6 +12,11 @@
 const tm = require("./track-model");
 
 const fmt = (x, d = 1) => `${Math.abs(x).toFixed(d)}%`;
+// Negative numbers are written with the word "מינוס": a leading minus sign
+// jumps to the wrong side of the number in right-to-left text.
+const signed = (x, d = 1) => `${x < 0 ? "מינוס " : ""}${Math.abs(x).toFixed(d)}%`;
+const between = (lo, hi) => `בין ${signed(lo)} ל${hi < 0 ? signed(hi) : `-${signed(hi)}`}`;
+const heDate = (iso) => (/^\d{4}-\d{2}-\d{2}$/.test(String(iso)) ? `${iso.slice(8)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}` : iso);
 
 // Wording per factor and direction. `up`/`down` refer to the factor's move.
 const WORDING = {
@@ -89,14 +94,14 @@ function explainMonth({ model, factors, actual = null, partial = false, asOf = n
   // professional summary (for Karin / internal report)
   const summary = [];
   summary.push(isEstimate
-    ? `אומדן מוקדם עבור ${trackLabel}: ${dirWord} של כ-${amount}${est.range ? ` (טווח סביר: ${est.range.low}% עד ${est.range.high}%)` : ""}${asOf ? `, לפי נתוני שוק עד ${asOf}` : ""}.`
+    ? `אומדן מוקדם עבור ${trackLabel}: ${dirWord} של כ-${amount}${est.range ? ` (טווח סביר: ${between(est.range.low, est.range.high)})` : ""}${asOf ? `, לפי נתוני שוק עד ${heDate(asOf)}` : ""}.`
     : `${trackLabel}: ${dirWord} של ${amount} (נתון רשמי).`);
   if (drivers.length) summary.push(`הגורמים העיקריים: ${drivers.map(effect).join("; ")}.`);
   if (offsets.length) summary.push(`גורמים שפעלו בכיוון ההפוך: ${offsets.map(effect).join("; ")}.`);
   if (!drivers.length && !offsets.length) summary.push("לא נרשמה תנועת שוק בולטת; השינוי קטן ונובע מתנודה שוטפת.");
   if (!isEstimate) {
     const gap = Number((actual - est.estimate).toFixed(2));
-    if (Math.abs(gap) >= 0.5) summary.push(`הפער בין הנתון הרשמי לאומדן המודל (${est.estimate}%) הוא ${Math.abs(gap).toFixed(1)} נק' אחוז ${gap > 0 ? "לטובה" : "לרעה"} — חלק שאינו מוסבר בתנועות השוק (בחירת נכסים, נכסים לא סחירים, שינוי חשיפות).`);
+    if (Math.abs(gap) >= 0.5) summary.push(`הפער בין הנתון הרשמי לאומדן המודל (${signed(est.estimate)}) הוא ${Math.abs(gap).toFixed(1)} נק' אחוז ${gap > 0 ? "לטובה" : "לרעה"} — חלק שאינו מוסבר בתנועות השוק (בחירת נכסים, נכסים לא סחירים, שינוי חשיפות).`);
   }
 
   // client draft — short, plain, no names, no signature

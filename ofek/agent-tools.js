@@ -113,11 +113,16 @@ const TOOL_DEFS = [
     input_schema: obj({ product: { type: "string" } }),
   },
   {
+    name: "find_track",
+    description: "Find a savings track by name words (Hebrew), e.g. 'הפניקס כללי' or 'מיטב השתלמות מניות', optionally limited to a dataset (gemel | pension | insurance). Returns fund ids (needed by the other track tools), product, assets, equity and FX exposure, and whether a model exists. ~1,260 active tracks.",
+    input_schema: obj({ q: { type: "string" }, dataset: { type: "string", enum: ["gemel", "pension", "insurance"] }, limit: { type: "integer" } }, ["q"]),
+  },
+  {
     name: "track_scenario_impact",
     description:
       "Expected effect (percentage points, within a month) of a market scenario on a track. Identify the track by fundId or category from track_model_baseline, or pass betas. " +
       `Named scenarios: ${Object.keys(trackModel.SCENARIOS).join(", ")}; or custom shocks in percent, e.g. { ta125: -8, usd: 3 }. Without scenario/shocks returns the full scenario table. Shock sizes are illustrations, not forecasts.`,
-    input_schema: obj({ fundId: { type: "integer" }, category: { type: "string" }, betas: anyObj, alpha: { type: "number" }, scenario: { type: "string" }, shocks: anyObj }),
+    input_schema: obj({ fundId: { type: "integer" }, dataset: { type: "string" }, category: { type: "string" }, betas: anyObj, alpha: { type: "number" }, scenario: { type: "string" }, shocks: anyObj }),
   },
   {
     name: "track_early_estimate",
@@ -206,6 +211,7 @@ function createToolExecutor({ ledger, now = () => new Date(), fetchImpl }) {
     },
     quality_gate_check: (i) => runQualityGate({ ...i, manual: {}, approval: {} }, { now: now() }),
     track_model_baseline: (i) => trackService.baselineSummary({ product: i.product }),
+    find_track: (i) => trackService.searchFunds({ q: i.q, dataset: i.dataset, limit: i.limit || 15 }),
     track_scenario_impact: (i) => {
       const { model, origin, label } = trackService.resolveModel(i);
       const scenario = i.shocks ? { shocks: i.shocks } : i.scenario;

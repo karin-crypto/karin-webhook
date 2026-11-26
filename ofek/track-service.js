@@ -39,15 +39,77 @@ function baselineSummary({ product } = {}) {
   };
 }
 
+let fundsCache;
+/** Sensitivities for every active track (compact file, ~1,260 tracks). */
+function loadFunds() {
+  if (fundsCache === undefined) {
+    try {
+      fundsCache = JSON.parse(fs.readFileSync(path.join(__dirname, "data", "track-model-funds.json"), "utf8"));
+    } catch {
+      fundsCache = null;
+    }
+  }
+  return fundsCache;
+}
+
+const DATASET_HE = { gemel: "גמל / השתלמות", pension: "פנסיה", insurance: "פוליסות ביטוח" };
+
+/** Compact fund entry -> the model shape track-model.js works with. */
+function fundToModel(f, file) {
+  if (!f.basis) return null;
+  return {
+    kind: "fund", fundId: f.id, dataset: f.ds, name: f.name, product: f.product, category: f.cat || null,
+    alpha: f.a,
+    betas: Object.fromEntries(file.factorOrder.map((n, i) => [n, f.b[i]])),
+    r2: f.r2 == null ? null : f.r2,
+    basis: f.basis, basisNote: file.basisNote[f.basis],
+    accuracy: f.p90 == null ? null : { mae: f.mae == null ? null : f.mae, p90AbsError: f.p90, naiveMeanMae: f.naive == null ? null : f.naive, n: f.accN || null, basis: f.p90Basis || "walk-forward, חלון מתגלגל של 60 חודשים" },
+  };
+}
+
+/** Search tracks by name words, id, dataset. Largest first. */
+function searchFunds({ q = "", dataset, limit = 20 } = {}) {
+  const file = loadFunds();
+  if (!file) return { ok: false, error: "קובץ המסלולים חסר" };
+  const terms = String(q).trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const hits = file.funds.filter((f) => {
+    if (dataset && f.ds !== dataset) return false;
+    if (!terms.length) return true;
+    const hay = `${f.id} ${f.name} ${f.product} ${f.catLabel || ""}`.toLowerCase();
+    return terms.every((t) => hay.includes(t));
+  });
+  return {
+    ok: true, total: hits.length, dataThrough: file.dataThrough,
+    funds: hits.slice(0, Math.max(1, Math.min(Number(limit) || 20, 100))).map((f) => ({
+      fundId: f.id, dataset: f.ds, datasetLabel: DATASET_HE[f.ds], name: f.name, product: f.product, category: f.catLabel || null,
+      assetsMillions: f.aum, equityPct: f.eqPct == null ? null : f.eqPct, fxPct: f.fxPct == null ? null : f.fxPct,
+      historyMonths: f.n, hasModel: !!f.basis, modelBasis: f.basis ? file.basisNote[f.basis] : "אין מספיק נתונים למודל", mae: f.mae == null ? null : f.mae,
+    })),
+  };
+}
+
+function findFundModel({ fundId, dataset } = {}) {
+  const file = loadFunds();
+  if (!file || fundId == null) return null;
+  const hits = file.funds.filter((f) => String(f.id) === String(fundId) && (!dataset || f.ds === dataset));
+  if (!hits.length) return null;
+  if (hits.length > 1) throw new tm.TrackModelError(`מספר ${fundId} קיים ביותר ממאגר אחד (${hits.map((h) => h.ds).join(", ")}) — ציינו dataset`);
+  const m = fundToModel(hits[0], file);
+  if (!m) throw new tm.TrackModelError(`למסלול ${hits[0].name} אין מספיק נתונים למודל`);
+  return { model: m, file };
+}
+
 /**
- * Resolve the model a caller refers to: explicit { betas }, a baseline fund
- * id, or a baseline category.
+ * Resolve the model a caller refers to: explicit { betas }, a fund id
+ * (any active track), or a baseline category.
  */
-function resolveModel({ model, betas, alpha, fundId, category } = {}) {
+function resolveModel({ model, betas, alpha, fundId, dataset, category } = {}) {
   if (model && model.betas) return { model, origin: "supplied" };
   if (betas) return { model: { betas, alpha: alpha || 0 }, origin: "supplied" };
+  const fund = findFundModel({ fundId, dataset });
+  if (fund) return { model: fund.model, origin: `baseline ${fund.file.version} (${fund.file.computedAt}, נתונים עד ${fund.file.dataThrough})`, label: fund.model.name };
   const hit = tm.findBaselineModel(loadBaseline(), { fundId, category });
-  if (!hit) throw new tm.TrackModelError("לא נמצא מודל: העבירו betas, או fundId / category הקיימים בבסיס (GET /track-model/baseline)");
+  if (!hit) throw new tm.TrackModelError("לא נמצא מודל: העבירו betas, או fundId / category קיימים (GET /track-model/funds?q=…, GET /track-model/baseline)");
   const b = loadBaseline();
   return { model: hit, origin: `baseline ${b.version} (${b.computedAt}, נתונים עד ${b.dataThrough})`, label: hit.name || hit.category };
 }
@@ -118,4 +180,4 @@ async function analyzeFund({ dataset, fundId, window = 60, factorRows = null, mt
   };
 }
 
-module.exports = { loadBaseline, baselineSummary, resolveModel, analyzeFund, mainModels };
+module.exports = { loadBaseline, loadFunds, baselineSummary, resolveModel, searchFunds, analyzeFund, mainModels };

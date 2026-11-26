@@ -382,6 +382,11 @@ function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_AD
     res.status(r.ok ? 200 : 500).json(r);
   });
 
+  router.get("/track-model/funds", (req, res) => {
+    const r = trackService.searchFunds({ q: req.query.q, dataset: req.query.dataset, limit: req.query.limit });
+    res.status(r.ok ? 200 : 500).json(r);
+  });
+
   router.get("/track-model/scenarios", (_req, res) => {
     res.json({ ok: true, factors: trackModel.FACTORS, scenarios: trackModel.SCENARIOS, note: "גודל הזעזועים הוא הדגמה שנקבעה בשיקול דעת — לא תחזית ולא הסתברות." });
   });
