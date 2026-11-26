@@ -12,6 +12,7 @@ const tm = require("./track-model");
 const { fetchFundHistory } = require("./connectors/gemelnet");
 const market = require("./connectors/market");
 const explain = require("./track-explain");
+const forecastEngine = require("./track-forecast");
 
 let baselineCache;
 /** Stored research baseline (category and large-fund sensitivities). */
@@ -63,6 +64,7 @@ function fundToModel(f, file) {
     alpha: f.a,
     betas: Object.fromEntries(file.factorOrder.map((n, i) => [n, f.b[i]])),
     r2: f.r2 == null ? null : f.r2,
+    residualSd: f.s == null ? null : f.s,
     basis: f.basis, basisNote: file.basisNote[f.basis],
     accuracy: f.p90 == null ? null : { mae: f.mae == null ? null : f.mae, p90AbsError: f.p90, naiveMeanMae: f.naive == null ? null : f.naive, n: f.accN || null, basis: f.p90Basis || "walk-forward, חלון מתגלגל של 60 חודשים" },
   };
@@ -201,6 +203,79 @@ async function fetchMarketWatch({ asOf, fetchImpl, env = process.env, today = ne
   return { ...w, sources: fetched.sources, modelDataThrough: b.dataThrough };
 }
 
+let factorHistoryCache;
+function loadFactorHistory() {
+  if (factorHistoryCache === undefined) {
+    try {
+      factorHistoryCache = JSON.parse(fs.readFileSync(path.join(__dirname, "data", "factor-history.json"), "utf8"));
+    } catch {
+      factorHistoryCache = null;
+    }
+  }
+  return factorHistoryCache;
+}
+function yieldSnapshot() {
+  try {
+    return { ...JSON.parse(fs.readFileSync(path.join(__dirname, "data", "yield-snapshot.json"), "utf8")), live: false };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Multi-year forecast for one track (by fund id) or a track category:
+ * expected yearly return range for 1, 3, 5 and 10 years, loss probability,
+ * the anchors and assumptions behind it, a plain summary, a client-message
+ * draft and forecast-card drafts. Yields come live from the Bank of Israel,
+ * with a dated stored snapshot as fallback (the result says which).
+ */
+async function forecastFund({ fundId, dataset, category, annualFee = 0, assumptions = {}, trackLabel = null, includeHistory = true, fetchImpl, today = new Date() } = {}) {
+  const history = loadFactorHistory();
+  if (!history) throw new tm.TrackModelError("קובץ היסטוריית גורמי השוק חסר");
+  const { model, origin, label } = resolveModel({ fundId, dataset, category });
+  const base = loadBaseline();
+  const cat = model.kind === "fund" && model.category && base ? base.categories.find((c) => c.category === model.category) : null;
+
+  let yields;
+  let yieldWarning = null;
+  try {
+    yields = await market.fetchYieldCurve({ today, ...(fetchImpl ? { fetchImpl } : {}) });
+  } catch (err) {
+    yields = yieldSnapshot();
+    if (!yields) throw err;
+    yieldWarning = `המשיכה החיה מבנק ישראל נכשלה (${err.message}); נעשה שימוש בנתון שמור מ-${yields.asOf}.`;
+  }
+
+  const forecast = forecastEngine.forecastTrack({ model, history, yields, assumptions, categoryAlpha: cat ? cat.alpha : null, annualFee: Number(annualFee) || 0 });
+  const name = trackLabel || label || "המסלול";
+  const text = explain.explainForecast({ forecast, trackLabel: trackLabel || "המסלול" });
+
+  // the track's own record, when its official history is reachable
+  let ownRecord = null;
+  if (includeHistory && model.kind === "fund") {
+    try {
+      const h = await fetchFundHistory({ dataset: model.dataset, fundId: model.fundId, ...(fetchImpl ? { fetchImpl } : {}) });
+      if (h.rows.length >= 36) {
+        const d = tm.depositTimingStats(h.rows.map((r) => r.ret));
+        ownRecord = { from: h.rows[0].period, to: h.rows[h.rows.length - 1].period, months: h.rows.length, holding: d.holding, worstDrawdowns: d.worstDrawdowns.slice(0, 3), negativeMonthsShare: d.negativeMonthsShare, note: "מה שקרה בפועל במסלול בעבר — תיאור, לא תחזית." };
+      }
+    } catch { /* the forecast does not depend on it */ }
+  }
+
+  const dataAsOf = `${yields.asOf}-01`.slice(0, 10);
+  const cards = {};
+  for (const key of ["1y", "5y"]) cards[key] = forecastEngine.toForecastCard(forecast, { asset: `${name} — תשואה מצטברת ל-${forecast.horizons.find((x) => x.key === key).label}`, key, dataAsOf });
+  return {
+    track: { label: name, fundId: model.fundId || null, dataset: model.dataset || null, category: model.category || null, modelOrigin: origin, modelBasis: model.basisNote || null },
+    ...forecast,
+    ...text,
+    ownRecord,
+    forecastCardDrafts: cards,
+    warnings: [yieldWarning, model.basis && model.basis !== "own" ? `המודל של המסלול נשען על היסטוריה קצרה (${model.basisNote}) — התחזית פחות מבוססת.` : null].filter(Boolean),
+    notice: "תחזית = טווח תשואה אפשרי לפי מודל והנחות מוצהרות. אינה הבטחה, אינה המלצה ואינה ייעוץ מותאם אישית. רישום התחזית ביומן ושליחה ללקוח — רק באישור קארין.",
+  };
+}
+
 /**
  * This year against the same months of last year, for one track: official
  * returns, the market moves in both periods, the gap split by factor, and a
@@ -314,4 +389,4 @@ async function analyzeFund({ dataset, fundId, window = 60, factorRows = null, mt
   };
 }
 
-module.exports = { loadBaseline, loadFunds, baselineSummary, resolveModel, searchFunds, analyzeFund, yearOverYear, mainModels, marketWatch, fetchMarketWatch, unusualLevel, monthShare };
+module.exports = { loadBaseline, loadFunds, loadFactorHistory, baselineSummary, resolveModel, searchFunds, analyzeFund, yearOverYear, forecastFund, mainModels, marketWatch, fetchMarketWatch, unusualLevel, monthShare };

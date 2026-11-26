@@ -109,7 +109,18 @@
         <button id="tfetch" class="secondary">משוך נתוני שוק אוטומטית</button>
         <button id="texplain">הסבר וטיוטת הודעה</button>
         <button id="tyoy" class="secondary">השנה מול שנה שעברה</button>
+        <button id="tfc" class="secondary">תחזית למסלול</button>
         <span id="tstatus" class="status"></span>
+      </div>
+      <div id="tfcout" hidden>
+        <h3 style="margin:16px 0 4px">תחזית למסלול <span class="pill">הערכה מחקרית — לא הבטחה</span></h3>
+        <div class="row" style="margin-top:0">
+          <label class="muted" style="font-weight:400;margin:0" for="tfee">דמי ניהול שנתיים של הלקוח (%, לא חובה)</label>
+          <input id="tfee" type="number" step="0.05" min="0" max="4" style="width:110px">
+        </div>
+        <div id="tfctable"></div>
+        <p id="tfcanchors" class="muted" style="margin:8px 0 0"></p>
+        <p id="tfcwarn" class="warn" style="margin:6px 0 0"></p>
       </div>
       <div id="tout" hidden>
         <h3 style="margin:16px 0 4px">הסבר מקצועי</h3>
@@ -304,6 +315,24 @@
     $("tstatus").className = "status"; $("tstatus").textContent = "משווה בין השנים…";
     try {
       const r = await api("/track-model/year-over-year", { method: "POST", body: JSON.stringify({ fundId: track.fundId, dataset: track.dataset, trackLabel: "המסלול" }) });
+      $("tout").hidden = false;
+      $("tsummary").textContent = r.summary;
+      $("tdraft").textContent = r.clientDraft.text;
+      $("tstatus").textContent = "";
+    } catch (e) { $("tstatus").className = "status warn"; $("tstatus").textContent = e.message; }
+  });
+  $("tfc").addEventListener("click", async () => {
+    if (!track || !track.hasModel) return;
+    $("tstatus").className = "status"; $("tstatus").textContent = "מחשב תחזית…";
+    try {
+      const fee = parseFloat($("tfee").value);
+      const r = await api("/track-model/forecast", { method: "POST", body: JSON.stringify({ fundId: track.fundId, dataset: track.dataset, annualFee: Number.isFinite(fee) ? fee : 0 }) });
+      const ltr = (x) => `<bdi dir="ltr">${x}%</bdi>`;
+      $("tfcout").hidden = false;
+      $("tfctable").innerHTML = `<table class="tbl"><tr><th>אופק</th><th>תשואה שנתית ממוצעת — טווח סביר</th><th>מרכז</th><th>תשואה מצטברת — טווח</th><th>סיכוי משוער להפסד</th></tr>` +
+        r.horizons.map((h) => `<tr><td>${esc(h.label)}${h.backtested ? "" : " <span class=\"muted\">(לא נבדק היסטורית)</span>"}</td><td style="white-space:nowrap">${ltr(h.annualized.low)} עד ${ltr(h.annualized.high)}</td><td class="num">${ltr(h.annualized.central)}</td><td style="white-space:nowrap">${ltr(h.cumulative.low)} עד ${ltr(h.cumulative.high)}</td><td class="num">${Math.round(h.lossProbability * 100)}%</td></tr>`).join("") + "</table>";
+      $("tfcanchors").textContent = `עוגן היסטורי: ${r.anchors.historical.annual}% בשנה · עוגן לפי תשואות האג"ח: ${r.anchors.yieldBased.annual}% בשנה · ${r.anchors.centreRule}. תשואות אג"ח ממשלתיות (${r.inputs.yields.asOf}): 5 שנים ${r.inputs.yields.y5}%, 10 שנים ${r.inputs.yields.y10}%. הנחות: פרמיית מניות ${r.inputs.assumptions.equityPremium}%, מרווח אג"ח חברות ${r.inputs.assumptions.corporateSpread}%. בבדיקה היסטורית כ-${Math.round(r.calibration.insideShare * 100)}% מהתוצאות נפלו בטווח.` + (r.anchors.historicalCap ? " " + r.anchors.historicalCap + "." : "");
+      $("tfcwarn").textContent = (r.warnings || []).join(" ");
       $("tout").hidden = false;
       $("tsummary").textContent = r.summary;
       $("tdraft").textContent = r.clientDraft.text;

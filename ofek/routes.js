@@ -474,6 +474,14 @@ function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_AD
     res.json({ source: b.source, ...trackService.marketWatch({ factors: b.factors, asOf: b.asOf, elapsedShare: b.elapsedShare == null ? trackService.monthShare(b.asOf) : b.elapsedShare }) });
   }));
 
+  router.post("/track-model/forecast", wrap(async (req, res) => {
+    const b = req.body || {};
+    res.json(await trackService.forecastFund({
+      fundId: b.fundId, dataset: b.dataset, category: b.category, annualFee: b.annualFee || 0, assumptions: b.assumptions || {}, trackLabel: b.trackLabel || null,
+      includeHistory: b.includeHistory !== false, ...(fetchImpl ? { fetchImpl } : {}),
+    }));
+  }));
+
   router.post("/track-model/year-over-year", wrap(async (req, res) => {
     const b = req.body || {};
     res.json(await trackService.yearOverYear({ dataset: b.dataset, fundId: b.fundId, factorRows: b.factorRows || null, trackLabel: b.trackLabel || "המסלול", ...(fetchImpl ? { fetchImpl } : {}) }));

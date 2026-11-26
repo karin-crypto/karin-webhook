@@ -106,6 +106,44 @@ async function fetchIndexClose({ factor, date, fetchImpl = fetch, today = new Da
   return out;
 }
 
+const BOI_CURVE = "https://edge.boi.gov.il/FusionEdgeServer/sdmx/v2/data/dataflow/BOI.STATISTICS/ZCM/1.0";
+const CURVE_SERIES = { y5: "ZC_TSB_ZND_05Y_MA", y10: "ZC_TSB_ZND_10Y_MA", real10: "ZC_TSB_ZRD_10Y_MA", inflation: "EXP_EXB_ZD_10Y_MA" };
+let curveCache = null; // { at, value }
+
+/**
+ * Latest monthly government zero-coupon yields and 10-year inflation
+ * expectations from the Bank of Israel (official open data). Cached 12h.
+ */
+async function fetchYieldCurve({ fetchImpl = fetch, today = new Date() } = {}) {
+  if (curveCache && today.getTime() - curveCache.at < 12 * 3600e3) return curveCache.value;
+  const end = today.toISOString().slice(0, 10);
+  const start = new Date(today.getTime() - 200 * 864e5).toISOString().slice(0, 10);
+  const res = await fetchImpl(`${BOI_CURVE}?startperiod=${start}&endperiod=${end}&format=csv`, { headers: { Accept: "text/csv" } });
+  if (!res.ok) throw new MarketDataError(`בנק ישראל (עקום תשואות): ${res.status}`, 502);
+  const lines = (await res.text()).trim().split(/\r?\n/);
+  const head = lines.shift().split(",");
+  const iCode = head.indexOf("SERIES_CODE");
+  const iDate = head.indexOf("TIME_PERIOD");
+  const iVal = head.indexOf("OBS_VALUE");
+  if (iCode < 0 || iDate < 0 || iVal < 0) throw new MarketDataError("בנק ישראל: מבנה קובץ לא צפוי", 502);
+  const latest = {};
+  for (const l of lines) {
+    const c = l.split(",");
+    const key = Object.keys(CURVE_SERIES).find((k) => CURVE_SERIES[k] === c[iCode]);
+    const v = Number(c[iVal]);
+    if (!key || !Number.isFinite(v) || !/^\d{4}-\d{2}$/.test(c[iDate])) continue;
+    if (!latest[key] || c[iDate] > latest[key].period) latest[key] = { period: c[iDate], value: v };
+  }
+  if (!latest.y5 || !latest.y10) throw new MarketDataError("בנק ישראל: לא התקבלו תשואות ל-5 ול-10 שנים", 502);
+  const value = {
+    asOf: latest.y10.period, y5: latest.y5.value, y10: latest.y10.value,
+    real10: latest.real10 ? latest.real10.value : null, inflation: latest.inflation ? latest.inflation.value : null,
+    source: "בנק ישראל — עקום תשואות חסר קופון ממשלתי וציפיות אינפלציה (ממוצע חודשי)", live: true,
+  };
+  curveCache = { at: today.getTime(), value };
+  return value;
+}
+
 async function mapLimit(items, limit, fn) {
   const out = new Array(items.length);
   let next = 0;
@@ -185,6 +223,6 @@ async function fetchFactorHistory({ from, to, asOf = null, fetchImpl = fetch, en
 
 module.exports = {
   INDEX_SYMBOLS, MarketDataError, indexSourceEnabled,
-  fetchUsdIls, fetchIndexClose, fetchFactorHistory, periodsBetween, monthEnd, prevPeriod, nextPeriod, lastOnOrBefore,
-  _clearCache: () => closeCache.clear(),
+  fetchUsdIls, fetchIndexClose, fetchFactorHistory, fetchYieldCurve, periodsBetween, monthEnd, prevPeriod, nextPeriod, lastOnOrBefore,
+  _clearCache: () => { closeCache.clear(); curveCache = null; },
 };

@@ -153,6 +153,13 @@ const TOOL_DEFS = [
     input_schema: obj({ fundId: { type: "integer" }, category: { type: "string" }, betas: anyObj, alpha: { type: "number" }, factors: anyObj, actual: { type: "number" }, partial: { type: "boolean" }, asOf: { type: "string" }, source: { type: "string" }, trackLabel: { type: "string" } }, ["factors", "asOf", "source"]),
   },
   {
+    name: "forecast_track",
+    description:
+      "Multi-year forecast for ONE savings track (fund id from find_track) or a track category: expected yearly return RANGE for 1, 3, 5 and 10 years, loss probability per horizon, the historical and yield-based anchors, stated assumptions, the backtest calibration (how often past outcomes fell inside such ranges), the track's own record, a plain summary and forecast-card drafts. " +
+      "Use it when someone asks what to expect from investing in a specific track at a specific company. Always present the range, never the centre alone; a one-year figure is not reliable. It is not a recommendation — suitability is Karin's decision. Optional annualFee (percent) gives the result net of the client's fee.",
+    input_schema: obj({ fundId: { type: "integer" }, dataset: { type: "string", enum: ["gemel", "pension", "insurance"] }, category: { type: "string" }, annualFee: { type: "number" }, assumptions: anyObj }),
+  },
+  {
     name: "explain_year_over_year",
     description:
       "Answers 'why is this year weaker (or stronger) than last year?' for ONE track: official return for January-to-latest-month in both years, the market moves in each period, the gap split by market factor and the part markets do not explain, plus a client-message DRAFT (no names; needs Karin's approval). " +
@@ -241,6 +248,7 @@ function createToolExecutor({ ledger, now = () => new Date(), fetchImpl }) {
       const { model, origin, label } = trackService.resolveModel(i);
       return { track: label || null, modelOrigin: origin, source: i.source, ...trackExplain.explainMonth({ model, factors: i.factors, actual: typeof i.actual === "number" ? i.actual : null, partial: !!i.partial, asOf: i.asOf, trackLabel: i.trackLabel || "המסלול" }) };
     },
+    forecast_track: (i) => trackService.forecastFund({ fundId: i.fundId, dataset: i.dataset, category: i.category, annualFee: i.annualFee || 0, assumptions: i.assumptions || {}, today: now(), ...fx }),
     explain_year_over_year: (i) => trackService.yearOverYear({ dataset: i.dataset, fundId: i.fundId, trackLabel: i.trackLabel || "המסלול", today: now(), ...fx }),
     market_watch: (i) => {
       if (!i.factors) return trackService.fetchMarketWatch({ asOf: i.asOf || null, today: now(), ...fx });

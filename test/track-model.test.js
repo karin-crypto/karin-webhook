@@ -7,6 +7,8 @@ const express = require("express");
 const tm = require("../ofek/track-model");
 const service = require("../ofek/track-service");
 const explain = require("../ofek/track-explain");
+const fc = require("../ofek/track-forecast");
+const { validateCard } = require("../ofek/forecast-card");
 const market = require("../ofek/connectors/market");
 const { fetchFundHistory, RESOURCES, HISTORY_RESOURCES } = require("../ofek/connectors/gemelnet");
 const { createLedger, memoryBackend } = require("../ofek/ledger");
@@ -318,6 +320,111 @@ test("daily watch: estimates per track type, how unusual, matching scenarios, no
   assert.equal(service.unusualLevel(-3, null).level, "unknown");
 });
 
+test("track forecast: range per horizon, anchors, prudence cap, fees and guards", () => {
+  const history = service.loadFactorHistory();
+  assert.ok(history.periods.length >= 170 && tm.FACTOR_NAMES.every((f) => history.factors[f].length === history.periods.length));
+  const yields = { y5: 3.86, y10: 4.24, inflation: 1.95, asOf: "2026-10", source: "בדיקה" };
+  const general = { alpha: 0.08, betas: { ta125: 0.16, spx: 0.23, usd: 0.11, gov: -0.01, corp: 0.2 }, residualSd: 0.43 };
+  const f = fc.forecastTrack({ model: general, history, yields });
+  assert.deepEqual(f.horizons.map((h) => h.key), ["1y", "3y", "5y", "10y"]);
+  assert.ok(f.central > 4 && f.central < 8, `centre ${f.central}`);
+  assert.ok(Math.abs(f.central - (f.anchors.historical.annual + f.anchors.yieldBased.annual) / 2) < 0.11);
+  assert.ok(Math.abs(f.centralReal - (f.central - 1.95)) < 0.11);
+  // the range narrows with the horizon, and the chance of a loss falls
+  const widths = f.horizons.map((h) => h.annualized.high - h.annualized.low);
+  assert.ok(widths[0] > widths[1] && widths[1] > widths[2] && widths[2] > widths[3]);
+  const loss = f.horizons.map((h) => h.lossProbability);
+  assert.ok(loss[0] > loss[1] && loss[1] > loss[2] && loss[0] > 0.1 && loss[0] < 0.3);
+  assert.ok(f.horizons[0].annualized.low < 0, "a one-year range for a general track includes a loss");
+  assert.equal(f.horizons[3].backtested, false);
+  assert.ok(Math.abs(f.horizons[2].cumulative.central - ((1 + f.central / 100) ** 5 - 1) * 100) < 0.3);
+  assert.equal(f.calibration.insideShare, 0.73);
+  assert.ok(f.caveats.some((c) => /אינה מבטיחה/.test(c)));
+
+  // more equity -> higher centre, wider range, more chance of a loss in one year
+  const equity = { alpha: -0.02, betas: { ta125: 0.4, spx: 0.55, usd: 0.1, gov: 0, corp: 0.1 }, residualSd: 0.8 };
+  const e = fc.forecastTrack({ model: equity, history, yields });
+  assert.ok(e.central > f.central && e.annualVolatility > f.annualVolatility * 1.7);
+  assert.ok(e.horizons[0].lossProbability > f.horizons[0].lossProbability);
+  assert.match(e.anchors.historicalCap, /S&P 500/); // the exceptional 2012–2026 average is not projected forward
+  const tracker = fc.forecastTrack({ model: { alpha: 0, betas: { ta125: 0, spx: 1, usd: 0, gov: 0, corp: 0 }, residualSd: 0.3 }, history, yields });
+  // cap = (4.24% + 2 × 4%) a year, applied monthly and compounded: about 13%, below the raw 2012–2026 average
+  assert.ok(tracker.anchors.historical.annual > 12 && tracker.anchors.historical.annual <= 13.1, `capped historical anchor ${tracker.anchors.historical.annual}`);
+
+  // a bond track is anchored on yields only
+  const bond = fc.forecastTrack({ model: { alpha: 0.05, betas: { ta125: 0.02, spx: 0.03, usd: 0.02, gov: 0.4, corp: 0.3 }, residualSd: 0.2 }, history, yields });
+  assert.match(bond.anchors.centreRule, /בלבד/);
+  assert.equal(bond.central, bond.anchors.yieldBased.annual);
+
+  // fee, category shrinkage and custom assumptions
+  const net = fc.forecastTrack({ model: general, history, yields, annualFee: 0.8 });
+  assert.ok(Math.abs(f.central - net.central - 0.8) < 0.11);
+  const shrunk = fc.forecastTrack({ model: { ...general, alpha: 0.4 }, history, yields, categoryAlpha: 0.08 });
+  const own = fc.forecastTrack({ model: { ...general, alpha: 0.4 }, history, yields });
+  assert.ok(shrunk.central < own.central && shrunk.central > f.central);
+  const cautious = fc.forecastTrack({ model: general, history, yields, assumptions: { equityPremium: 2 } });
+  assert.ok(cautious.central < f.central);
+
+  assert.throws(() => fc.forecastTrack({ model: general, history, yields: { y5: 3.9 } }), /y10/);
+  assert.throws(() => fc.forecastTrack({ model: { betas: { ta125: 0.1 } }, history, yields }), /חסרות רגישויות/);
+  assert.throws(() => fc.forecastTrack({ model: general, history, yields, annualFee: 9 }), /annualFee/);
+  assert.throws(() => fc.forecastTrack({ model: general, history: { periods: [], factors: {} }, yields }), /60 חודשים/);
+  assert.ok(Math.abs(fc.normalCdf(0) - 0.5) < 1e-6 && Math.abs(fc.normalCdf(-1.2816) - 0.1) < 2e-3);
+
+  // forecast card drafts are valid cards; the untested 10-year range is not presented as statistical
+  const card5 = validateCard(fc.toForecastCard(f, { asset: "מסלול בדיקה", key: "5y", dataAsOf: "2026-10-01" }), { now: new Date("2026-11-26T12:00:00Z") });
+  assert.equal(card5.ok, true);
+  assert.equal(card5.card.interval.kind, "statistical");
+  const card10 = validateCard(fc.toForecastCard(f, { asset: "מסלול בדיקה", key: "10y", dataAsOf: "2026-10-01" }), { now: new Date("2026-11-26T12:00:00Z") });
+  assert.equal(card10.ok, true);
+  assert.notEqual(card10.card.interval.kind, "statistical");
+
+  const text = explain.explainForecast({ forecast: f, trackLabel: "המסלול הכללי" });
+  assert.match(text.summary, /הטווח הסביר/);
+  assert.match(text.summary, /73%/);
+  assert.ok(text.clientDraft.text.startsWith("היי") && /אינה תשואה מובטחת/.test(text.clientDraft.text));
+  assert.equal(text.clientDraft.requiresApproval, true);
+});
+
+test("forecast service: live yields with a dated fallback, per-track and per-category", async () => {
+  market._clearCache();
+  const curve = [
+    "SERIES_CODE,FREQ,NOMINAL_REAL,TIME_PERIOD_TYPE,DATA_TYPE,MODEL_TYPE,TIME_TO_MATURITY,FCT_TOPIC,FCT_SOURCE,DATA_SOURCE,TIME_COLLECT,CONF_STATUS,PUB_WEBSITE,UNIT_MEASURE,UNIT_MULT,TIME_PERIOD,OBS_VALUE,RELEASE_STATUS",
+    "ZC_TSB_ZND_05Y_MA,M,N,_Z,ZC_YTM,M_T,Y05T05,_Z,_Z,BOI,V,F,Y,PT,0,2026-09,3.7,YP",
+    "ZC_TSB_ZND_05Y_MA,M,N,_Z,ZC_YTM,M_T,Y05T05,_Z,_Z,BOI,V,F,Y,PT,0,2026-10,3.9,YP",
+    "ZC_TSB_ZND_10Y_MA,M,N,_Z,ZC_YTM,M_T,Y10T10,_Z,_Z,BOI,V,F,Y,PT,0,2026-10,4.3,YP",
+    "EXP_EXB_ZD_10Y_MA,M,_Z,_Z,INF_EXP,M_T,Y10T10,_Z,_Z,BOI,V,F,Y,PT,0,2026-10,2.0,YP",
+    "INF_MAX_TRGT_D,D,_Z,_Z,INF_MAX_TRGT,_Z,_Z,_Z,_Z,BOI,V,F,Y,PT,0,2026-11-25,3,YP",
+  ].join("\n");
+  const ok = async (url) => (String(url).includes("/ZCM/") ? { ok: true, status: 200, text: async () => curve } : { ok: true, status: 200, json: async () => ({ success: true, result: { records: [], total: 0 } }), text: async () => "" });
+  const today = new Date("2026-11-26T12:00:00Z");
+  const y = await market.fetchYieldCurve({ fetchImpl: ok, today });
+  assert.deepEqual([y.y5, y.y10, y.inflation, y.asOf, y.live], [3.9, 4.3, 2, "2026-10", true]);
+
+  const r = await service.forecastFund({ fundId: 50, fetchImpl: ok, today });
+  assert.match(r.track.label, /הפניקס/);
+  assert.equal(r.inputs.yields.y10, 4.3);
+  assert.deepEqual(r.warnings, []);
+  assert.equal(r.ownRecord, null); // no official history reachable in this test — the forecast does not depend on it
+  assert.ok(r.forecastCardDrafts["5y"].asset.includes("הפניקס") && validateCard(r.forecastCardDrafts["1y"], { now: today }).ok);
+  assert.match(r.notice, /אינה הבטחה/);
+
+  // Bank of Israel unreachable -> stored snapshot, and the result says so
+  market._clearCache();
+  const down = async () => ({ ok: false, status: 503, text: async () => "" });
+  const fallback = await service.forecastFund({ category: "גמל/השתלמות · כללי", fetchImpl: down, today });
+  assert.equal(fallback.inputs.yields.asOf, "2026-10");
+  assert.match(fallback.warnings[0], /נתון שמור/);
+  assert.ok(fallback.central > 3 && fallback.central < 9);
+
+  // a short-history track carries a warning
+  const short = service.loadFunds().funds.find((x) => x.basis === "blend");
+  const s = await service.forecastFund({ fundId: short.id, dataset: short.ds, fetchImpl: down, today });
+  assert.ok(s.warnings.some((w) => /היסטוריה קצרה/.test(w)));
+  await assert.rejects(service.forecastFund({ fundId: 999999, fetchImpl: down, today }), /לא נמצא מודל/);
+  market._clearCache();
+});
+
 /* ---------- connectors with a fake network ---------- */
 
 const CLOSES = {
@@ -518,6 +625,12 @@ test("routes and agent tools: track model end to end", async () => {
     const playbook = await (await fetch(`${base}/track-model/playbook`, { headers })).json();
     assert.equal(playbook.playbook.length, Object.keys(tm.SCENARIOS).length);
 
+    const forecast = await post("/track-model/forecast", { fundId: 50, annualFee: 0.9 });
+    assert.equal(forecast.status, 200);
+    assert.equal(forecast.body.horizons.length, 4);
+    assert.equal(forecast.body.inputs.annualFee, 0.9);
+    assert.equal((await post("/track-model/forecast", { fundId: 123456789 })).status, 400);
+
     const attr = await post("/track-model/attribution", { betas: TRUE.betas, alpha: TRUE.alpha, periodA: rows.slice(0, 10), periodB: rows.slice(12, 22), labels: ["לפני", "אחרי"] });
     assert.equal(attr.body["אחרי"].months, 10);
     const timing = await post("/track-model/deposit-timing", { monthlyReturns: rows.map((r) => r.ret) });
@@ -540,10 +653,13 @@ test("routes and agent tools: track model end to end", async () => {
   }
 
   // the same capabilities as agent tools
-  for (const name of ["find_track", "track_model_baseline", "track_scenario_impact", "track_early_estimate", "analyze_fund_track", "deposit_timing_stats", "explain_track_month", "explain_year_over_year", "scenario_playbook", "market_watch"]) {
+  for (const name of ["find_track", "forecast_track", "track_model_baseline", "track_scenario_impact", "track_early_estimate", "analyze_fund_track", "deposit_timing_stats", "explain_track_month", "explain_year_over_year", "scenario_playbook", "market_watch"]) {
     assert.ok(TOOL_DEFS.some((t) => t.name === name), name);
   }
   const tools = createToolExecutor({ ledger, fetchImpl });
+  const fcTool = await tools.execute("forecast_track", { category: "ביטוח · כללי" });
+  assert.equal(fcTool.isError, false);
+  assert.equal(fcTool.result.horizons.length, 4);
   const located = await tools.execute("find_track", { q: "הפניקס כללי" });
   assert.equal(located.result.funds[0].fundId, 50);
   const impact = await tools.execute("track_scenario_impact", { fundId: 50, scenario: "global_selloff" });

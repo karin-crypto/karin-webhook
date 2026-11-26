@@ -205,6 +205,36 @@ function explainYearOverYear({ attribution, factorMoves, years, fromMonth, toMon
 }
 
 /**
+ * A multi-year forecast (track-forecast.js) in plain words, with a short
+ * client-message draft. The range is the message; the centre alone is never
+ * presented as "the forecast".
+ */
+function explainForecast({ forecast, trackLabel = "המסלול", peerNote = true } = {}) {
+  const h = Object.fromEntries(forecast.horizons.map((x) => [x.key, x]));
+  const rangeYear = (x) => between(x.annualized.low, x.annualized.high);
+  const summary = [];
+  summary.push(`${trackLabel}: מרכז התחזית הוא תשואה של כ-${forecast.central}% בשנה בממוצע (נומינלי${forecast.centralReal == null ? "" : `; כ-${forecast.centralReal}% מעל האינפלציה הצפויה`}).`);
+  summary.push(`הטווח הסביר: בשנה הקרובה ${rangeYear(h["1y"])}; בממוצע שנתי לאורך 3 שנים ${rangeYear(h["3y"])}; לאורך 5 שנים ${rangeYear(h["5y"])}; לאורך 10 שנים ${rangeYear(h["10y"])} (האחרון לא נבדק היסטורית).`);
+  summary.push(`הסיכוי המשוער לסיים בהפסד: כ-${Math.round(h["1y"].lossProbability * 100)}% אחרי שנה, כ-${Math.round(h["3y"].lossProbability * 100)}% אחרי 3 שנים, כ-${Math.round(h["5y"].lossProbability * 100)}% אחרי 5 שנים.`);
+  summary.push(`שני עוגנים: לפי ממוצע השווקים מאז 2012 — ${forecast.anchors.historical.annual}% בשנה; לפי תשואות האג"ח הנוכחיות והנחות הפרמיה — ${forecast.anchors.yieldBased.annual}% בשנה. ${forecast.anchors.centreRule}.`);
+  summary.push(`בבדיקה היסטורית (${forecast.calibration.period}) כ-${Math.round(forecast.calibration.insideShare * 100)}% מהתוצאות בפועל נפלו בתוך טווח כזה, כ-${Math.round(forecast.calibration.belowShare * 100)}% מתחתיו וכ-${Math.round(forecast.calibration.aboveShare * 100)}% מעליו.`);
+  if (peerNote) summary.push("בין חברות שונות באותו סוג מסלול הפער בעבר היה קטן יחסית (כ-2 נקודות אחוז לשנה בין הטובות לחלשות), והצטיינות בעבר חזתה את ההמשך רק במעט. סוג המסלול משפיע הרבה יותר מזהות החברה.");
+
+  const lines = [
+    `היי, בדקתי את ${trackLabel}. לפי המודל שלנו, לאורך 5 שנים התשואה השנתית הממוצעת הצפויה היא בסביבות ${forecast.central}%, בטווח סביר של ${rangeYear(h["5y"])} לשנה.`,
+    `בשנה בודדת הטווח רחב הרבה יותר, ${rangeYear(h["1y"])}, ולכן אי אפשר להתחייב על שנה מסוימת.`,
+    "זו הערכה מחקרית ואינה תשואה מובטחת, והיא לפני התאמה אישית של המסלול לטווח ולרמת הסיכון שלך.",
+  ];
+  return {
+    summary: summary.join(" "),
+    clientDraft: {
+      status: "draft", requiresApproval: true, text: lines.join(" "),
+      rules: "טיוטה בלבד. נשלחת ללקוח רק לאחר אישור קארין. תחזית אינה המלצה: התאמת המסלול ללקוח נקבעת על ידי בעלת הרישיון.",
+    },
+  };
+}
+
+/**
  * Scenario playbook: for each named scenario, what happens, which track
  * types are hit most, and talking points — with the computed impact for the
  * models supplied (e.g. main categories from the baseline).
@@ -259,4 +289,4 @@ function scenarioPlaybook(models) {
   }));
 }
 
-module.exports = { explainMonth, explainYearOverYear, classifyEnvironment, scenarioPlaybook, PLAYBOOK_TEXT, MONTHS_HE };
+module.exports = { explainMonth, explainYearOverYear, explainForecast, classifyEnvironment, scenarioPlaybook, PLAYBOOK_TEXT, MONTHS_HE };
