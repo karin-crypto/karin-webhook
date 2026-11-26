@@ -25,6 +25,7 @@ const { recordsToTracks, parseCsv, fetchCkan, RESOURCES } = require("./connector
 const { buildDcf, buildComps } = require("./valuation");
 const trackModel = require("./track-model");
 const trackService = require("./track-service");
+const trackExplain = require("./track-explain");
 const marketData = require("./connectors/market");
 const { createAgent } = require("./agent");
 const research = require("./research");
@@ -413,6 +414,20 @@ function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_AD
     if (!b.asOf || !b.source) throw new trackModel.TrackModelError("asOf ו־source חובה: מאיזה תאריך ומאיזה מקור נלקחו תנועות השוק");
     res.json({ ok: true, model: { label: label || null, origin }, asOf: b.asOf, source: b.source, ...trackModel.nowcast(model, b.factors, { elapsedShare: b.elapsedShare == null ? 1 : b.elapsedShare }) });
   }));
+
+  router.post("/track-model/explain", wrap(async (req, res) => {
+    const b = req.body || {};
+    const { model, origin, label } = trackService.resolveModel(b);
+    if (!b.asOf || !b.source) throw new trackModel.TrackModelError("asOf ו־source חובה: מאיזה תאריך ומאיזה מקור נלקחו תנועות השוק");
+    res.json({
+      model: { label: label || null, origin }, source: b.source,
+      ...trackExplain.explainMonth({ model, factors: b.factors, actual: typeof b.actual === "number" ? b.actual : null, partial: !!b.partial, asOf: b.asOf, trackLabel: b.trackLabel || "המסלול", elapsedShare: b.elapsedShare == null ? 1 : b.elapsedShare }),
+    });
+  }));
+
+  router.get("/track-model/playbook", (_req, res) => {
+    res.json({ ok: true, playbook: trackExplain.scenarioPlaybook(trackService.mainModels()), note: "גודל הזעזועים הוא הדגמה. ההשפעות — לפי הרגישות ההיסטורית (60 החודשים האחרונים), בנקודות אחוז." });
+  });
 
   router.post("/track-model/attribution", wrap(async (req, res) => {
     const b = req.body || {};

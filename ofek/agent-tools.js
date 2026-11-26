@@ -23,6 +23,7 @@ const { runQualityGate } = require("./quality-gate");
 const { createIndicatorRegistry } = require("./indicators");
 const trackModel = require("./track-model");
 const trackService = require("./track-service");
+const trackExplain = require("./track-explain");
 const { fetchFundHistory } = require("./connectors/gemelnet");
 
 const obj = (properties, required = []) => ({ type: "object", properties, required });
@@ -139,6 +140,18 @@ const TOOL_DEFS = [
       "Pass monthlyReturns (percent, oldest first) or dataset + fundId to load the official history. Statistics only — not a personal recommendation.",
     input_schema: obj({ monthlyReturns: numArr, dataset: { type: "string", enum: ["gemel", "pension", "insurance"] }, fundId: { type: "integer" }, splitMonths: { type: "integer" } }),
   },
+  {
+    name: "explain_track_month",
+    description:
+      "Plain-language explanation of a track's month from VERIFIED market moves (percent): which moves drove the return, what offset them, the market environment, and a short client-message DRAFT (no names, no signature; goes out only after Karin approves). " +
+      "Pass actual when the official return is already published; otherwise the result is an early estimate. partial=true when the month is not over. asOf and source are required.",
+    input_schema: obj({ fundId: { type: "integer" }, category: { type: "string" }, betas: anyObj, alpha: { type: "number" }, factors: anyObj, actual: { type: "number" }, partial: { type: "boolean" }, asOf: { type: "string" }, source: { type: "string" }, trackLabel: { type: "string" } }, ["factors", "asOf", "source"]),
+  },
+  {
+    name: "scenario_playbook",
+    description: "Scenario playbook: for each named market scenario — what happens, talking points, and the expected impact (percentage points) on the main track categories. Use it to prepare explanations before or as a scenario unfolds.",
+    input_schema: obj({}),
+  },
 ];
 
 /** Trim large tool results so they don't flood the context. */
@@ -203,6 +216,12 @@ function createToolExecutor({ ledger, now = () => new Date(), fetchImpl }) {
       const { model, origin, label } = trackService.resolveModel(i);
       return { track: label || null, modelOrigin: origin, asOf: i.asOf, source: i.source, ...trackModel.nowcast(model, i.factors, { elapsedShare: i.elapsedShare == null ? 1 : i.elapsedShare }) };
     },
+    explain_track_month: (i) => {
+      if (!i.asOf || !i.source) throw new Error("asOf ו־source חובה");
+      const { model, origin, label } = trackService.resolveModel(i);
+      return { track: label || null, modelOrigin: origin, source: i.source, ...trackExplain.explainMonth({ model, factors: i.factors, actual: typeof i.actual === "number" ? i.actual : null, partial: !!i.partial, asOf: i.asOf, trackLabel: i.trackLabel || "המסלול" }) };
+    },
+    scenario_playbook: () => ({ ok: true, playbook: trackExplain.scenarioPlaybook(trackService.mainModels()) }),
     analyze_fund_track: (i) => trackService.analyzeFund({ dataset: i.dataset, fundId: i.fundId, window: i.window || 60, asOf: i.asOf || null, today: now(), ...fx }),
     deposit_timing_stats: async (i) => {
       let returns = i.monthlyReturns;

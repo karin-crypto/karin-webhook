@@ -6,6 +6,7 @@ const express = require("express");
 
 const tm = require("../ofek/track-model");
 const service = require("../ofek/track-service");
+const explain = require("../ofek/track-explain");
 const market = require("../ofek/connectors/market");
 const { fetchFundHistory, RESOURCES, HISTORY_RESOURCES } = require("../ofek/connectors/gemelnet");
 const { createLedger, memoryBackend } = require("../ofek/ledger");
@@ -179,6 +180,55 @@ test("track model: stored baseline is complete and usable", () => {
   assert.equal(sum.funds.length, 0);
 });
 
+test("track explanations: drivers, offsets, environment and a client draft that follows the office rules", () => {
+  const model = { ...TRUE, accuracy: { p90AbsError: 0.7 } };
+  const mtd = { ta125: -3, spx: -5, usd: 7, gov: 0.3, corp: -0.9 };
+  const r = explain.explainMonth({ model, factors: mtd, partial: true, asOf: "2026-11-26", trackLabel: "המסלול הכללי" });
+  assert.equal(r.isEstimate, true);
+  assert.equal(r.value, -1.3);
+  assert.deepEqual(r.drivers.map((d) => d.factor), ["spx", "ta125", "corp"]); // largest negative contributions first
+  assert.deepEqual(r.offsets.map((d) => d.factor), ["usd"]);
+  assert.deepEqual(r.environment.tags.map((t) => t.tag), ["israel_equities_down", "global_equities_down", "shekel_weaker"]);
+  assert.match(r.summary, /אומדן מוקדם/);
+  assert.match(r.summary, /טווח סביר/);
+
+  const d = r.clientDraft;
+  assert.equal(d.status, "draft");
+  assert.equal(d.requiresApproval, true);
+  assert.ok(d.text.startsWith("היי"));
+  assert.match(d.text, /עדיין לא הנתון הרשמי/);
+  assert.match(d.text, /מתחילת החודש/);
+  for (const banned of ["קארין", "קרן", "בברכה", "לכל שאלה", "רישיון", "**", "#", "\n"]) assert.equal(d.text.includes(banned), false, banned);
+  assert.ok(d.text.length < 600);
+
+  // published month: official number, no "estimate" wording, unexplained gap is called out
+  const done = explain.explainMonth({ model, factors: mtd, actual: -2.4, trackLabel: "המסלול הכללי" });
+  assert.equal(done.isEstimate, false);
+  assert.equal(done.range, null);
+  assert.match(done.summary, /נתון רשמי/);
+  assert.match(done.summary, /אינו מוסבר/);
+  assert.equal(/הערכה מוקדמת/.test(done.clientDraft.text), false);
+
+  // a positive, quiet month: no "it happened before" consolation line
+  const calm = explain.explainMonth({ model, factors: { ta125: 0.2, spx: 0.3, usd: 0.1, gov: 0.1, corp: 0.1 }, asOf: "2026-11-26" });
+  assert.equal(calm.environment.tags[0].tag, "calm");
+  assert.ok(calm.value > 0);
+  assert.equal(/תנודה של חודש/.test(calm.clientDraft.text), false);
+  assert.throws(() => explain.explainMonth({ model, factors: { ta125: 1 } }), /חסרים גורמים/);
+
+  const pb = explain.scenarioPlaybook(service.mainModels());
+  assert.equal(pb.length, Object.keys(tm.SCENARIOS).length);
+  for (const s of pb) {
+    assert.ok(s.what && s.talkingPoints && s.impacts.length >= 8, s.scenario);
+  }
+  const sell = pb.find((s) => s.scenario === "global_selloff");
+  const impact = (label) => sell.impacts.find((i) => i.track === label).impact;
+  assert.ok(impact("גמל/השתלמות · מניות") < impact("גמל/השתלמות · כללי"));
+  assert.ok(impact("גמל/השתלמות · כללי") < impact("גמל/השתלמות · 60 ומעלה"));
+  const weak = pb.find((s) => s.scenario === "shekel_weaker_5");
+  assert.ok(weak.impacts.find((i) => i.track === "ביטוח · עוקב S&P 500").impact > 3);
+});
+
 /* ---------- connectors with a fake network ---------- */
 
 const CLOSES = {
@@ -329,6 +379,13 @@ test("routes and agent tools: track model end to end", async () => {
     assert.ok(fit.body.model.r2 > 0.95 && fit.body.accuracy.mae < 0.3);
     assert.equal((await post("/track-model/fit", { rows: rows.slice(0, 5) })).status, 400);
 
+    const exp = await post("/track-model/explain", { fundId: 50, factors: mtd, asOf: "2026-11-26", source: "בדיקה", partial: true, trackLabel: "המסלול הכללי" });
+    assert.equal(exp.status, 200);
+    assert.equal(exp.body.clientDraft.requiresApproval, true);
+    assert.equal((await post("/track-model/explain", { fundId: 50, factors: mtd })).status, 400);
+    const playbook = await (await fetch(`${base}/track-model/playbook`, { headers })).json();
+    assert.equal(playbook.playbook.length, Object.keys(tm.SCENARIOS).length);
+
     const attr = await post("/track-model/attribution", { betas: TRUE.betas, alpha: TRUE.alpha, periodA: rows.slice(0, 10), periodB: rows.slice(12, 22), labels: ["לפני", "אחרי"] });
     assert.equal(attr.body["אחרי"].months, 10);
     const timing = await post("/track-model/deposit-timing", { monthlyReturns: rows.map((r) => r.ret) });
@@ -346,7 +403,7 @@ test("routes and agent tools: track model end to end", async () => {
   }
 
   // the same capabilities as agent tools
-  for (const name of ["track_model_baseline", "track_scenario_impact", "track_early_estimate", "analyze_fund_track", "deposit_timing_stats"]) {
+  for (const name of ["track_model_baseline", "track_scenario_impact", "track_early_estimate", "analyze_fund_track", "deposit_timing_stats", "explain_track_month", "scenario_playbook"]) {
     assert.ok(TOOL_DEFS.some((t) => t.name === name), name);
   }
   const tools = createToolExecutor({ ledger, fetchImpl });
@@ -355,6 +412,10 @@ test("routes and agent tools: track model end to end", async () => {
   assert.ok(impact.result.impact < -2 && /הפניקס/.test(impact.result.track));
   const early = await tools.execute("track_early_estimate", { category: "ביטוח · כללי", factors: { ta125: -3, spx: -5, usd: 7, gov: 0.3, corp: -0.9 } });
   assert.equal(early.isError, true); // asOf and source are mandatory
+  const told = await tools.execute("explain_track_month", { category: "ביטוח · כללי", factors: { ta125: -3, spx: -5, usd: 7, gov: 0.3, corp: -0.9 }, asOf: "2026-11-26", source: "בדיקה", partial: true });
+  assert.equal(told.isError, false);
+  assert.equal(told.result.clientDraft.status, "draft");
+  assert.equal((await tools.execute("scenario_playbook", {})).result.playbook.length, Object.keys(tm.SCENARIOS).length);
   const timing = await tools.execute("deposit_timing_stats", { dataset: "gemel", fundId: 77 });
   assert.equal(timing.result.fund.fundId, 77);
   assert.equal(timing.result.months, 120);

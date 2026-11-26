@@ -52,6 +52,14 @@ function resolveModel({ model, betas, alpha, fundId, category } = {}) {
   return { model: hit, origin: `baseline ${b.version} (${b.computedAt}, נתונים עד ${b.dataThrough})`, label: hit.name || hit.category };
 }
 
+/** Main categories from the baseline, for the scenario playbook. */
+const MAIN_CATEGORIES = ["גמל/השתלמות · כללי", "גמל/השתלמות · מניות", "גמל/השתלמות · עד 50", "גמל/השתלמות · 60 ומעלה", "גמל/השתלמות · אשראי ואג\"ח", "ביטוח · כללי", "ביטוח · מניות", "ביטוח · עוקב S&P 500", "פנסיה מקיפה · עד 50", "פנסיה מקיפה · 60 ומעלה"];
+function mainModels() {
+  const b = loadBaseline();
+  if (!b) return [];
+  return MAIN_CATEGORIES.map((c) => b.categories.find((x) => x.category === c)).filter(Boolean).map((c) => ({ label: c.category, model: c }));
+}
+
 /**
  * Full analysis of one track.
  *   dataset: gemel | pension | insurance; fundId: CMA fund id
@@ -110,4 +118,4 @@ async function analyzeFund({ dataset, fundId, window = 60, factorRows = null, mt
   };
 }
 
-module.exports = { loadBaseline, baselineSummary, resolveModel, analyzeFund };
+module.exports = { loadBaseline, baselineSummary, resolveModel, analyzeFund, mainModels };
