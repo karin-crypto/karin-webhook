@@ -184,7 +184,13 @@ test("track model: deposit-timing statistics", () => {
     const p = (est, share) => tm.negativeMonthProbability(m, est, { elapsedShare: share, history: hist }).probability;
     assert.ok(p(-1, 0.5) > p(0, 0.5) && p(0, 0.5) > p(1, 0.5));
     assert.ok(p(-1, 1) > p(-1, 0.5)); // the same estimate is more decisive at month end
-    assert.ok(p(-3, 1) > 0.99 && p(3, 1) < 0.01);
+    assert.ok(p(-3, 1) === 0.99 && p(3, 1) === 0.01); // never shown as certainty
+    assert.match(tm.negativeMonthProbability(m, -3, { elapsedShare: 1, history: hist }).text, /99% ומעלה/);
+    // the estimate's error is the tested one when it is larger than the fit's residual
+    const shaky = { ...m, accuracy: { p90AbsError: 2.9 } };
+    assert.ok(tm.negativeMonthProbability(shaky, -1, { elapsedShare: 1, history: hist }).probability < p(-1, 1));
+    // a supplied factor with no history series gives no probability instead of throwing
+    assert.equal(tm.negativeMonthProbability({ alpha: 0, betas: { ta125: 0.3, nasdaq: 0.2 } }, -1, { history: hist }), null);
     assert.ok(Math.abs(p(0, 1) - 0.5) < 0.011); // a zero estimate with nothing left of the month is a coin flip
     assert.equal(tm.negativeMonthProbability(m, -1, { elapsedShare: 0.5 }), null); // no history, no probability
     const both = tm.negativeMonthProbability(m, -0.8, { elapsedShare: 0.8, history: hist });
@@ -483,6 +489,10 @@ test("track forecast: range per horizon, anchors, prudence cap, fees and guards"
   assert.equal(userZero.central, noDividend.central);
   assert.equal(userZero.inputs.assumptions.spxDividendYield, 0);
   assert.equal(typeof dear.inputs.bondLike, "boolean");
+  assert.equal(fc.forecastTrack({ model: general, history, yields, assumptions: null }).central, f.central); // null assumptions are accepted
+  const pensioner = fc.forecastTrack({ model: general, history, yields, inflationLinked: { share: 0.6, trailingInflation: 3.16, expectedInflation: 1.96 } });
+  assert.match(pensioner.anchors.inflationLinked.note, /60%/);
+  assert.equal(pensioner.anchors.inflationLinked.effectOnCentre, -0.72);
   // short-term ranges: wider with the horizon, centred near the pro-rata centre, never a point forecast
   assert.deepEqual(f.shortTerm.map((h) => h.key), ["1m", "3m", "6m"]);
   const span = (h) => h.cumulative.high - h.cumulative.low;

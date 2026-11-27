@@ -128,8 +128,8 @@ const TOOL_DEFS = [
     name: "track_early_estimate",
     description:
       "Early estimate of a track's return for a month whose official figure is not published yet, from month-to-date market moves YOU VERIFIED (percent): factors { ta125, spx (in USD), usd (USD/ILS change), gov, corp }. " +
-      "asOf (date of the market data) and source are required. elapsedShare = share of the month that has passed (1 if the month ended). Always present the result as an early estimate with its range.",
-    input_schema: obj({ fundId: { type: "integer" }, category: { type: "string" }, betas: anyObj, alpha: { type: "number" }, factors: anyObj, asOf: { type: "string" }, source: { type: "string" }, elapsedShare: { type: "number" } }, ["factors", "asOf", "source"]),
+      "asOf (date of the market data) and source are required. For a month still in progress pass partial: true — the share of the month that has passed is then taken from asOf (or pass elapsedShare yourself); without it the month is treated as complete and the decline probability will be overstated. Always present the result as an early estimate with its range.",
+    input_schema: obj({ fundId: { type: "integer" }, category: { type: "string" }, betas: anyObj, alpha: { type: "number" }, factors: anyObj, asOf: { type: "string" }, source: { type: "string" }, elapsedShare: { type: "number" }, partial: { type: "boolean" } }, ["factors", "asOf", "source"]),
   },
   {
     name: "analyze_fund_track",
@@ -241,7 +241,7 @@ function createToolExecutor({ ledger, now = () => new Date(), fetchImpl }) {
     track_early_estimate: (i) => {
       if (!i.asOf || !i.source) throw new Error("asOf ו־source חובה");
       const { model, origin, label } = trackService.resolveModel(i);
-      return { track: label || null, modelOrigin: origin, asOf: i.asOf, source: i.source, ...trackModel.nowcast(model, i.factors, { elapsedShare: i.elapsedShare == null ? 1 : i.elapsedShare, history: trackService.loadFactorHistory() }) };
+      return { track: label || null, modelOrigin: origin, asOf: i.asOf, source: i.source, ...trackModel.nowcast(model, i.factors, { elapsedShare: i.elapsedShare == null ? (i.partial ? trackService.monthShare(i.asOf) : 1) : i.elapsedShare, history: trackService.loadFactorHistory() }) };
     },
     explain_track_month: (i) => {
       if (!i.asOf || !i.source) throw new Error("asOf ו־source חובה");

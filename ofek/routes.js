@@ -417,7 +417,7 @@ function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_AD
     const b = req.body || {};
     const { model, origin, label } = trackService.resolveModel(b);
     if (!b.asOf || !b.source) throw new trackModel.TrackModelError("asOf ו־source חובה: מאיזה תאריך ומאיזה מקור נלקחו תנועות השוק");
-    res.json({ ok: true, model: { label: label || null, origin }, asOf: b.asOf, source: b.source, ...trackModel.nowcast(model, b.factors, { elapsedShare: b.elapsedShare == null ? 1 : b.elapsedShare, history: trackService.loadFactorHistory() }) });
+    res.json({ ok: true, model: { label: label || null, origin }, asOf: b.asOf, source: b.source, ...trackModel.nowcast(model, b.factors, { elapsedShare: b.elapsedShare == null ? (b.partial ? trackService.monthShare(b.asOf) : 1) : b.elapsedShare, history: trackService.loadFactorHistory() }) });
   }));
 
   router.post("/track-model/explain", wrap(async (req, res) => {

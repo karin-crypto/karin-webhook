@@ -246,7 +246,7 @@
     try {
       const w = await api("/track-model/watch?asOf=" + $("tasof").value);
       const il = (d) => (d ? d.slice(8) + "." + d.slice(5, 7) + "." + d.slice(0, 4) : "");
-      const prob = (x) => (x == null ? "—" : x > 0.99 ? "מעל 99%" : x < 0.01 ? "פחות מ-1%" : Math.round(x * 100) + "%");
+      const prob = (x) => (x == null ? "—" : x >= 0.99 ? "99% ומעלה" : x <= 0.01 ? "1% או פחות" : Math.round(x * 100) + "%");
       $("wout").hidden = false;
       $("walert").className = w.alert.attention ? "warn" : "";
       $("walert").textContent = w.alert.text + (w.earlyWarning ? " " + w.earlyWarning.text : "");
@@ -362,7 +362,7 @@
           const cd = r.ownRecord.currentDrawdown;
           if (cd && cd.depth < 0) parts.push(`נכון לחודש הרשמי האחרון (${ym(r.ownRecord.to)}) המסלול הזה ${Math.abs(cd.depth)}% מתחת לשיא${cd.deepest < cd.depth - 0.05 ? ` (בשפל של הירידה הזו: ${Math.abs(cd.deepest)}%)` : ""}.`);
           const withCases = own.filter((o) => o.episodes);
-          if (withCases.length) parts.push(`במסלול הזה עצמו (מאז ${ym(r.ownRecord.from)}): ` + withCases.map((o) => `אחרי ירידה של ${o.depth}% מהשיא (${o.episodes} מקרים${o.reliable ? "" : ", מעט"}) — ${o.deepenedShare == null ? "" : `ב-${pct(o.deepenedShare)} העמיקה ל-${o.deepenedBeyond}% ומעלה; `}${o.medianMonthsToRecover == null ? "אף אחת מהן עוד לא חזרה לשיא" : `חזרה לשיא תוך ${o.medianMonthsToRecover} חודשים בחציון`}${o.recoveredWithin.months12 == null ? "" : `, ${pct(o.recoveredWithin.months12)} תוך שנה`}, הארוכה ${o.longestMonthsToRecover}${o.longestStillOpen ? " (ועדיין נמשכת)" : ""}`).join("; ") + ".");
+          if (withCases.length) parts.push(`במסלול הזה עצמו (מאז ${ym(r.ownRecord.from)}): ` + withCases.map((o) => `אחרי ירידה של ${o.depth}% מהשיא (${o.finishedEpisodes == null ? o.episodes : o.finishedEpisodes} מקרים שהסתיימו${o.inProgress ? ", ועוד ירידה אחת שעדיין נמשכת" : ""}${o.reliable ? "" : " — מעט"}) — ${o.deepenedShare == null ? "" : `ב-${pct(o.deepenedShare)} העמיקה ל-${o.deepenedBeyond}% ומעלה; `}${o.medianMonthsToRecover == null ? "אף אחת מהן עוד לא חזרה לשיא" : `חזרה לשיא תוך ${o.medianMonthsToRecover} חודשים בחציון`}${o.recoveredWithin.months12 == null ? "" : `, ${pct(o.recoveredWithin.months12)} תוך שנה`}, הארוכה ${o.longestMonthsToRecover}${o.longestStillOpen ? " (ועדיין נמשכת)" : ""}`).join("; ") + ".");
         }
         if (parts.length) parts.push("תיאור העבר — אינו אומר כמה זמן תימשך ירידה נוכחית.");
         $("tfcrecover").textContent = parts.join(" ");

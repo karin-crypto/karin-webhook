@@ -301,6 +301,7 @@ function negativeMonthProbability(model, estimate, { elapsedShare = 1, history =
   const betas = requireBetas(model);
   if (!Number.isFinite(estimate) || !history || !Array.isArray(history.periods) || history.periods.length < 36) return null;
   const names = Object.keys(betas);
+  if (!history.factors || names.some((f) => !Array.isArray(history.factors[f]))) return null;
   const n = Math.min(60, history.periods.length);
   const tail = Object.fromEntries(names.map((f) => [f, history.factors[f].slice(-n)]));
   const mu = Object.fromEntries(names.map((f) => [f, mean(tail[f])]));
@@ -310,12 +311,15 @@ function negativeMonthProbability(model, estimate, { elapsedShare = 1, history =
     for (let t = 0; t < n; t++) c += (tail[f][t] - mu[f]) * (tail[g][t] - mu[g]);
     factorVar += betas[f] * betas[g] * (c / (n - 1));
   }
-  const resid = Number.isFinite(model.residualSd) ? model.residualSd : model.accuracy && Number.isFinite(model.accuracy.p90AbsError) ? model.accuracy.p90AbsError / 1.645 : 0.45;
+  const tested = model.accuracy && Number.isFinite(model.accuracy.p90AbsError) ? model.accuracy.p90AbsError / 1.645 : null;
+  const resid = Number.isFinite(model.residualSd) ? model.residualSd : tested != null ? tested : 0.45;
+  // the same error the estimate's range is built from, never smaller than the fit's residual
+  const estimateError = tested != null ? Math.max(tested, resid) : resid;
   const monthlyMean = (model.alpha || 0) + names.reduce((t, f) => t + betas[f] * mu[f], 0);
   const rest = 1 - elapsedShare;
   // the estimate already holds the constant for the elapsed part of the month
   const centre = estimate + rest * monthlyMean;
-  const sdAll = Math.sqrt(rest * (factorVar + resid * resid) + resid * resid);
+  const sdAll = Math.sqrt(rest * (factorVar + resid * resid) + estimateError * estimateError);
   if (!(sdAll > 0)) return null;
   // standard normal CDF (Abramowitz–Stegun 7.1.26)
   const below = (threshold) => {
@@ -324,15 +328,16 @@ function negativeMonthProbability(model, estimate, { elapsedShare = 1, history =
     const erf = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-(z * z) / 2);
     return 0.5 * (1 + (z >= 0 ? erf : -erf));
   };
-  const p = below(0);
-  const p1 = below(-1);
-  const shown = (x) => (x > 0.99 ? "מעל 99%" : x < 0.01 ? "פחות מ-1%" : `${Math.round(x * 100)}%`);
+  // kept between 1% and 99%: the check does not support claiming certainty
+  const clamp = (x) => Math.min(0.99, Math.max(0.01, x));
+  const p = clamp(below(0));
+  const p1 = clamp(below(-1));
+  const shown = (x) => (x >= 0.99 ? "99% ומעלה" : x <= 0.01 ? "1% או פחות" : `${Math.round(x * 100)}%`);
   return {
     probability: round(p, 2),
     // the same check for a fall of more than 1%: skill of 37%, 50% and 68% on days 15, 22 and 27
     declineOver1Probability: round(p1, 2),
     expectedMonthEnd: round(centre),
-    // shown between 1% and 99%: the check does not support claiming certainty
     text: `הסיכוי המוערך שהחודש יסתיים בירידה: ${shown(p)}; בירידה של יותר מ-1%: ${shown(p1)}`,
     note: "מדד מחקרי. נבדק בימים 8, 15, 22 ו-27 בחודש על כ-600 חודשים (2017–2026): כשהמדד היה מעל 90%, כל החודשים הסתיימו בירידה; בין 70% ל-90% — כ-9 מכל 10 (ביום 8: 3 מכל 4). ככל שהחודש מתקדם המדד חד יותר. הוא מתייחס לחודש הנוכחי בלבד ואינו חוזה את החודש הבא.",
   };
@@ -582,7 +587,7 @@ function yearEndProjection(history, { estimates = [] } = {}) {
   }
   const central = (growth - 1) * 100;
   const half = 1.2816 * Math.sqrt(variance) * growth;
-  const complete = official.length === 12;
+  const complete = official.length > 0 && official[official.length - 1].period.endsWith("12");
   return {
     ok: true,
     year: Number(year),
@@ -596,6 +601,7 @@ function yearEndProjection(history, { estimates = [] } = {}) {
     central: round(central),
     range: complete ? null : { low: round(central - half), high: round(central + half), coverage: 0.8 },
     complete,
+    officialMonthsInYear: official.length,
     note: complete ? "השנה הסתיימה — זו התשואה הרשמית." : "הערכה מחקרית לסיום השנה: החודשים הרשמיים, אומדן לחודשים שיש עליהם נתוני שוק, וממוצע רב-שנתי לשאר החודשים. הטווח הוא התחזית; אינו תשואה מובטחת.",
   };
 }

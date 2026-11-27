@@ -73,7 +73,7 @@ function explainMonth({ model, factors, actual = null, partial = false, asOf = n
   let share = elapsedShare;
   if (partial && elapsedShare === 1 && /^\d{4}-\d{2}-\d{2}$/.test(String(asOf || ""))) {
     const [y, m, d] = asOf.split("-").map(Number);
-    share = Math.min(1, d / new Date(Date.UTC(y, m, 0)).getUTCDate());
+    if (d >= 1 && m >= 1 && m <= 12) share = Math.min(1, d / new Date(Date.UTC(y, m, 0)).getUTCDate());
   }
   const est = tm.nowcast(model, factors, { elapsedShare: share, history });
   const value = typeof actual === "number" ? actual : est.estimate;
@@ -225,7 +225,7 @@ function explainForecast({ forecast, trackLabel = "המסלול", draftLabel = "
   if (Math.abs(forecast.inputs.equitySensitivity) >= 0.15 && forecast.inputs.assumptions.spxDividendYield > 0) summary.push(`מדד S&P 500 שבמודל אינו כולל דיבידנדים, ולכן העוגנים שלו חושבו בניכוי תשואת הדיבידנד (${forecast.inputs.assumptions.spxDividendYield}%), כדי לא לספור אותה פעמיים.`);
   if (forecast.anchors.inflationLinked) {
     const il = forecast.anchors.inflationLinked;
-    summary.push(`בקרן פנסיה מקיפה 30% מהנכסים נהנים מתשואה מובטחת צמודה למדד; הרכיב הזה חושב לפי האינפלציה הצפויה (${il.expectedInflation}%) ולא לפי זו של חמש השנים האחרונות (${il.trailingInflation}%), והשפעתו על המרכז: ${il.effectOnCentre < 0 ? "מינוס " + Math.abs(il.effectOnCentre) : il.effectOnCentre} נקודות אחוז לשנה.`);
+    summary.push(`${il.share > 0.3 ? "במסלול מקבלי קצבה בקרן פנסיה מקיפה כ-" + Math.round(il.share * 100) + "%" : "בקרן פנסיה מקיפה 30%"} מהנכסים נהנים מתשואה מובטחת צמודה למדד; הרכיב הזה חושב לפי האינפלציה הצפויה (${il.expectedInflation}%) ולא לפי זו של חמש השנים האחרונות (${il.trailingInflation}%), והשפעתו על המרכז: ${il.effectOnCentre < 0 ? "מינוס " + Math.abs(il.effectOnCentre) : il.effectOnCentre} נקודות אחוז לשנה.`);
   }
   if (reliability) summary.push(`אמינות התחזית: ${reliability.he} (${reliability.reasons.join("; ")}).`);
   if (forecast.inputs.annualFee > 0) summary.push(`המספרים אחרי דמי ניהול של ${forecast.inputs.annualFee}% בשנה.`);

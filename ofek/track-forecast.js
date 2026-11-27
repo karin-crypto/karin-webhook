@@ -156,6 +156,7 @@ function forecastTrack({ model, history, yields, assumptions = {}, categoryAlpha
   if (missing.length) throw new TrackModelError(`חסרות רגישויות: ${missing.join(", ")}`);
   if (!yields || !Number.isFinite(yields.y5) || !Number.isFinite(yields.y10)) throw new TrackModelError("yields.y5 ו־yields.y10 חובה (תשואות אג\"ח ממשלתיות, באחוזים)");
   if (!(annualFee >= 0 && annualFee < 5)) throw new TrackModelError("annualFee: אחוז שנתי בין 0 ל־5");
+  assumptions = assumptions || {};
   const a = { ...DEFAULT_ASSUMPTIONS, ...assumptions };
   for (const k of Object.keys(DEFAULT_ASSUMPTIONS)) if (!Number.isFinite(a[k])) throw new TrackModelError(`הנחה לא מספרית: ${k}`);
 
@@ -204,7 +205,7 @@ function forecastTrack({ model, history, yields, assumptions = {}, categoryAlpha
   let inflationEffect = 0;
   if (inflationLinked && inflationLinked.share > 0 && inflationLinked.share <= 1 && Number.isFinite(inflationLinked.trailingInflation) && Number.isFinite(inflationLinked.expectedInflation)) {
     inflationEffect = Math.max(-1, Math.min(1, -inflationLinked.share * (inflationLinked.trailingInflation - inflationLinked.expectedInflation)));
-    inflationAnchor = { share: inflationLinked.share, trailingInflation: round(inflationLinked.trailingInflation, 2), expectedInflation: round(inflationLinked.expectedInflation, 2), effectOnCentre: round(inflationEffect, 2), note: "30% מנכסי קרן פנסיה מקיפה נהנים מתשואה מובטחת צמודה למדד. הרכיב הזה חושב לפי האינפלציה הצפויה ולא לפי האינפלציה של השנים האחרונות." };
+    inflationAnchor = { share: inflationLinked.share, trailingInflation: round(inflationLinked.trailingInflation, 2), expectedInflation: round(inflationLinked.expectedInflation, 2), effectOnCentre: round(inflationEffect, 2), note: `כ-${Math.round(inflationLinked.share * 100)}% מנכסי המסלול נהנים מתשואה מובטחת צמודה למדד. הרכיב הזה חושב לפי האינפלציה הצפויה ולא לפי האינפלציה של השנים האחרונות.` };
   }
   const rawGross = (bondLike ? yieldBased : (historical + yieldBased) / 2) + valuationEffect + inflationEffect;
   // Plausibility bounds on the centre. No track is forecast above what a pure equity

@@ -262,8 +262,12 @@ function estimateErrorSd(model) {
 const MONTH_NAMES = ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"];
 
 /** Year-end projection with a one-sentence Hebrew summary. */
-function yearEndFor(historyRows, estimates, trackLabel = "המסלול") {
+function yearEndFor(historyRows, estimates, trackLabel = "המסלול", today = new Date()) {
   if (historyRows.length < 36) return null;
+  // a track whose official figures stopped more than four months ago is not projected
+  const lastPeriod = String(historyRows[historyRows.length - 1].period);
+  const monthsBehind = (today.getUTCFullYear() - Number(lastPeriod.slice(0, 4))) * 12 + (today.getUTCMonth() + 1 - Number(lastPeriod.slice(4)));
+  if (monthsBehind > 4) return null;
   const y = tm.yearEndProjection(historyRows, { estimates });
   const num = (v) => (v < 0 ? `מינוס ${Math.abs(v)}%` : `${v}%`);
   const month = (p) => MONTH_NAMES[Number(p.slice(4)) - 1];
@@ -526,7 +530,7 @@ async function yearOverYear({ dataset, fundId, factorRows = null, trackLabel = "
     const share = monthShare(monthToDate.asOf);
     estimates.push({ period: monthToDate.period, estimate: tm.nowcast(model, monthToDate.factors, { elapsedShare: share }).estimate, errorSd, elapsedShare: share });
   }
-  const yearEnd = yearEndFor(history.rows, estimates, trackLabel);
+  const yearEnd = yearEndFor(history.rows, estimates, trackLabel, today);
 
   return {
     fund: { fundId: history.fundId, dataset, name: history.fundName, lastOfficialMonth: last },
@@ -607,7 +611,7 @@ async function analyzeFund({ dataset, fundId, window = 60, factorRows = null, mt
   const yearEnd = yearEndFor(history.rows, [
     ...unpublishedEstimates.map((u) => ({ period: u.period, estimate: u.estimate, errorSd, elapsedShare: 1 })),
     ...(earlyEstimate && monthToDate.asOf ? [{ period: monthToDate.period || monthToDate.asOf.replace(/-/g, "").slice(0, 6), estimate: earlyEstimate.estimate, errorSd, elapsedShare: monthShare(monthToDate.asOf) }] : []),
-  ], history.fundName);
+  ], history.fundName, today);
 
   return {
     ok: true,
