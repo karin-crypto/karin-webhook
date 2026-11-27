@@ -214,6 +214,10 @@ function explainForecast({ forecast, trackLabel = "המסלול", draftLabel = "
   const rangeYear = (x) => between(x.annualized.low, x.annualized.high);
   const summary = [];
   summary.push(`${trackLabel}: מרכז התחזית הוא תשואה של כ-${forecast.central}% בשנה בממוצע (נומינלי${forecast.centralReal == null ? "" : `; כ-${forecast.centralReal}% מעל האינפלציה הצפויה`}).`);
+  if (forecast.anchors.inflationLinked) {
+    const il = forecast.anchors.inflationLinked;
+    summary.push(`בקרן פנסיה מקיפה 30% מהנכסים נהנים מתשואה מובטחת צמודה למדד; הרכיב הזה חושב לפי האינפלציה הצפויה (${il.expectedInflation}%) ולא לפי זו של חמש השנים האחרונות (${il.trailingInflation}%), והשפעתו על המרכז: ${il.effectOnCentre < 0 ? "מינוס " + Math.abs(il.effectOnCentre) : il.effectOnCentre} נקודות אחוז לשנה.`);
+  }
   if (reliability) summary.push(`אמינות התחזית: ${reliability.he} (${reliability.reasons.join("; ")}).`);
   if (forecast.inputs.annualFee > 0) summary.push(`המספרים אחרי דמי ניהול של ${forecast.inputs.annualFee}% בשנה.`);
   else if (afterAverageFee) summary.push(`המספרים לפני דמי ניהול. אחרי דמי הניהול הממוצעים במסלול (${afterAverageFee.fee}% בשנה) המרכז הוא כ-${afterAverageFee.central}% בשנה.`);

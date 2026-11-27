@@ -553,6 +553,13 @@ test("forecast service: live yields with a dated fallback, per-track and per-cat
   assert.equal(stockTrack.reliability.grade, "low");
   assert.equal(service.forecastReliability({ quality: "low", basis: "own" }, { inputs: { equitySensitivity: 0.4, centreBounded: false, alphaClamped: false } }).grade, "very_low");
   assert.equal(service.forecastReliability({ quality: "ok", basis: "blend", basisNote: "היסטוריה קצרה" }, { inputs: { equitySensitivity: 0.4, centreBounded: false, alphaClamped: false } }).grade, "low");
+  // comprehensive pension: the CPI-linked guaranteed share uses expected, not trailing, inflation
+  const pensionTrack = await service.forecastFund({ category: "פנסיה מקיפה · כללי", fetchImpl: ok, today });
+  const il = pensionTrack.anchors.inflationLinked;
+  assert.equal(il.share, 0.3);
+  assert.ok(Math.abs(il.effectOnCentre + 0.3 * (il.trailingInflation - il.expectedInflation)) < 0.011);
+  assert.match(pensionTrack.summary, /צמודה למדד/);
+  assert.equal(r.anchors.inflationLinked, null); // not applied outside comprehensive pension funds
   assert.equal(r.anchors.valuation.cape, 39); // the stored valuation snapshot is applied
   assert.match(r.summary, /מכפיל שילר 39/);
   const cheaper = await service.forecastFund({ fundId: 50, assumptions: { cape: 20 }, fetchImpl: ok, today });

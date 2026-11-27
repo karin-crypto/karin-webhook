@@ -145,7 +145,7 @@ function factorStats(history) {
  *                  (past out-performance of a single track persists only weakly)
  *   annualFee: optional yearly management fee to subtract (percent)
  */
-function forecastTrack({ model, history, yields, assumptions = {}, categoryAlpha = null, annualFee = 0, horizons = HORIZONS, valuation = null } = {}) {
+function forecastTrack({ model, history, yields, assumptions = {}, categoryAlpha = null, annualFee = 0, horizons = HORIZONS, valuation = null, inflationLinked = null } = {}) {
   if (!model || !model.betas) throw new TrackModelError("model.betas חובה");
   const missing = FACTOR_NAMES.filter((f) => typeof model.betas[f] !== "number");
   if (missing.length) throw new TrackModelError(`חסרות רגישויות: ${missing.join(", ")}`);
@@ -186,7 +186,17 @@ function forecastTrack({ model, history, yields, assumptions = {}, categoryAlpha
     valuationEffect = model.betas.spx * (threeAnchor - twoAnchor);
     valuationAnchor = { cape: valuation.cape, asOf: valuation.asOf || null, source: valuation.source || null, impliedSpxAnnual: round(spxValuation), spxAnchorBefore: round(twoAnchor), spxAnchorAfter: round(threeAnchor), effectOnCentre: round(valuationEffect, 2) };
   }
-  const rawGross = (bondLike ? yieldBased : (historical + yieldBased) / 2) + valuationEffect;
+  // Comprehensive pension funds: 30% of assets earn a CPI-linked guaranteed return, so the
+  // track's fitted "alpha" carries the inflation of the fitting window. Going forward that
+  // share earns expected inflation instead. In a backtest (2017–2023 origins) this lowered
+  // the forecast error in every pension category at 3 and 5 years.
+  let inflationAnchor = null;
+  let inflationEffect = 0;
+  if (inflationLinked && inflationLinked.share > 0 && inflationLinked.share <= 1 && Number.isFinite(inflationLinked.trailingInflation) && Number.isFinite(inflationLinked.expectedInflation)) {
+    inflationEffect = Math.max(-1, Math.min(1, -inflationLinked.share * (inflationLinked.trailingInflation - inflationLinked.expectedInflation)));
+    inflationAnchor = { share: inflationLinked.share, trailingInflation: round(inflationLinked.trailingInflation, 2), expectedInflation: round(inflationLinked.expectedInflation, 2), effectOnCentre: round(inflationEffect, 2), note: "30% מנכסי קרן פנסיה מקיפה נהנים מתשואה מובטחת צמודה למדד. הרכיב הזה חושב לפי האינפלציה הצפויה ולא לפי האינפלציה של השנים האחרונות." };
+  }
+  const rawGross = (bondLike ? yieldBased : (historical + yieldBased) / 2) + valuationEffect + inflationEffect;
   // Plausibility bounds on the centre. No track is forecast above what a pure equity
   // position would be forecast to earn plus 1.5 points, or below the 5-year government
   // yield minus 2.5 points. A centre outside these bounds means the track's fitted
@@ -241,6 +251,7 @@ function forecastTrack({ model, history, yields, assumptions = {}, categoryAlpha
       yieldBased: { annual: round(yieldBased - annualFee), basis: "תשואות אג\"ח ממשלתיות נוכחיות בתוספת פרמיות שנקבעו בהנחה" },
       historicalCap: capped.length ? `הממוצע ההיסטורי של ${capped.map((f) => (f === "spx" ? "S&P 500" : 'ת"א 125')).join(" ושל ")} הוגבל ל-${round(equityCap * 12)}% בשנה (תשואת אג"ח + פעמיים פרמיית המניות), כדי לא להשליך תקופה חריגה קדימה` : null,
       valuation: valuationAnchor,
+      inflationLinked: inflationAnchor,
       centreRule: bondLike ? "מסלול כמעט ללא רגישות למניות — המרכז הוא העוגן מבוסס התשואות בלבד" : "המרכז הוא ממוצע שני העוגנים",
     },
     horizons: rows,

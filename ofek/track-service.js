@@ -330,7 +330,12 @@ async function forecastFund({ fundId, dataset, category, annualFee = 0, assumpti
   }
 
   const valuation = assumptions && assumptions.cape ? { cape: Number(assumptions.cape), asOf: null, source: "הוזן על ידי המשתמש" } : valuationSnapshot();
-  const forecast = forecastEngine.forecastTrack({ model, history, yields, assumptions, valuation, categoryAlpha: cat ? cat.alpha : null, annualFee: Number(annualFee) || 0 });
+  // comprehensive pension funds hold a 30% CPI-linked guaranteed share (see forecastTrack)
+  const comprehensivePension = model.product === "קרן פנסיה מקיפה" || String(model.category || "").startsWith("פנסיה מקיפה");
+  const snap = yieldSnapshot();
+  const trailing = snap && snap.trailingInflation5y ? snap.trailingInflation5y.value : null;
+  const inflationLinked = comprehensivePension && Number.isFinite(trailing) && Number.isFinite(yields.inflation) ? { share: 0.3, trailingInflation: trailing, expectedInflation: yields.inflation } : null;
+  const forecast = forecastEngine.forecastTrack({ model, history, yields, assumptions, valuation, inflationLinked, categoryAlpha: cat ? cat.alpha : null, annualFee: Number(annualFee) || 0 });
   const reliability = forecastReliability(model, forecast);
   const name = trackLabel || label || "המסלול";
   // Official returns are gross of management fees, so the same forecast is also
@@ -338,7 +343,7 @@ async function forecastFund({ fundId, dataset, category, annualFee = 0, assumpti
   let afterAverageFee = null;
   let netForecast = Number(annualFee) > 0 ? forecast : null; // the forecast a savings projection should stand on
   if (!(Number(annualFee) > 0) && Number.isFinite(model.averageFee) && model.averageFee > 0) {
-    const net = forecastEngine.forecastTrack({ model, history, yields, assumptions, valuation, categoryAlpha: cat ? cat.alpha : null, annualFee: model.averageFee });
+    const net = forecastEngine.forecastTrack({ model, history, yields, assumptions, valuation, inflationLinked, categoryAlpha: cat ? cat.alpha : null, annualFee: model.averageFee });
     netForecast = net;
     afterAverageFee = {
       fee: model.averageFee, depositFee: model.averageDepositFee, central: net.central, centralReal: net.centralReal,
