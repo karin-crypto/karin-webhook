@@ -219,6 +219,10 @@ function explainForecast({ forecast, trackLabel = "המסלול", draftLabel = "
   else summary.push("המספרים לפני דמי ניהול.");
   summary.push(`הטווח הסביר: בשנה הקרובה ${rangeYear(h["1y"])}; בממוצע שנתי לאורך 3 שנים ${rangeYear(h["3y"])}; לאורך 5 שנים ${rangeYear(h["5y"])}; לאורך 10 שנים ${rangeYear(h["10y"])} (האחרון לא נבדק היסטורית).`);
   summary.push(`הסיכוי המשוער לסיים בהפסד: כ-${Math.round(h["1y"].lossProbability * 100)}% אחרי שנה, כ-${Math.round(h["3y"].lossProbability * 100)}% אחרי 3 שנים, כ-${Math.round(h["5y"].lossProbability * 100)}% אחרי 5 שנים.`);
+  if (forecast.generalTrackRecord) {
+    const w = forecast.generalTrackRecord.windows;
+    summary.push(`לשם השוואה, במסלול כללי חציוני מאז 1999 הסתיימו בהפסד ${Math.round(w["1y"].negativeShare * 100)}% מהתקופות של שנה, ${Math.round(w["3y"].negativeShare * 100)}% מהתקופות של 3 שנים, ואף תקופה של 5 שנים.`);
+  }
   summary.push(`שני עוגנים: לפי ממוצע השווקים מאז 2012 — ${forecast.anchors.historical.annual}% בשנה; לפי תשואות האג"ח הנוכחיות והנחות הפרמיה — ${forecast.anchors.yieldBased.annual}% בשנה. ${forecast.anchors.centreRule}.`);
   summary.push(`בבדיקה היסטורית (${forecast.calibration.period}) כ-${Math.round(forecast.calibration.insideShare * 100)}% מהתוצאות בפועל נפלו בתוך טווח כזה, כ-${Math.round(forecast.calibration.belowShare * 100)}% מתחתיו וכ-${Math.round(forecast.calibration.aboveShare * 100)}% מעליו.`);
   if (forecast.volatilityState === "elevated") summary.push("התנודתיות בחודשים האחרונים גבוהה מהרגיל, ולכן הטווח לשנה הקרובה רחב מהרגיל.");

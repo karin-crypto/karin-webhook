@@ -447,6 +447,9 @@ test("track forecast: range per horizon, anchors, prudence cap, fees and guards"
   assert.match(text.summary, /הטווח הסביר/);
   assert.match(text.summary, /84%/);
   assert.match(text.summary, /רמת הסיכון ודמי הניהול/);
+  assert.match(text.summary, /מאז 1999 הסתיימו בהפסד 17% מהתקופות של שנה, 2% מהתקופות של 3 שנים/);
+  assert.equal(f.calibration.individualTracks.tracks, 70);
+  assert.match(f.calibration.lossProbabilityNote, /שמרני/);
   assert.ok(text.clientDraft.text.startsWith("היי") && /אינה תשואה מובטחת/.test(text.clientDraft.text));
   assert.equal(text.clientDraft.requiresApproval, true);
 });
