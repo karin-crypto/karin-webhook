@@ -46,6 +46,10 @@ const SCENARIOS = {
   local_shock: { he: 'זעזוע מקומי: ת"א -10%, קונצרני -2%, דולר +4%', shocks: { ta125: -10, corp: -2, usd: 4 } },
   global_selloff: { he: 'ירידה עולמית: S&P -10%, ת"א -6%, דולר +3%', shocks: { spx: -10, ta125: -6, usd: 3 } },
   yields_up: { he: 'עליית תשואות: ממשלתי -3%, קונצרני -2.5%, מניות -3%', shocks: { gov: -3, corp: -2.5, ta125: -3, spx: -3 } },
+  // upside scenarios; the combined moves follow the median of such months since 2008
+  global_rally: { he: 'עלייה עולמית: S&P +8%, ת"א +6%, קונצרני +1.5%, דולר -2.5%', shocks: { spx: 8, ta125: 6, corp: 1.5, usd: -2.5 } },
+  local_rally: { he: 'עלייה מקומית: ת"א +10%, קונצרני +2%, דולר -3%', shocks: { ta125: 10, corp: 2, usd: -3 } },
+  yields_down: { he: 'ירידת תשואות (ציפייה להורדת ריבית): ממשלתי +2%, קונצרני +1.5%, מניות +2%', shocks: { gov: 2, corp: 1.5, ta125: 2, spx: 2 } },
 };
 
 const round = (x, d = 2) => (Number.isFinite(x) ? Number(x.toFixed(d)) : null);
