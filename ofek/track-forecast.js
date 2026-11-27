@@ -7,7 +7,7 @@
  * Method (all inputs and assumptions are returned with every forecast):
  *   1. The track's sensitivities to five market factors (track-model.js).
  *   2. Two anchors for what the factors may deliver:
- *        - historical: their average monthly change since 2012;
+ *        - historical: their average monthly change over the stored history (2008 onward);
  *        - yield-based: government-bond yields published by the Bank of
  *          Israel, plus stated premiums for corporate bonds and equities.
  *      The centre is the average of the two; for tracks with almost no

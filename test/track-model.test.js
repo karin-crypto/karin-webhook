@@ -500,6 +500,15 @@ test("track forecast: range per horizon, anchors, prudence cap, fees and guards"
   assert.ok(f.shortTerm.every((h) => h.cumulative.low < 0 && h.cumulative.high > 0)); // a general track can lose or gain in any half year
   assert.ok(Math.abs((f.shortTerm[2].cumulative.low + f.shortTerm[2].cumulative.high) / 2 - ((1 + f.central / 100) ** 0.5 - 1) * 100) < 0.11);
   const cheap = fc.forecastTrack({ model: general, history, yields, valuation: { cape: 8 } });
+  // the summary says which way the valuation moved the centre, and names the real history window
+  const cheapText = explain.explainForecast({ forecast: cheap, trackLabel: "מסלול בדיקה" }).summary;
+  assert.match(cheapText, /תמחור המניות בארה"ב נמוך/);
+  assert.match(cheapText, /הועלה/);
+  const dearText = explain.explainForecast({ forecast: dear, trackLabel: "מסלול בדיקה" }).summary;
+  assert.match(dearText, /תמחור המניות בארה"ב גבוה/);
+  assert.match(dearText, /הופחת/);
+  assert.equal(/מאז 2012/.test(dearText), false);
+  assert.ok(dearText.includes(dear.anchors.historical.basis));
   assert.ok(cheap.central > f.central); // and a cheap one raises it
   const trackerDear = fc.forecastTrack({ model: trackerModel, history, yields, valuation: { cape: 39 } });
   assert.ok(tracker.central - trackerDear.central > 1 && tracker.central - trackerDear.central < 1.6);

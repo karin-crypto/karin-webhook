@@ -237,9 +237,9 @@ function explainForecast({ forecast, trackLabel = "המסלול", draftLabel = "
     const w = forecast.generalTrackRecord.windows;
     summary.push(`לשם השוואה, במסלול כללי חציוני מאז 1999 הסתיימו בהפסד ${Math.round(w["1y"].negativeShare * 100)}% מהתקופות של שנה, ${Math.round(w["3y"].negativeShare * 100)}% מהתקופות של 3 שנים, ואף תקופה של 5 שנים.`);
   }
-  summary.push(`שני עוגנים: לפי ממוצע השווקים מאז 2012 — ${forecast.anchors.historical.annual}% בשנה; לפי תשואות האג"ח הנוכחיות והנחות הפרמיה — ${forecast.anchors.yieldBased.annual}% בשנה. ${forecast.anchors.centreRule}.`);
+  summary.push(`שני עוגנים: לפי ${forecast.anchors.historical.basis || "ממוצע גורמי השוק בעבר"} — ${forecast.anchors.historical.annual}% בשנה; לפי תשואות האג"ח הנוכחיות והנחות הפרמיה — ${forecast.anchors.yieldBased.annual}% בשנה. ${forecast.anchors.centreRule}.`);
   const val = forecast.anchors.valuation;
-  if (val && Math.abs(val.effectOnCentre) >= 0.05) summary.push(`תמחור המניות בארה"ב גבוה (מכפיל שילר ${val.cape}${val.asOf ? `, ${val.asOf}` : ""}). לפי 140 שנות נתונים, רמה כזו הייתה מלווה בתשואה של כ-${val.impliedSpxAnnual}% בשנה ב-S&P 500 בעשור שאחריה, ולכן מרכז התחזית הופחת ב-${Math.abs(val.effectOnCentre).toFixed(1)} נקודות אחוז. זה אינו כלי לעיתוי: לשנה אחת אין לתמחור כוח חיזוי.`);
+  if (val && Math.abs(val.effectOnCentre) >= 0.05) summary.push(`תמחור המניות בארה"ב ${val.effectOnCentre < 0 ? "גבוה" : "נמוך"} (מכפיל שילר ${val.cape}${val.asOf ? `, ${val.asOf}` : ""}). לפי 140 שנות נתונים, רמה כזו הייתה מלווה בתשואה של כ-${val.impliedSpxAnnual}% בשנה ב-S&P 500 בעשור שאחריה, ולכן מרכז התחזית ${val.effectOnCentre < 0 ? "הופחת" : "הועלה"} ב-${Math.abs(val.effectOnCentre).toFixed(1)} נקודות אחוז. זה אינו כלי לעיתוי: לשנה אחת אין לתמחור כוח חיזוי.`);
   summary.push(`בבדיקה היסטורית (${forecast.calibration.period}) כ-${Math.round(forecast.calibration.insideShare * 100)}% מהתוצאות בפועל נפלו בתוך טווח כזה, כ-${Math.round(forecast.calibration.belowShare * 100)}% מתחתיו וכ-${Math.round(forecast.calibration.aboveShare * 100)}% מעליו.`);
   if (forecast.volatilityState === "elevated") summary.push("התנודתיות בחודשים האחרונים גבוהה מהרגיל, ולכן הטווח לשנה הקרובה רחב מהרגיל.");
   if (forecast.volatilityState === "calm") summary.push("התנודתיות בחודשים האחרונים נמוכה מהרגיל, ולכן הטווח לשנה הקרובה צר מעט מהרגיל.");

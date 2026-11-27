@@ -92,7 +92,7 @@ function searchFunds({ q = "", dataset, limit = 20 } = {}) {
       assetsMillions: f.aum, equityPct: f.eqPct == null ? null : f.eqPct, fxPct: f.fxPct == null ? null : f.fxPct,
       averageFee: f.fee == null ? null : f.fee, averageDepositFee: f.depFee == null ? null : f.depFee,
       historyMonths: f.n, hasModel: !!f.basis, modelBasis: (f.basis ? file.basisNote[f.basis] : "אין מספיק נתונים למודל") + (f.q === "low" ? " · מודל לא יציב — לקרוא בזהירות" : f.q === "low_own_fit" ? " · המודל של המסלול אינו יציב, נעשה שימוש בסוג המסלול" : ""),
-      modelQuality: f.q === "low" ? "low" : "ok", mae: f.mae == null ? null : f.mae,
+      modelQuality: f.q === "low" ? "low" : f.q === "low_own_fit" ? "category_substitute" : "ok", mae: f.mae == null ? null : f.mae,
     })),
   };
 }
