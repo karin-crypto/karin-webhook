@@ -278,6 +278,74 @@ function stressTests(model, history = null) {
   });
 }
 
+/** Seeded uniform generator (same algorithm as metrics.mulberry32) and a standard normal draw. */
+function rng32(seed) {
+  let t = seed >>> 0;
+  return () => {
+    t += 0x6d2b79f5;
+    let r = Math.imul(t ^ (t >>> 15), 1 | t);
+    r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const gauss = (u) => Math.sqrt(-2 * Math.log(1 - u())) * Math.cos(2 * Math.PI * u());
+
+// Uncertainty about the long-run centre itself, as a share of the track's annual volatility.
+// Chosen so that a simulated lump sum reproduces the 5- and 10-year ranges of forecastTrack.
+const CENTRE_UNCERTAINTY = 0.21;
+
+/**
+ * Savings projection on top of a track forecast: the range of the final
+ * balance for an opening balance and/or a fixed monthly deposit.
+ *   forecast: result of forecastTrack (its centre is already net of annualFee)
+ *   years: 1–40; balance, monthlyDeposit: in ₪ (nominal, not indexed)
+ *   depositFee: percent taken from each deposit
+ * Monte Carlo with a fixed seed: each path draws its own long-run centre
+ * (parameter uncertainty) and monthly returns around it.
+ */
+function projectSavings(forecast, { years, balance = 0, monthlyDeposit = 0, depositFee = 0, simulations = 4000, seed = 20261127 } = {}) {
+  if (!forecast || !Number.isFinite(forecast.central) || !Number.isFinite(forecast.annualVolatility)) throw new TrackModelError("נדרשת תחזית מסלול (forecastTrack)");
+  if (!(Number.isInteger(years) && years >= 1 && years <= 40)) throw new TrackModelError("years: מספר שנים שלם בין 1 ל־40");
+  if (!(balance >= 0) || !(monthlyDeposit >= 0) || balance + monthlyDeposit <= 0) throw new TrackModelError("נדרש סכום פתיחה או הפקדה חודשית (מספרים חיוביים)");
+  if (!(depositFee >= 0 && depositFee < 10)) throw new TrackModelError("depositFee: אחוז בין 0 ל־10");
+  if (!(Number.isInteger(simulations) && simulations >= 500 && simulations <= 20000)) throw new TrackModelError("simulations: בין 500 ל־20000");
+  const u = rng32(seed);
+  const months = years * 12;
+  const vol = forecast.annualVolatility;
+  const monthlySd = vol / Math.sqrt(12);
+  const netDeposit = monthlyDeposit * (1 - depositFee / 100);
+  const finals = new Array(simulations);
+  for (let sIdx = 0; sIdx < simulations; sIdx++) {
+    const centre = forecast.central + CENTRE_UNCERTAINTY * vol * gauss(u);
+    const mean = ((1 + centre / 100) ** (1 / 12) - 1) * 100;
+    let b = balance;
+    for (let m = 0; m < months; m++) {
+      b += netDeposit; // deposit at the start of the month
+      b *= 1 + Math.max(-60, mean + monthlySd * gauss(u)) / 100;
+    }
+    finals[sIdx] = b;
+  }
+  finals.sort((x, y) => x - y);
+  const q = (p) => finals[Math.min(simulations - 1, Math.floor(p * simulations))];
+  const paidIn = balance + monthlyDeposit * months;
+  const r0 = (x) => Math.round(x / 100) * 100;
+  // the balance if every year earned exactly the centre
+  const m0 = (1 + forecast.central / 100) ** (1 / 12) - 1;
+  let straight = balance;
+  for (let m = 0; m < months; m++) straight = (straight + netDeposit) * (1 + m0);
+  const inflation = forecast.inputs && Number.isFinite(forecast.inputs.yields && forecast.inputs.yields.inflationExpectation) ? forecast.inputs.yields.inflationExpectation : null;
+  const deflator = inflation == null ? null : (1 + inflation / 100) ** years;
+  return {
+    ok: true,
+    years, balance, monthlyDeposit, depositFee, paidIn: r0(paidIn),
+    finalBalance: { low: r0(q(0.1)), central: r0(q(0.5)), high: r0(q(0.9)), atCentreEveryYear: r0(straight) },
+    finalBalanceTodayPrices: deflator == null ? null : { low: r0(q(0.1) / deflator), central: r0(q(0.5) / deflator), high: r0(q(0.9) / deflator), inflationAssumed: inflation },
+    belowPaidInProbability: round(finals.filter((x) => x < paidIn).length / simulations, 2),
+    basis: { annualReturnCentre: forecast.central, annualVolatility: vol, annualFee: forecast.inputs ? forecast.inputs.annualFee : null, simulations, seed },
+    note: "טווח של 80% מהסימולציות (עשירון תחתון עד עליון), בשקלים נומינליים ומעוגל למאות. ההפקדה קבועה ואינה צמודה. זו המחשה לפי התחזית וההנחות שלה — לא הבטחה, ולא במקום תכנון אישי.",
+  };
+}
+
 /** A forecast-card draft (forecast-card.js shape) for one horizon of a forecast. */
 function toForecastCard(forecast, { asset, key = "5y", dataAsOf, modelVersion = "track-forecast-1.0" } = {}) {
   const h = forecast.horizons.find((x) => x.key === key);
@@ -304,4 +372,4 @@ function toForecastCard(forecast, { asset, key = "5y", dataAsOf, modelVersion = 
   };
 }
 
-module.exports = { HORIZONS, DEFAULT_ASSUMPTIONS, ALPHA_BOUNDS, OWN_ALPHA_WEIGHT, BACKTEST, GENERAL_TRACK_RECORD, HISTORICAL_EPISODES, forecastTrack, stressTests, toForecastCard, factorStats, normalCdf };
+module.exports = { HORIZONS, DEFAULT_ASSUMPTIONS, ALPHA_BOUNDS, OWN_ALPHA_WEIGHT, BACKTEST, GENERAL_TRACK_RECORD, HISTORICAL_EPISODES, forecastTrack, stressTests, projectSavings, toForecastCard, factorStats, normalCdf };

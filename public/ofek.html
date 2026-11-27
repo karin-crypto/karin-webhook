@@ -112,12 +112,19 @@
         <button id="tfc" class="secondary">תחזית למסלול</button>
         <label class="muted" style="font-weight:400;margin:0" for="tfee">דמי ניהול שנתיים של הלקוח (%, לא חובה):</label>
         <input id="tfee" type="number" step="0.05" min="0" max="4" style="width:90px">
+      </div>
+      <div class="row">
+        <span class="muted">חישוב צבירה (לא חובה):</span>
+        <label class="muted" style="font-weight:400;margin:0" for="tsbal">סכום היום ₪</label><input id="tsbal" type="number" step="1000" min="0" style="width:120px">
+        <label class="muted" style="font-weight:400;margin:0" for="tsdep">הפקדה חודשית ₪</label><input id="tsdep" type="number" step="100" min="0" style="width:110px">
+        <label class="muted" style="font-weight:400;margin:0" for="tsyrs">שנים</label><input id="tsyrs" type="number" step="1" min="1" max="40" style="width:70px">
         <span id="tstatus" class="status"></span>
       </div>
       <div id="tfcout" hidden>
         <h3 style="margin:16px 0 4px">תחזית למסלול <span class="pill">הערכה מחקרית — לא הבטחה</span></h3>
         <div id="tfctable"></div>
         <p id="tfcanchors" class="muted" style="margin:8px 0 0"></p>
+        <p id="tfcsave" style="margin:10px 0 0;font-weight:500"></p>
         <div id="tfcstress"></div>
         <p id="tfcwarn" class="warn" style="margin:6px 0 0"></p>
       </div>
@@ -328,7 +335,9 @@
     $("tstatus").className = "status"; $("tstatus").textContent = "מחשב תחזית…";
     try {
       const fee = parseFloat($("tfee").value);
-      const r = await api("/track-model/forecast", { method: "POST", body: JSON.stringify({ fundId: track.fundId, dataset: track.dataset, annualFee: Number.isFinite(fee) ? fee : 0 }) });
+      const sBal = parseFloat($("tsbal").value); const sDep = parseFloat($("tsdep").value); const sYrs = parseInt($("tsyrs").value, 10);
+      const savings = Number.isInteger(sYrs) && ((sBal > 0) || (sDep > 0)) ? { years: sYrs, balance: sBal > 0 ? sBal : 0, monthlyDeposit: sDep > 0 ? sDep : 0 } : null;
+      const r = await api("/track-model/forecast", { method: "POST", body: JSON.stringify({ fundId: track.fundId, dataset: track.dataset, annualFee: Number.isFinite(fee) ? fee : 0, savings }) });
       const ltr = (x) => `<bdi dir="ltr">${x}%</bdi>`;
       $("tfcout").hidden = false;
       $("tfctable").innerHTML = `<table class="tbl"><tr><th>אופק</th><th>תשואה שנתית ממוצעת — טווח סביר</th><th>מרכז</th><th>תשואה מצטברת — טווח</th><th>סיכוי משוער להפסד</th></tr>` +
@@ -336,6 +345,7 @@
       $("tfcanchors").textContent = (r.inputs.annualFee ? `אחרי דמי ניהול של ${r.inputs.annualFee}% בשנה. ` : "לפני דמי ניהול. " + (r.afterAverageFee ? `אחרי דמי הניהול הממוצעים במסלול (${r.afterAverageFee.fee}%): מרכז ${r.afterAverageFee.central}% בשנה. ` : "")) + `עוגן היסטורי: ${r.anchors.historical.annual}% בשנה · עוגן לפי תשואות האג"ח: ${r.anchors.yieldBased.annual}% בשנה · ${r.anchors.centreRule}. תשואות אג"ח ממשלתיות (${r.inputs.yields.asOf}): 5 שנים ${r.inputs.yields.y5}%, 10 שנים ${r.inputs.yields.y10}%. הנחות: פרמיית מניות ${r.inputs.assumptions.equityPremium}%, מרווח אג"ח חברות ${r.inputs.assumptions.corporateSpread}%. בבדיקה היסטורית כ-${Math.round(r.calibration.insideShare * 100)}% מהתוצאות נפלו בטווח.` + (r.anchors.historicalCap ? " " + r.anchors.historicalCap + "." : "");
       $("tfcstress").innerHTML = r.stressTests ? `<h3 style="margin:14px 0 2px">מבחני קיצון: מה היה קורה למסלול בתקופות עבר</h3><table class="tbl"><tr><th>תקופה</th><th>ת"א 125</th><th>S&amp;P 500</th><th>דולר</th><th>השפעה על המסלול (חישוב)</th><th>מסלול כללי בפועל אז</th></tr>` +
         r.stressTests.episodes.map((e) => `<tr><td>${esc(e.description)}</td><td class="num">${num(e.marketMoves.ta125, 0)}</td><td class="num">${num(e.marketMoves.spx, 0)}</td><td class="num">${num(e.marketMoves.usd, 0)}</td><td class="num">${num(e.impact)}</td><td class="num">${num(e.actualGeneralTrack)}</td></tr>`).join("") + `</table><p class="muted" style="margin:6px 0 0">${esc(r.stressTests.note)}</p>` : "";
+      $("tfcsave").textContent = r.savingsProjection ? r.savingsProjection.text + " " + r.savingsProjection.feeBasis + ". " + (r.savingsProjection.finalBalanceTodayPrices ? `במחירי היום (אינפלציה צפויה ${r.savingsProjection.finalBalanceTodayPrices.inflationAssumed}%): כ-${r.savingsProjection.finalBalanceTodayPrices.central.toLocaleString("en-US")} ₪. ` : "") + r.savingsProjection.note : "";
       $("tfcwarn").textContent = (r.warnings || []).join(" ");
       $("tout").hidden = false;
       $("tsummary").textContent = r.summary;

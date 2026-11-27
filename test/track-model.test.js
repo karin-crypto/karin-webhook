@@ -443,6 +443,22 @@ test("track forecast: range per horizon, anchors, prudence cap, fees and guards"
   assert.ok(stress.find((x) => x.key === "covid_2020").impact < -6);
   assert.throws(() => fc.stressTests({}), /betas/);
 
+  // savings projection: consistent with the forecast, deterministic, and guarded
+  const lump5 = fc.projectSavings(f, { years: 5, balance: 100000 });
+  const h5 = f.horizons.find((x) => x.key === "5y");
+  assert.ok(Math.abs(lump5.finalBalance.central / 1000 - 100 - h5.cumulative.central) < 4, "the median of a lump sum matches the five-year centre");
+  assert.ok(Math.abs(lump5.finalBalance.high / 1000 - 100 - h5.cumulative.high) < 8 && lump5.finalBalance.low < lump5.finalBalance.central);
+  assert.deepEqual(fc.projectSavings(f, { years: 5, balance: 100000 }).finalBalance, lump5.finalBalance); // same seed, same answer
+  const plan = fc.projectSavings(f, { years: 20, balance: 50000, monthlyDeposit: 2000, depositFee: 1 });
+  assert.equal(plan.paidIn, 530000);
+  assert.ok(plan.finalBalance.low > 530000 * 0.9 && plan.finalBalance.central > 700000 && plan.finalBalance.high > plan.finalBalance.central * 1.2);
+  assert.ok(plan.finalBalanceTodayPrices.central < plan.finalBalance.central);
+  assert.ok(plan.belowPaidInProbability < 0.1 && fc.projectSavings(f, { years: 1, balance: 100000 }).belowPaidInProbability > 0.1);
+  assert.ok(fc.projectSavings(net, { years: 20, monthlyDeposit: 2000 }).finalBalance.central < fc.projectSavings(f, { years: 20, monthlyDeposit: 2000 }).finalBalance.central); // fees cost money
+  assert.throws(() => fc.projectSavings(f, { years: 0, balance: 1000 }), /years/);
+  assert.throws(() => fc.projectSavings(f, { years: 5 }), /סכום פתיחה או הפקדה/);
+  assert.throws(() => fc.projectSavings({}, { years: 5, balance: 1 }), /תחזית מסלול/);
+
   const text = explain.explainForecast({ forecast: f, trackLabel: "המסלול הכללי" });
   assert.match(text.summary, /הטווח הסביר/);
   assert.match(text.summary, /84%/);
@@ -486,6 +502,13 @@ test("forecast service: live yields with a dated fallback, per-track and per-cat
   assert.ok(r.afterAverageFee.fee > 0.3 && r.afterAverageFee.fee < 2);
   assert.ok(Math.abs(r.central - r.afterAverageFee.central - r.afterAverageFee.fee) < 0.11);
   assert.match(r.summary, /לפני דמי ניהול/);
+  assert.equal(r.savingsProjection, null);
+  const withPlan = await service.forecastFund({ fundId: 50, savings: { years: 10, monthlyDeposit: 1500 }, fetchImpl: ok, today });
+  assert.equal(withPlan.savingsProjection.paidIn, 180000);
+  assert.match(withPlan.savingsProjection.feeBasis, /הממוצעים במסלול/);
+  assert.match(withPlan.savingsProjection.text, /180,000 ₪/);
+  assert.equal(withPlan.savingsProjection.basis.annualReturnCentre, withPlan.afterAverageFee.central);
+  await assert.rejects(service.forecastFund({ fundId: 50, savings: { years: 99, balance: 1000 }, fetchImpl: ok, today }), /years/);
   const own = await service.forecastFund({ fundId: 50, annualFee: 1.1, fetchImpl: ok, today });
   assert.equal(own.afterAverageFee, null); // the caller's own fee replaces the average
   assert.match(own.summary, /אחרי דמי ניהול של 1\.1%/);

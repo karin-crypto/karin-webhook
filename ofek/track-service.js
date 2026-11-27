@@ -234,7 +234,7 @@ function yieldSnapshot() {
  * draft and forecast-card drafts. Yields come live from the Bank of Israel,
  * with a dated stored snapshot as fallback (the result says which).
  */
-async function forecastFund({ fundId, dataset, category, annualFee = 0, assumptions = {}, trackLabel = null, includeHistory = true, fetchImpl, today = new Date() } = {}) {
+async function forecastFund({ fundId, dataset, category, annualFee = 0, assumptions = {}, trackLabel = null, includeHistory = true, savings = null, fetchImpl, today = new Date() } = {}) {
   const history = loadFactorHistory();
   if (!history) throw new tm.TrackModelError("קובץ היסטוריית גורמי השוק חסר");
   const { model, origin, label } = resolveModel({ fundId, dataset, category });
@@ -256,8 +256,10 @@ async function forecastFund({ fundId, dataset, category, annualFee = 0, assumpti
   // Official returns are gross of management fees, so the same forecast is also
   // shown after the track's average fee (when the caller gave no fee of their own).
   let afterAverageFee = null;
+  let netForecast = Number(annualFee) > 0 ? forecast : null; // the forecast a savings projection should stand on
   if (!(Number(annualFee) > 0) && Number.isFinite(model.averageFee) && model.averageFee > 0) {
     const net = forecastEngine.forecastTrack({ model, history, yields, assumptions, categoryAlpha: cat ? cat.alpha : null, annualFee: model.averageFee });
+    netForecast = net;
     afterAverageFee = {
       fee: model.averageFee, depositFee: model.averageDepositFee, central: net.central, centralReal: net.centralReal,
       horizons: net.horizons.map((h) => ({ key: h.key, label: h.label, annualized: h.annualized, lossProbability: h.lossProbability })),
@@ -265,6 +267,21 @@ async function forecastFund({ fundId, dataset, category, annualFee = 0, assumpti
     };
   }
   const text = explain.explainForecast({ forecast, trackLabel: name, afterAverageFee });
+
+  // optional: what an opening balance and/or a monthly deposit may grow to
+  let savingsProjection = null;
+  if (savings && typeof savings === "object") {
+    const basis = netForecast || forecast;
+    const p = forecastEngine.projectSavings(basis, {
+      years: Number(savings.years), balance: Number(savings.balance) || 0, monthlyDeposit: Number(savings.monthlyDeposit) || 0,
+      depositFee: savings.depositFee == null ? 0 : Number(savings.depositFee),
+    });
+    savingsProjection = {
+      ...p,
+      feeBasis: Number(annualFee) > 0 ? `אחרי דמי ניהול של ${annualFee}% מהצבירה שהוזנו` : netForecast ? `אחרי דמי הניהול הממוצעים במסלול (${model.averageFee}% מהצבירה)` : "לפני דמי ניהול (לא ידועים דמי הניהול במסלול)",
+      text: `אם ${p.balance ? `יושקעו היום ${p.balance.toLocaleString("en-US")} ₪` : ""}${p.balance && p.monthlyDeposit ? " ו" : ""}${p.monthlyDeposit ? `יופקדו ${p.monthlyDeposit.toLocaleString("en-US")} ₪ בכל חודש` : ""} במשך ${p.years} שנים, הסכום הצפוי בסוף התקופה הוא בסביבות ${p.finalBalance.central.toLocaleString("en-US")} ₪, בטווח סביר של ${p.finalBalance.low.toLocaleString("en-US")} עד ${p.finalBalance.high.toLocaleString("en-US")} ₪ (סך ההפקדות: ${p.paidIn.toLocaleString("en-US")} ₪).`,
+    };
+  }
 
   // the track's own record, when its official history is reachable
   let ownRecord = null;
@@ -286,6 +303,7 @@ async function forecastFund({ fundId, dataset, category, annualFee = 0, assumpti
     ...forecast,
     ...text,
     afterAverageFee,
+    savingsProjection,
     stressTests: {
       episodes: forecastEngine.stressTests(model, history).map((e) => ({ ...e, actualSameCategory: model.category && e.actualByCategory[model.category] != null ? e.actualByCategory[model.category] : null, actualGeneralTrack: e.actualByCategory["גמל/השתלמות · כללי"] })),
       note: "מה היה קורה למסלול, עם הרגישות של היום, אילו חזרו תנועות השוק של כל תקופה. לשם השוואה מוצג מה שקרה בפועל למסלול כללי חציוני. בקורונה וב-2022 המסלולים הכלליים ירדו בפועל כ-15% עד 30% יותר מהחישוב. במשבר 2008 הם ירדו בפועל 11% עד 15%, פחות ממה שהחישוב נותן היום, כי אז החזיקו פחות מניות ופחות נכסים בחו\"ל. זהו תרחיש להמחשה ולא תחזית.",

@@ -478,7 +478,7 @@ function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_AD
     const b = req.body || {};
     res.json(await trackService.forecastFund({
       fundId: b.fundId, dataset: b.dataset, category: b.category, annualFee: b.annualFee || 0, assumptions: b.assumptions || {}, trackLabel: b.trackLabel || null,
-      includeHistory: b.includeHistory !== false, ...(fetchImpl ? { fetchImpl } : {}),
+      includeHistory: b.includeHistory !== false, savings: b.savings || null, ...(fetchImpl ? { fetchImpl } : {}),
     }));
   }));
 
