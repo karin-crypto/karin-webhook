@@ -209,11 +209,14 @@ function explainYearOverYear({ attribution, factorMoves, years, fromMonth, toMon
  * client-message draft. The range is the message; the centre alone is never
  * presented as "the forecast".
  */
-function explainForecast({ forecast, trackLabel = "המסלול", draftLabel = "המסלול", peerNote = true } = {}) {
+function explainForecast({ forecast, trackLabel = "המסלול", draftLabel = "המסלול", peerNote = true, afterAverageFee = null } = {}) {
   const h = Object.fromEntries(forecast.horizons.map((x) => [x.key, x]));
   const rangeYear = (x) => between(x.annualized.low, x.annualized.high);
   const summary = [];
   summary.push(`${trackLabel}: מרכז התחזית הוא תשואה של כ-${forecast.central}% בשנה בממוצע (נומינלי${forecast.centralReal == null ? "" : `; כ-${forecast.centralReal}% מעל האינפלציה הצפויה`}).`);
+  if (forecast.inputs.annualFee > 0) summary.push(`המספרים אחרי דמי ניהול של ${forecast.inputs.annualFee}% בשנה.`);
+  else if (afterAverageFee) summary.push(`המספרים לפני דמי ניהול. אחרי דמי הניהול הממוצעים במסלול (${afterAverageFee.fee}% בשנה) המרכז הוא כ-${afterAverageFee.central}% בשנה.`);
+  else summary.push("המספרים לפני דמי ניהול.");
   summary.push(`הטווח הסביר: בשנה הקרובה ${rangeYear(h["1y"])}; בממוצע שנתי לאורך 3 שנים ${rangeYear(h["3y"])}; לאורך 5 שנים ${rangeYear(h["5y"])}; לאורך 10 שנים ${rangeYear(h["10y"])} (האחרון לא נבדק היסטורית).`);
   summary.push(`הסיכוי המשוער לסיים בהפסד: כ-${Math.round(h["1y"].lossProbability * 100)}% אחרי שנה, כ-${Math.round(h["3y"].lossProbability * 100)}% אחרי 3 שנים, כ-${Math.round(h["5y"].lossProbability * 100)}% אחרי 5 שנים.`);
   summary.push(`שני עוגנים: לפי ממוצע השווקים מאז 2012 — ${forecast.anchors.historical.annual}% בשנה; לפי תשואות האג"ח הנוכחיות והנחות הפרמיה — ${forecast.anchors.yieldBased.annual}% בשנה. ${forecast.anchors.centreRule}.`);
@@ -224,6 +227,7 @@ function explainForecast({ forecast, trackLabel = "המסלול", draftLabel = "
     // the client draft keeps a generic label: office rules ban the word "קרן" there, and many track names contain it
     `היי, בדקתי את ${draftLabel}. לפי המודל שלנו, לאורך 5 שנים התשואה השנתית הממוצעת הצפויה היא בסביבות ${forecast.central}%, בטווח סביר של ${rangeYear(h["5y"])} לשנה.`,
     `בשנה בודדת הטווח רחב הרבה יותר, ${rangeYear(h["1y"])}, ולכן אי אפשר להתחייב על שנה מסוימת.`,
+    forecast.inputs.annualFee > 0 ? `המספרים אחרי דמי ניהול של ${forecast.inputs.annualFee}% בשנה.` : "המספרים לפני דמי ניהול.",
     "זו הערכה מחקרית ואינה תשואה מובטחת, והיא לפני התאמה אישית של המסלול לטווח ולרמת הסיכון שלך.",
   ];
   return {

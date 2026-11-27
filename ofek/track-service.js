@@ -65,6 +65,7 @@ function fundToModel(f, file) {
     betas: Object.fromEntries(file.factorOrder.map((n, i) => [n, f.b[i]])),
     r2: f.r2 == null ? null : f.r2,
     residualSd: f.s == null ? null : f.s,
+    averageFee: f.fee == null ? null : f.fee, averageDepositFee: f.depFee == null ? null : f.depFee,
     basis: f.basis, basisNote: file.basisNote[f.basis],
     accuracy: f.p90 == null ? null : { mae: f.mae == null ? null : f.mae, p90AbsError: f.p90, naiveMeanMae: f.naive == null ? null : f.naive, n: f.accN || null, basis: f.p90Basis || "walk-forward, חלון מתגלגל של 60 חודשים" },
   };
@@ -86,6 +87,7 @@ function searchFunds({ q = "", dataset, limit = 20 } = {}) {
     funds: hits.slice(0, Math.max(1, Math.min(Number(limit) || 20, 100))).map((f) => ({
       fundId: f.id, dataset: f.ds, datasetLabel: DATASET_HE[f.ds], name: f.name, product: f.product, category: f.catLabel || null,
       assetsMillions: f.aum, equityPct: f.eqPct == null ? null : f.eqPct, fxPct: f.fxPct == null ? null : f.fxPct,
+      averageFee: f.fee == null ? null : f.fee, averageDepositFee: f.depFee == null ? null : f.depFee,
       historyMonths: f.n, hasModel: !!f.basis, modelBasis: f.basis ? file.basisNote[f.basis] : "אין מספיק נתונים למודל", mae: f.mae == null ? null : f.mae,
     })),
   };
@@ -248,7 +250,18 @@ async function forecastFund({ fundId, dataset, category, annualFee = 0, assumpti
 
   const forecast = forecastEngine.forecastTrack({ model, history, yields, assumptions, categoryAlpha: cat ? cat.alpha : null, annualFee: Number(annualFee) || 0 });
   const name = trackLabel || label || "המסלול";
-  const text = explain.explainForecast({ forecast, trackLabel: name });
+  // Official returns are gross of management fees, so the same forecast is also
+  // shown after the track's average fee (when the caller gave no fee of their own).
+  let afterAverageFee = null;
+  if (!(Number(annualFee) > 0) && Number.isFinite(model.averageFee) && model.averageFee > 0) {
+    const net = forecastEngine.forecastTrack({ model, history, yields, assumptions, categoryAlpha: cat ? cat.alpha : null, annualFee: model.averageFee });
+    afterAverageFee = {
+      fee: model.averageFee, depositFee: model.averageDepositFee, central: net.central, centralReal: net.centralReal,
+      horizons: net.horizons.map((h) => ({ key: h.key, label: h.label, annualized: h.annualized, lossProbability: h.lossProbability })),
+      note: "אחרי דמי הניהול הממוצעים מהצבירה במסלול, לפי הדיווח לרשות שוק ההון. דמי הניהול של לקוח מסוים עשויים להיות שונים; דמי ניהול מהפקדה אינם מנוכים כאן.",
+    };
+  }
+  const text = explain.explainForecast({ forecast, trackLabel: name, afterAverageFee });
 
   // the track's own record, when its official history is reachable
   let ownRecord = null;
@@ -269,6 +282,8 @@ async function forecastFund({ fundId, dataset, category, annualFee = 0, assumpti
     track: { label: name, fundId: model.fundId || null, dataset: model.dataset || null, category: model.category || null, modelOrigin: origin, modelBasis: model.basisNote || null },
     ...forecast,
     ...text,
+    afterAverageFee,
+    returnsBasis: "התשואות הרשמיות הן נומינליות ברוטו — לפני דמי ניהול (כך מצוין באתר פנסיה־נט של רשות שוק ההון; בגמל־נט ובביטוח־נט לפי אותה שיטת דיווח).",
     ownRecord,
     forecastCardDrafts: cards,
     warnings: [yieldWarning, model.basis && model.basis !== "own" ? `המודל של המסלול נשען על היסטוריה קצרה (${model.basisNote}) — התחזית פחות מבוססת.` : null].filter(Boolean),

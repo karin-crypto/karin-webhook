@@ -269,7 +269,7 @@
     track = $("thits").hits[Number(b.dataset.i)];
     $("tsel").hidden = false; $("tout").hidden = true;
     $("tname").textContent = track.name;
-    $("tinfo").textContent = [track.datasetLabel, track.product, track.equityPct == null ? null : `חשיפה למניות ${track.equityPct}%`, track.fxPct == null ? null : `חשיפה למט"ח ${track.fxPct}%`, track.mae == null ? track.modelBasis : `טעות ממוצעת של המודל ${track.mae} נק' אחוז בחודש`].filter(Boolean).join(" · ");
+    $("tinfo").textContent = [track.datasetLabel, track.product, track.averageFee == null ? null : `דמי ניהול ממוצעים ${track.averageFee}% מהצבירה`, track.equityPct == null ? null : `חשיפה למניות ${track.equityPct}%`, track.fxPct == null ? null : `חשיפה למט"ח ${track.fxPct}%`, track.mae == null ? track.modelBasis : `טעות ממוצעת של המודל ${track.mae} נק' אחוז בחודש`].filter(Boolean).join(" · ");
     $("tscen").innerHTML = "";
     if (!track.hasModel) { $("tscen").textContent = "למסלול הזה אין מספיק נתונים למודל."; return; }
     try {
@@ -332,7 +332,7 @@
       $("tfcout").hidden = false;
       $("tfctable").innerHTML = `<table class="tbl"><tr><th>אופק</th><th>תשואה שנתית ממוצעת — טווח סביר</th><th>מרכז</th><th>תשואה מצטברת — טווח</th><th>סיכוי משוער להפסד</th></tr>` +
         r.horizons.map((h) => `<tr><td>${esc(h.label)}${h.backtested ? "" : " <span class=\"muted\">(לא נבדק היסטורית)</span>"}</td><td style="white-space:nowrap">${ltr(h.annualized.low)} עד ${ltr(h.annualized.high)}</td><td class="num">${ltr(h.annualized.central)}</td><td style="white-space:nowrap">${ltr(h.cumulative.low)} עד ${ltr(h.cumulative.high)}</td><td class="num">${Math.round(h.lossProbability * 100)}%</td></tr>`).join("") + "</table>";
-      $("tfcanchors").textContent = (r.inputs.annualFee ? `אחרי דמי ניהול של ${r.inputs.annualFee}% בשנה. ` : "לפני דמי ניהול. ") + `עוגן היסטורי: ${r.anchors.historical.annual}% בשנה · עוגן לפי תשואות האג"ח: ${r.anchors.yieldBased.annual}% בשנה · ${r.anchors.centreRule}. תשואות אג"ח ממשלתיות (${r.inputs.yields.asOf}): 5 שנים ${r.inputs.yields.y5}%, 10 שנים ${r.inputs.yields.y10}%. הנחות: פרמיית מניות ${r.inputs.assumptions.equityPremium}%, מרווח אג"ח חברות ${r.inputs.assumptions.corporateSpread}%. בבדיקה היסטורית כ-${Math.round(r.calibration.insideShare * 100)}% מהתוצאות נפלו בטווח.` + (r.anchors.historicalCap ? " " + r.anchors.historicalCap + "." : "");
+      $("tfcanchors").textContent = (r.inputs.annualFee ? `אחרי דמי ניהול של ${r.inputs.annualFee}% בשנה. ` : "לפני דמי ניהול. " + (r.afterAverageFee ? `אחרי דמי הניהול הממוצעים במסלול (${r.afterAverageFee.fee}%): מרכז ${r.afterAverageFee.central}% בשנה. ` : "")) + `עוגן היסטורי: ${r.anchors.historical.annual}% בשנה · עוגן לפי תשואות האג"ח: ${r.anchors.yieldBased.annual}% בשנה · ${r.anchors.centreRule}. תשואות אג"ח ממשלתיות (${r.inputs.yields.asOf}): 5 שנים ${r.inputs.yields.y5}%, 10 שנים ${r.inputs.yields.y10}%. הנחות: פרמיית מניות ${r.inputs.assumptions.equityPremium}%, מרווח אג"ח חברות ${r.inputs.assumptions.corporateSpread}%. בבדיקה היסטורית כ-${Math.round(r.calibration.insideShare * 100)}% מהתוצאות נפלו בטווח.` + (r.anchors.historicalCap ? " " + r.anchors.historicalCap + "." : "");
       $("tfcwarn").textContent = (r.warnings || []).join(" ");
       $("tout").hidden = false;
       $("tsummary").textContent = r.summary;

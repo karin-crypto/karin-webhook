@@ -414,6 +414,15 @@ test("forecast service: live yields with a dated fallback, per-track and per-cat
   assert.ok(r.forecastCardDrafts["5y"].asset.includes("הפניקס") && validateCard(r.forecastCardDrafts["1y"], { now: today }).ok);
   assert.match(r.notice, /אינה הבטחה/);
   assert.ok(r.summary.startsWith(r.track.label), "the professional summary names the track that was analysed");
+  // official returns are gross of fees: the forecast is also shown after the track's average fee
+  assert.match(r.returnsBasis, /ברוטו/);
+  assert.ok(r.afterAverageFee.fee > 0.3 && r.afterAverageFee.fee < 2);
+  assert.ok(Math.abs(r.central - r.afterAverageFee.central - r.afterAverageFee.fee) < 0.11);
+  assert.match(r.summary, /לפני דמי ניהול/);
+  const own = await service.forecastFund({ fundId: 50, annualFee: 1.1, fetchImpl: ok, today });
+  assert.equal(own.afterAverageFee, null); // the caller's own fee replaces the average
+  assert.match(own.summary, /אחרי דמי ניהול של 1\.1%/);
+  assert.match(own.clientDraft.text, /אחרי דמי ניהול של 1\.1%/);
   assert.ok(r.clientDraft.text.startsWith("היי, בדקתי את המסלול."), "the client draft keeps the generic label");
 
   // Bank of Israel unreachable -> stored snapshot, and the result says so
