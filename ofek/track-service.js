@@ -67,6 +67,8 @@ function fundToModel(f, file) {
     residualSd: f.s == null ? null : f.s,
     averageFee: f.fee == null ? null : f.fee, averageDepositFee: f.depFee == null ? null : f.depFee,
     basis: f.basis, basisNote: file.basisNote[f.basis],
+    quality: f.q === "low" ? "low" : f.q === "low_own_fit" ? "category_substitute" : "ok",
+    qualityNote: f.q === "low" ? "המודל של המסלול אינו יציב (התאמה חלשה או מקדמים לא סבירים, לרוב בגלל שינוי באופי המסלול) ואין סוג מסלול מתאים להישען עליו — יש להתייחס לתוצאות בזהירות רבה." : f.q === "low_own_fit" ? "המודל של המסלול עצמו אינו יציב, ולכן נעשה שימוש במקדמי סוג המסלול." : null,
     accuracy: f.p90 == null ? null : { mae: f.mae == null ? null : f.mae, p90AbsError: f.p90, naiveMeanMae: f.naive == null ? null : f.naive, n: f.accN || null, basis: f.p90Basis || "walk-forward, חלון מתגלגל של 60 חודשים" },
   };
 }
@@ -88,7 +90,8 @@ function searchFunds({ q = "", dataset, limit = 20 } = {}) {
       fundId: f.id, dataset: f.ds, datasetLabel: DATASET_HE[f.ds], name: f.name, product: f.product, category: f.catLabel || null,
       assetsMillions: f.aum, equityPct: f.eqPct == null ? null : f.eqPct, fxPct: f.fxPct == null ? null : f.fxPct,
       averageFee: f.fee == null ? null : f.fee, averageDepositFee: f.depFee == null ? null : f.depFee,
-      historyMonths: f.n, hasModel: !!f.basis, modelBasis: f.basis ? file.basisNote[f.basis] : "אין מספיק נתונים למודל", mae: f.mae == null ? null : f.mae,
+      historyMonths: f.n, hasModel: !!f.basis, modelBasis: (f.basis ? file.basisNote[f.basis] : "אין מספיק נתונים למודל") + (f.q === "low" ? " · מודל לא יציב — לקרוא בזהירות" : f.q === "low_own_fit" ? " · המודל של המסלול אינו יציב, נעשה שימוש בסוג המסלול" : ""),
+      modelQuality: f.q === "low" ? "low" : "ok", mae: f.mae == null ? null : f.mae,
     })),
   };
 }
@@ -290,7 +293,13 @@ async function forecastFund({ fundId, dataset, category, annualFee = 0, assumpti
     returnsBasis: "התשואות הרשמיות הן נומינליות ברוטו — לפני דמי ניהול (כך מצוין באתר פנסיה־נט של רשות שוק ההון; בגמל־נט ובביטוח־נט לפי אותה שיטת דיווח).",
     ownRecord,
     forecastCardDrafts: cards,
-    warnings: [yieldWarning, model.basis && model.basis !== "own" ? `המודל של המסלול נשען על היסטוריה קצרה (${model.basisNote}) — התחזית פחות מבוססת.` : null].filter(Boolean),
+    warnings: [
+      yieldWarning,
+      model.qualityNote || null,
+      !model.qualityNote && model.basis && model.basis !== "own" ? `המודל של המסלול נשען על בסיס חלקי (${model.basisNote}) — התחזית פחות מבוססת.` : null,
+      forecast.inputs.centreBounded ? `המודל של המסלול נתן מרכז תחזית מחוץ לטווח סביר, והוא הוגבל ל-${forecast.inputs.centreBounds.low}% עד ${forecast.inputs.centreBounds.high}% בשנה. למסלול הזה התחזית פחות אמינה.` : null,
+      forecast.inputs.alphaClamped ? "הרכיב שאינו מוסבר בשוק היה חריג, ולצורך התחזית הוגבל לטווח סביר (מינוס 1.5% עד 3.5% בשנה)." : null,
+    ].filter(Boolean),
     notice: "תחזית = טווח תשואה אפשרי לפי מודל והנחות מוצהרות. אינה הבטחה, אינה המלצה ואינה ייעוץ מותאם אישית. רישום התחזית ביומן ושליחה ללקוח — רק באישור קארין.",
   };
 }

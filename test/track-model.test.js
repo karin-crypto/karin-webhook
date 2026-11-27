@@ -291,6 +291,16 @@ test("all-track file: every active track is searchable and almost all have a usa
   const m = service.resolveModel({ fundId: short.id, dataset: short.ds }).model;
   assert.match(m.basisNote, /היסטוריה קצרה/);
   assert.ok(m.accuracy && m.accuracy.p90AbsError > 0);
+  // quality control: an unstable own fit is replaced by the category or flagged; nothing implausible is served silently
+  for (const f of withModel) {
+    if (f.basis === "own" && f.q !== "low") assert.ok(f.b.every((v) => Math.abs(v) <= 1.5) && f.a * 12 >= -4 && f.a * 12 <= 6, `${f.name}: plausible coefficients`);
+  }
+  const flagged = file.funds.find((f) => f.q === "low");
+  if (flagged) assert.match(service.resolveModel({ fundId: flagged.id, dataset: flagged.ds }).model.qualityNote, /אינו יציב/);
+  const substituted = file.funds.find((f) => f.q === "low_own_fit");
+  assert.equal(service.resolveModel({ fundId: substituted.id, dataset: substituted.ds }).model.quality, "category_substitute");
+  assert.ok(file.funds.some((f) => f.basis === "own_recent")); // tracks that changed character are fitted on the period since 2024
+
   // a track with no usable data is refused, not guessed
   const none = file.funds.find((f) => !f.basis);
   assert.throws(() => service.resolveModel({ fundId: none.id, dataset: none.ds }), /אין מספיק נתונים/);
@@ -372,6 +382,20 @@ test("track forecast: range per horizon, anchors, prudence cap, fees and guards"
   const shrunk = fc.forecastTrack({ model: { ...general, alpha: 0.4 }, history, yields, categoryAlpha: 0.08 });
   const own = fc.forecastTrack({ model: { ...general, alpha: 0.4 }, history, yields });
   assert.ok(shrunk.central < own.central && shrunk.central > f.central);
+  // an extreme unexplained return is bounded, and the result says so
+  const wild = fc.forecastTrack({ model: { ...general, alpha: 1.2 }, history, yields }); // 14% a year of "alpha"
+  assert.equal(wild.inputs.alphaClamped, true);
+  assert.equal(wild.inputs.alphaUsed, fc.ALPHA_BOUNDS.high);
+  assert.ok(wild.central < f.central + 3.5);
+  assert.equal(f.inputs.alphaClamped, false);
+  // sensitivities that would imply an absurd centre are bounded and flagged
+  const absurd = fc.forecastTrack({ model: { alpha: 0.29, betas: { ta125: 0, spx: 0.9, usd: 0, gov: -0.5, corp: 1.05 }, residualSd: 0.8 }, history, yields });
+  assert.equal(absurd.inputs.centreBounded, true);
+  assert.equal(absurd.central, absurd.inputs.centreBounds.high);
+  assert.ok(absurd.inputs.centreBounds.high < 12.5 && absurd.inputs.centreBounds.low > 0.5);
+  assert.equal(f.inputs.centreBounded, false);
+  const sour = fc.forecastTrack({ model: { ...general, alpha: -0.9 }, history, yields });
+  assert.equal(sour.inputs.alphaUsed, fc.ALPHA_BOUNDS.low);
   const cautious = fc.forecastTrack({ model: general, history, yields, assumptions: { equityPremium: 2 } });
   assert.ok(cautious.central < f.central);
 

@@ -41,6 +41,9 @@ const DEFAULT_ASSUMPTIONS = {
   usdDrift: 0, // expected yearly change of USD/ILS
 };
 
+// Bounds (percent per year) on the unexplained return carried into a forecast.
+const ALPHA_BOUNDS = { low: -1.5, high: 3.5 };
+
 const BACKTEST = {
   period: "2011–2026 (נתוני שוק מ-2008, כולל משבר 2008)",
   categories: 19,
@@ -99,7 +102,12 @@ function forecastTrack({ model, history, yields, assumptions = {}, categoryAlpha
 
   const stats = factorStats(history);
   const beta = FACTOR_NAMES.map((f) => model.betas[f]);
-  const alpha = Number.isFinite(categoryAlpha) ? ((model.alpha || 0) + categoryAlpha) / 2 : model.alpha || 0;
+  // The unexplained monthly return is averaged with the category's (weak persistence) and then
+  // bounded: a large "alpha" in a 60-month fit is mostly noise or a change in the track's
+  // character, and compounding it for ten years would dominate the forecast.
+  const rawAlpha = Number.isFinite(categoryAlpha) ? ((model.alpha || 0) + categoryAlpha) / 2 : model.alpha || 0;
+  const alpha = Math.min(ALPHA_BOUNDS.high / 12, Math.max(ALPHA_BOUNDS.low / 12, rawAlpha));
+  const alphaClamped = alpha !== rawAlpha;
 
   const yieldMonthly = { ta125: (yields.y10 + a.equityPremium) / 12, spx: (yields.y10 + a.equityPremium) / 12, usd: a.usdDrift / 12, gov: yields.y5 / 12, corp: (yields.y5 + a.corporateSpread) / 12 };
   const dot = (mu) => FACTOR_NAMES.reduce((s, f, i) => s + beta[i] * mu[f], 0);
@@ -113,7 +121,15 @@ function forecastTrack({ model, history, yields, assumptions = {}, categoryAlpha
 
   const equitySensitivity = model.betas.ta125 + model.betas.spx;
   const bondLike = equitySensitivity < 0.15;
-  const gross = bondLike ? yieldBased : (historical + yieldBased) / 2;
+  const rawGross = bondLike ? yieldBased : (historical + yieldBased) / 2;
+  // Plausibility bounds on the centre. No track is forecast above what a pure equity
+  // position would be forecast to earn plus 1.5 points, or below the 5-year government
+  // yield minus 2.5 points. A centre outside these bounds means the track's fitted
+  // sensitivities are not a sound basis for a long-run forecast, and the result says so.
+  const equityCentre = (annualise(Math.max(histMean.ta125, histMean.spx)) + yields.y10 + a.equityPremium) / 2;
+  const bounds = { low: yields.y5 - 2.5, high: equityCentre + 1.5 };
+  const gross = Math.min(bounds.high, Math.max(bounds.low, rawGross));
+  const centreBounded = gross !== rawGross;
   const centre = gross - annualFee;
 
   const factorVar = beta.reduce((s, bi, i) => s + beta.reduce((t, bj, j) => t + bi * bj * stats.cov[i][j], 0), 0);
@@ -150,6 +166,9 @@ function forecastTrack({ model, history, yields, assumptions = {}, categoryAlpha
       yields: { y5: round(yields.y5, 2), y10: round(yields.y10, 2), inflationExpectation: inflation == null ? null : round(inflation, 2), asOf: yields.asOf || null, source: yields.source || null },
       assumptions: { ...a, basis: "פרמיות ארוכות טווח שנקבעו בשיקול דעת — לא נאמדו מהנתונים" },
       alphaUsed: round(alpha * 12, 2),
+      alphaClamped,
+      centreBounded,
+      centreBounds: { low: round(bounds.low), high: round(bounds.high) },
       alphaNote: Number.isFinite(categoryAlpha) ? "הרכיב שאינו מוסבר בשוק: ממוצע בין המסלול לסוג המסלול" : "הרכיב שאינו מוסבר בשוק: של המסלול עצמו",
       annualFee,
       equitySensitivity: round(equitySensitivity, 2),
@@ -236,4 +255,4 @@ function toForecastCard(forecast, { asset, key = "5y", dataAsOf, modelVersion = 
   };
 }
 
-module.exports = { HORIZONS, DEFAULT_ASSUMPTIONS, BACKTEST, HISTORICAL_EPISODES, forecastTrack, stressTests, toForecastCard, factorStats, normalCdf };
+module.exports = { HORIZONS, DEFAULT_ASSUMPTIONS, ALPHA_BOUNDS, BACKTEST, HISTORICAL_EPISODES, forecastTrack, stressTests, toForecastCard, factorStats, normalCdf };
