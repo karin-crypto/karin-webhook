@@ -317,15 +317,21 @@ function negativeMonthProbability(model, estimate, { elapsedShare = 1, history =
   const centre = estimate + rest * monthlyMean;
   const sdAll = Math.sqrt(rest * (factorVar + resid * resid) + resid * resid);
   if (!(sdAll > 0)) return null;
-  const z = -centre / sdAll;
   // standard normal CDF (Abramowitz–Stegun 7.1.26)
-  const t = 1 / (1 + 0.3275911 * Math.abs(z) / Math.SQRT2);
-  const erf = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-(z * z) / 2);
-  const p = 0.5 * (1 + (z >= 0 ? erf : -erf));
+  const below = (threshold) => {
+    const z = (threshold - centre) / sdAll;
+    const t = 1 / (1 + 0.3275911 * Math.abs(z) / Math.SQRT2);
+    const erf = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-(z * z) / 2);
+    return 0.5 * (1 + (z >= 0 ? erf : -erf));
+  };
+  const p = below(0);
+  const p1 = below(-1);
   return {
     probability: round(p, 2),
+    // the same check for a fall of more than 1%: skill of 37%, 50% and 68% on days 15, 22 and 27
+    declineOver1Probability: round(p1, 2),
     expectedMonthEnd: round(centre),
-    text: `הסיכוי המוערך שהחודש יסתיים בירידה: ${Math.round(p * 100)}%`,
+    text: `הסיכוי המוערך שהחודש יסתיים בירידה: ${Math.round(p * 100)}%; בירידה של יותר מ-1%: ${Math.round(p1 * 100)}%`,
     note: "מדד מחקרי. נבדק בימים 8, 15, 22 ו-27 בחודש על כ-600 חודשים (2017–2026): כשהמדד היה מעל 90%, כל החודשים הסתיימו בירידה; בין 70% ל-90% — כ-9 מכל 10 (ביום 8: 3 מכל 4). ככל שהחודש מתקדם המדד חד יותר. הוא מתייחס לחודש הנוכחי בלבד ואינו חוזה את החודש הבא.",
   };
 }

@@ -187,6 +187,8 @@ test("track model: deposit-timing statistics", () => {
     assert.ok(p(-3, 1) > 0.99 && p(3, 1) < 0.01);
     assert.ok(Math.abs(p(0, 1) - 0.5) < 0.011); // a zero estimate with nothing left of the month is a coin flip
     assert.equal(tm.negativeMonthProbability(m, -1, { elapsedShare: 0.5 }), null); // no history, no probability
+    const both = tm.negativeMonthProbability(m, -0.8, { elapsedShare: 0.8, history: hist });
+    assert.ok(both.declineOver1Probability < both.probability && both.declineOver1Probability > 0); // a deeper fall is always less likely
     assert.equal(tm.nowcast(m, Object.fromEntries(tm.FACTOR_NAMES.map((f) => [f, -1])), { elapsedShare: 0.5, history: hist }).negativeMonth.text.startsWith("הסיכוי המוערך"), true);
   }
   const falling = tm.depositTimingStats([...Array(36).fill(1), -2, -3]);

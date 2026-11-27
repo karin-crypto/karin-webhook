@@ -158,7 +158,7 @@ function marketWatch({ factors, asOf, elapsedShare = 1, since = null, lastObserv
   const rows = b.categories.map((c) => {
     const n = tm.nowcast(c, factors, { elapsedShare, history: factorHistory });
     const u = unusualLevel(n.estimate, c.monthlyDistribution, n.range);
-    return { category: c.category, estimate: n.estimate, range: n.range, negativeMonthProbability: n.negativeMonth ? n.negativeMonth.probability : null, level: u.level, levelText: u.he, shortHistory: !!c.shortHistory, contributions: n.contributions };
+    return { category: c.category, estimate: n.estimate, range: n.range, negativeMonthProbability: n.negativeMonth ? n.negativeMonth.probability : null, declineOver1Probability: n.negativeMonth ? n.negativeMonth.declineOver1Probability : null, level: u.level, levelText: u.he, shortHistory: !!c.shortHistory, contributions: n.contributions };
   }).sort((x, y) => x.estimate - y.estimate);
   const order = ["very_unusual", "unusual", "weak", "slightly_negative", "within_noise", "normal", "unknown"];
   const main = rows.filter((r) => MAIN_CATEGORIES.includes(r.category));
