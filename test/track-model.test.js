@@ -516,6 +516,15 @@ test("forecast service: live yields with a dated fallback, per-track and per-cat
   assert.equal(r.ownRecord, null); // no official history reachable in this test — the forecast does not depend on it
   assert.ok(r.forecastCardDrafts["5y"].asset.includes("הפניקס") && validateCard(r.forecastCardDrafts["1y"], { now: today }).ok);
   assert.match(r.notice, /אינה הבטחה/);
+  // reliability grade follows what the backtest supports
+  assert.equal(r.reliability.grade, "medium");
+  assert.match(r.summary, /אמינות התחזית: בינונית/);
+  const bondTrack = await service.forecastFund({ category: 'גמל/השתלמות · אשראי ואג"ח', fetchImpl: ok, today });
+  assert.equal(bondTrack.reliability.grade, "high");
+  const stockTrack = await service.forecastFund({ category: "גמל/השתלמות · מניות", fetchImpl: ok, today });
+  assert.equal(stockTrack.reliability.grade, "low");
+  assert.equal(service.forecastReliability({ quality: "low", basis: "own" }, { inputs: { equitySensitivity: 0.4, centreBounded: false, alphaClamped: false } }).grade, "very_low");
+  assert.equal(service.forecastReliability({ quality: "ok", basis: "blend", basisNote: "היסטוריה קצרה" }, { inputs: { equitySensitivity: 0.4, centreBounded: false, alphaClamped: false } }).grade, "low");
   assert.equal(r.anchors.valuation.cape, 39); // the stored valuation snapshot is applied
   assert.match(r.summary, /מכפיל שילר 39/);
   const cheaper = await service.forecastFund({ fundId: 50, assumptions: { cape: 20 }, fetchImpl: ok, today });

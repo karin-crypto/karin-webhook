@@ -209,11 +209,12 @@ function explainYearOverYear({ attribution, factorMoves, years, fromMonth, toMon
  * client-message draft. The range is the message; the centre alone is never
  * presented as "the forecast".
  */
-function explainForecast({ forecast, trackLabel = "המסלול", draftLabel = "המסלול", peerNote = true, afterAverageFee = null } = {}) {
+function explainForecast({ forecast, trackLabel = "המסלול", draftLabel = "המסלול", peerNote = true, afterAverageFee = null, reliability = null } = {}) {
   const h = Object.fromEntries(forecast.horizons.map((x) => [x.key, x]));
   const rangeYear = (x) => between(x.annualized.low, x.annualized.high);
   const summary = [];
   summary.push(`${trackLabel}: מרכז התחזית הוא תשואה של כ-${forecast.central}% בשנה בממוצע (נומינלי${forecast.centralReal == null ? "" : `; כ-${forecast.centralReal}% מעל האינפלציה הצפויה`}).`);
+  if (reliability) summary.push(`אמינות התחזית: ${reliability.he} (${reliability.reasons.join("; ")}).`);
   if (forecast.inputs.annualFee > 0) summary.push(`המספרים אחרי דמי ניהול של ${forecast.inputs.annualFee}% בשנה.`);
   else if (afterAverageFee) summary.push(`המספרים לפני דמי ניהול. אחרי דמי הניהול הממוצעים במסלול (${afterAverageFee.fee}% בשנה) המרכז הוא כ-${afterAverageFee.central}% בשנה.`);
   else summary.push("המספרים לפני דמי ניהול.");

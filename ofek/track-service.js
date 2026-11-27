@@ -236,6 +236,39 @@ function yieldSnapshot() {
 }
 
 /**
+ * How far a forecast can be trusted, in plain words. The grades follow the
+ * backtest: bond-like tracks were forecast within about 0.3–0.9 points a
+ * year at 3–5 years, mixed tracks within about 1.5–2.5, equity-heavy tracks
+ * within about 3.5–6; an unstable or borrowed model lowers the grade.
+ */
+function forecastReliability(model, forecast) {
+  const eq = forecast.inputs.equitySensitivity;
+  const reasons = [];
+  let grade;
+  if (model.quality === "low" || forecast.inputs.centreBounded) {
+    grade = "very_low";
+    reasons.push(model.quality === "low" ? "המודל של המסלול אינו יציב" : "מרכז התחזית הוגבל לטווח סביר");
+  } else if (eq < 0.15) {
+    grade = "high";
+    reasons.push("מסלול אג\"ח או כספי: תשואת האג\"ח ההתחלתית חוזה היטב את התשואה ל-3 עד 5 שנים (טעות של כ-0.3 עד 0.9 נקודות אחוז לשנה בבדיקה)");
+  } else if (eq >= 0.6) {
+    grade = "low";
+    reasons.push("מסלול עתיר מניות: אין מנבא אמין לתשואת מניות, והטעות בבדיקה הייתה 3.5 עד 6 נקודות אחוז לשנה");
+  } else {
+    grade = "medium";
+    reasons.push("מסלול מעורב: הטעות בבדיקה הייתה כ-2 נקודות אחוז לשנה ל-3 שנים וכ-1.5 עד 1.8 ל-5 שנים");
+  }
+  const borrowed = model.basis && model.basis !== "own";
+  if (borrowed && grade !== "very_low") {
+    reasons.push(`המודל נשען על בסיס חלקי (${model.basisNote})`);
+    grade = grade === "high" ? "medium" : "low";
+  }
+  if (forecast.inputs.alphaClamped && grade === "medium") { grade = "low"; reasons.push("הרכיב הלא-מוסבר של המסלול היה חריג והוגבל"); }
+  const he = { high: "גבוהה", medium: "בינונית", low: "נמוכה", very_low: "נמוכה מאוד" }[grade];
+  return { grade, he, reasons, note: "הדירוג מתייחס לאופק של 3 עד 5 שנים. לשנה אחת אין תחזית נקודתית אמינה לאף מסלול עם מניות." };
+}
+
+/**
  * Multi-year forecast for one track (by fund id) or a track category:
  * expected yearly return range for 1, 3, 5 and 10 years, loss probability,
  * the anchors and assumptions behind it, a plain summary, a client-message
@@ -261,6 +294,7 @@ async function forecastFund({ fundId, dataset, category, annualFee = 0, assumpti
 
   const valuation = assumptions && assumptions.cape ? { cape: Number(assumptions.cape), asOf: null, source: "הוזן על ידי המשתמש" } : valuationSnapshot();
   const forecast = forecastEngine.forecastTrack({ model, history, yields, assumptions, valuation, categoryAlpha: cat ? cat.alpha : null, annualFee: Number(annualFee) || 0 });
+  const reliability = forecastReliability(model, forecast);
   const name = trackLabel || label || "המסלול";
   // Official returns are gross of management fees, so the same forecast is also
   // shown after the track's average fee (when the caller gave no fee of their own).
@@ -275,7 +309,7 @@ async function forecastFund({ fundId, dataset, category, annualFee = 0, assumpti
       note: "אחרי דמי הניהול הממוצעים מהצבירה במסלול, לפי הדיווח לרשות שוק ההון. דמי הניהול של לקוח מסוים עשויים להיות שונים; דמי ניהול מהפקדה אינם מנוכים כאן.",
     };
   }
-  const text = explain.explainForecast({ forecast, trackLabel: name, afterAverageFee });
+  const text = explain.explainForecast({ forecast, trackLabel: name, afterAverageFee, reliability });
 
   // optional: what an opening balance and/or a monthly deposit may grow to
   let savingsProjection = null;
@@ -311,6 +345,7 @@ async function forecastFund({ fundId, dataset, category, annualFee = 0, assumpti
     track: { label: name, fundId: model.fundId || null, dataset: model.dataset || null, category: model.category || null, modelOrigin: origin, modelBasis: model.basisNote || null },
     ...forecast,
     ...text,
+    reliability,
     afterAverageFee,
     savingsProjection,
     stressTests: {
@@ -450,4 +485,4 @@ async function analyzeFund({ dataset, fundId, window = 60, factorRows = null, mt
   };
 }
 
-module.exports = { loadBaseline, loadFunds, loadFactorHistory, baselineSummary, resolveModel, searchFunds, analyzeFund, yearOverYear, forecastFund, mainModels, marketWatch, fetchMarketWatch, unusualLevel, monthShare };
+module.exports = { loadBaseline, loadFunds, loadFactorHistory, baselineSummary, resolveModel, searchFunds, analyzeFund, yearOverYear, forecastFund, forecastReliability, mainModels, marketWatch, fetchMarketWatch, unusualLevel, monthShare };

@@ -121,7 +121,7 @@
         <span id="tstatus" class="status"></span>
       </div>
       <div id="tfcout" hidden>
-        <h3 style="margin:16px 0 4px">תחזית למסלול <span class="pill">הערכה מחקרית — לא הבטחה</span></h3>
+        <h3 style="margin:16px 0 4px">תחזית למסלול <span class="pill">הערכה מחקרית — לא הבטחה</span> <span class="pill" id="tfcrel"></span></h3>
         <div id="tfctable"></div>
         <p id="tfcanchors" class="muted" style="margin:8px 0 0"></p>
         <p id="tfcsave" style="margin:10px 0 0;font-weight:500"></p>
@@ -340,6 +340,7 @@
       const r = await api("/track-model/forecast", { method: "POST", body: JSON.stringify({ fundId: track.fundId, dataset: track.dataset, annualFee: Number.isFinite(fee) ? fee : 0, savings }) });
       const ltr = (x) => `<bdi dir="ltr">${x}%</bdi>`;
       $("tfcout").hidden = false;
+      $("tfcrel").textContent = r.reliability ? "אמינות: " + r.reliability.he : "";
       $("tfctable").innerHTML = `<table class="tbl"><tr><th>אופק</th><th>תשואה שנתית ממוצעת — טווח סביר</th><th>מרכז</th><th>תשואה מצטברת — טווח</th><th>סיכוי משוער להפסד</th></tr>` +
         r.horizons.map((h) => `<tr><td>${esc(h.label)}${h.backtested ? "" : " <span class=\"muted\">(לא נבדק היסטורית)</span>"}</td><td style="white-space:nowrap">${ltr(h.annualized.low)} עד ${ltr(h.annualized.high)}</td><td class="num">${ltr(h.annualized.central)}</td><td style="white-space:nowrap">${ltr(h.cumulative.low)} עד ${ltr(h.cumulative.high)}</td><td class="num">${Math.round(h.lossProbability * 100)}%</td></tr>`).join("") + "</table>";
       $("tfcanchors").textContent = (r.inputs.annualFee ? `אחרי דמי ניהול של ${r.inputs.annualFee}% בשנה. ` : "לפני דמי ניהול. " + (r.afterAverageFee ? `אחרי דמי הניהול הממוצעים במסלול (${r.afterAverageFee.fee}%): מרכז ${r.afterAverageFee.central}% בשנה. ` : "")) + `עוגן היסטורי: ${r.anchors.historical.annual}% בשנה · עוגן לפי תשואות האג"ח: ${r.anchors.yieldBased.annual}% בשנה · ${r.anchors.centreRule}. תשואות אג"ח ממשלתיות (${r.inputs.yields.asOf}): 5 שנים ${r.inputs.yields.y5}%, 10 שנים ${r.inputs.yields.y10}%. הנחות: פרמיית מניות ${r.inputs.assumptions.equityPremium}%, מרווח אג"ח חברות ${r.inputs.assumptions.corporateSpread}%. בבדיקה היסטורית כ-${Math.round(r.calibration.insideShare * 100)}% מהתוצאות נפלו בטווח.` + (r.anchors.historicalCap ? " " + r.anchors.historicalCap + "." : "");
