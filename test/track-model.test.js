@@ -476,6 +476,12 @@ test("track forecast: range per horizon, anchors, prudence cap, fees and guards"
   assert.equal(userZero.central, noDividend.central);
   assert.equal(userZero.inputs.assumptions.spxDividendYield, 0);
   assert.equal(typeof dear.inputs.bondLike, "boolean");
+  // short-term ranges: wider with the horizon, centred near the pro-rata centre, never a point forecast
+  assert.deepEqual(f.shortTerm.map((h) => h.key), ["1m", "3m", "6m"]);
+  const span = (h) => h.cumulative.high - h.cumulative.low;
+  assert.ok(span(f.shortTerm[0]) < span(f.shortTerm[1]) && span(f.shortTerm[1]) < span(f.shortTerm[2]));
+  assert.ok(f.shortTerm.every((h) => h.cumulative.low < 0 && h.cumulative.high > 0)); // a general track can lose or gain in any half year
+  assert.ok(Math.abs((f.shortTerm[2].cumulative.low + f.shortTerm[2].cumulative.high) / 2 - ((1 + f.central / 100) ** 0.5 - 1) * 100) < 0.11);
   const cheap = fc.forecastTrack({ model: general, history, yields, valuation: { cape: 8 } });
   assert.ok(cheap.central > f.central); // and a cheap one raises it
   const trackerDear = fc.forecastTrack({ model: trackerModel, history, yields, valuation: { cape: 39 } });
