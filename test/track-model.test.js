@@ -393,7 +393,7 @@ test("track forecast: range per horizon, anchors, prudence cap, fees and guards"
   assert.ok(f.horizons[0].annualized.low < 0, "a one-year range for a general track includes a loss");
   assert.equal(f.horizons[3].backtested, false);
   assert.ok(Math.abs(f.horizons[2].cumulative.central - ((1 + f.central / 100) ** 5 - 1) * 100) < 0.3);
-  assert.equal(f.calibration.insideShare, 0.84);
+  assert.equal(f.calibration.insideShare, 0.83);
   assert.equal(f.generalTrackRecord.windows["10y"].min, 3.6);
   assert.ok(["calm", "normal", "elevated"].includes(f.volatilityState) && f.recentVolatility > 0);
   // the range reacts to recent volatility: a turbulent last year widens the one-year range more than the ten-year one
@@ -424,7 +424,13 @@ test("track forecast: range per horizon, anchors, prudence cap, fees and guards"
   assert.equal(dear.anchors.valuation.impliedSpxAnnual, 5.5); // 3.37 + 0.85 × (100 / 39)
   assert.ok(dear.central < f.central && f.central - dear.central < 0.5);
   assert.ok(Math.abs(dear.anchors.valuation.effectOnCentre - general.betas.spx * (dear.anchors.valuation.spxAnchorAfter - dear.anchors.valuation.spxAnchorBefore)) < 0.03);
-  const cheap = fc.forecastTrack({ model: general, history, yields, valuation: { cape: 12 } });
+  // the S&P factor is a price index: the anchors built from total-return figures are net of the dividend yield
+  assert.equal(dear.anchors.valuation.impliedSpxPriceAnnual, 4.4);
+  assert.equal(dear.inputs.assumptions.spxDividendYield, 1.1);
+  const noDividend = fc.forecastTrack({ model: trackerModel, history, yields, valuation: { cape: 39, dividendYield: 0 } });
+  const withDividend = fc.forecastTrack({ model: trackerModel, history, yields, valuation: { cape: 39, dividendYield: 1.5 } });
+  assert.ok(noDividend.central - withDividend.central > 0.7 && noDividend.central - withDividend.central < 1.2, `dividend effect ${noDividend.central - withDividend.central}`);
+  const cheap = fc.forecastTrack({ model: general, history, yields, valuation: { cape: 8 } });
   assert.ok(cheap.central > f.central); // and a cheap one raises it
   const trackerDear = fc.forecastTrack({ model: trackerModel, history, yields, valuation: { cape: 39 } });
   assert.ok(tracker.central - trackerDear.central > 1 && tracker.central - trackerDear.central < 1.6);
@@ -513,7 +519,7 @@ test("track forecast: range per horizon, anchors, prudence cap, fees and guards"
 
   const text = explain.explainForecast({ forecast: f, trackLabel: "המסלול הכללי" });
   assert.match(text.summary, /הטווח הסביר/);
-  assert.match(text.summary, /84%/);
+  assert.match(text.summary, /83%/);
   assert.match(text.summary, /רמת הסיכון ודמי הניהול/);
   assert.match(text.summary, /מאז 1999 הסתיימו בהפסד 17% מהתקופות של שנה, 2% מהתקופות של 3 שנים/);
   assert.equal(f.calibration.individualTracks.tracks, 70);
@@ -560,6 +566,16 @@ test("forecast service: live yields with a dated fallback, per-track and per-cat
   assert.ok(Math.abs(il.effectOnCentre + 0.3 * (il.trailingInflation - il.expectedInflation)) < 0.011);
   assert.match(pensionTrack.summary, /צמודה למדד/);
   assert.equal(r.anchors.inflationLinked, null); // not applied outside comprehensive pension funds
+  // new track types (short history): their inflated constant is not carried forward, so an S&P tracker
+  // in provident funds is forecast like the same tracker in insurance policies, not points above it
+  const newType = await service.forecastFund({ category: "גמל/השתלמות · עוקב S&P 500", fetchImpl: ok, today });
+  const oldType = await service.forecastFund({ category: "ביטוח · עוקב S&P 500", fetchImpl: ok, today });
+  assert.ok(Math.abs(newType.central - oldType.central) < 1, `${newType.central} vs ${oldType.central}`);
+  assert.ok(newType.warnings.some((w) => /סוג המסלול חדש/.test(w)));
+  assert.equal(newType.reliability.grade, "low");
+  const mixedNew = await service.forecastFund({ category: "גמל/השתלמות · משולב סחיר", fetchImpl: ok, today });
+  assert.ok(mixedNew.central > 4.5 && mixedNew.central < 7.5, `mixed new type ${mixedNew.central}`);
+  assert.ok(mixedNew.warnings.some((w) => /לפי החשיפה המדווחת/.test(w)));
   assert.equal(r.anchors.valuation.cape, 39); // the stored valuation snapshot is applied
   assert.match(r.summary, /מכפיל שילר 39/);
   const cheaper = await service.forecastFund({ fundId: 50, assumptions: { cape: 20 }, fetchImpl: ok, today });

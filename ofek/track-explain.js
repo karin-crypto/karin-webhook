@@ -214,6 +214,7 @@ function explainForecast({ forecast, trackLabel = "המסלול", draftLabel = "
   const rangeYear = (x) => between(x.annualized.low, x.annualized.high);
   const summary = [];
   summary.push(`${trackLabel}: מרכז התחזית הוא תשואה של כ-${forecast.central}% בשנה בממוצע (נומינלי${forecast.centralReal == null ? "" : `; כ-${forecast.centralReal}% מעל האינפלציה הצפויה`}).`);
+  if (Math.abs(forecast.inputs.equitySensitivity) >= 0.15 && forecast.inputs.assumptions.spxDividendYield > 0) summary.push(`מדד S&P 500 שבמודל אינו כולל דיבידנדים, ולכן העוגנים שלו חושבו בניכוי תשואת הדיבידנד (${forecast.inputs.assumptions.spxDividendYield}%), כדי לא לספור אותה פעמיים.`);
   if (forecast.anchors.inflationLinked) {
     const il = forecast.anchors.inflationLinked;
     summary.push(`בקרן פנסיה מקיפה 30% מהנכסים נהנים מתשואה מובטחת צמודה למדד; הרכיב הזה חושב לפי האינפלציה הצפויה (${il.expectedInflation}%) ולא לפי זו של חמש השנים האחרונות (${il.trailingInflation}%), והשפעתו על המרכז: ${il.effectOnCentre < 0 ? "מינוס " + Math.abs(il.effectOnCentre) : il.effectOnCentre} נקודות אחוז לשנה.`);

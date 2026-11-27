@@ -66,6 +66,7 @@ function fundToModel(f, file) {
     r2: f.r2 == null ? null : f.r2,
     residualSd: f.s == null ? null : f.s,
     averageFee: f.fee == null ? null : f.fee, averageDepositFee: f.depFee == null ? null : f.depFee,
+    equityPct: f.eqPct == null ? null : f.eqPct,
     basis: f.basis, basisNote: file.basisNote[f.basis],
     quality: f.q === "low" ? "low" : f.q === "low_own_fit" ? "category_substitute" : "ok",
     qualityNote: f.q === "low" ? "המודל של המסלול אינו יציב (התאמה חלשה או מקדמים לא סבירים, לרוב בגלל שינוי באופי המסלול) ואין סוג מסלול מתאים להישען עליו — יש להתייחס לתוצאות בזהירות רבה." : f.q === "low_own_fit" ? "המודל של המסלול עצמו אינו יציב, ולכן נעשה שימוש במקדמי סוג המסלול." : null,
@@ -278,7 +279,7 @@ function declineSummary(returns, currentDepth = 0) {
  * 5 years; equity about 6 at 3 years (few tracks). An unstable or borrowed
  * model lowers the grade.
  */
-function forecastReliability(model, forecast) {
+function forecastReliability(model, forecast, { shortType = false } = {}) {
   const eq = forecast.inputs.equitySensitivity;
   const reasons = [];
   let grade;
@@ -300,6 +301,10 @@ function forecastReliability(model, forecast) {
     reasons.push(`המודל נשען על בסיס חלקי (${model.basisNote})`);
     grade = grade === "high" ? "medium" : "low";
   }
+  if (shortType && grade !== "very_low") {
+    reasons.push("סוג מסלול חדש, עם פחות מ-36 חודשי נתונים");
+    if (!(borrowed)) grade = grade === "high" ? "medium" : "low";
+  }
   if (forecast.inputs.alphaClamped && grade === "medium") { grade = "low"; reasons.push("הרכיב הלא-מוסבר של המסלול היה חריג והוגבל"); }
   const he = { high: "גבוהה", medium: "בינונית", low: "נמוכה", very_low: "נמוכה מאוד" }[grade];
   return { grade, he, reasons, note: "הדירוג מתייחס לאופק של 3 עד 5 שנים. לשנה אחת אין תחזית נקודתית אמינה לאף מסלול עם מניות." };
@@ -315,9 +320,44 @@ function forecastReliability(model, forecast) {
 async function forecastFund({ fundId, dataset, category, annualFee = 0, assumptions = {}, trackLabel = null, includeHistory = true, savings = null, fetchImpl, today = new Date() } = {}) {
   const history = loadFactorHistory();
   if (!history) throw new tm.TrackModelError("קובץ היסטוריית גורמי השוק חסר");
-  const { model, origin, label } = resolveModel({ fundId, dataset, category });
+  const resolved = resolveModel({ fundId, dataset, category });
+  const { origin, label } = resolved;
+  let model = resolved.model;
   const base = loadBaseline();
-  const cat = model.kind === "fund" && model.category && base ? base.categories.find((c) => c.category === model.category) : null;
+  let cat = model.kind === "fund" && model.category && base ? base.categories.find((c) => c.category === model.category) : null;
+  // New track types (fewer than 36 months of data, all from one strong market period) give an
+  // implausible unexplained return of 2.5% to 5% a year, against minus 0.7% to 1.7% in every
+  // type with a full history. It is not carried into a forecast: a track with its own full
+  // history keeps its own figure, and otherwise none is assumed.
+  const shortType = model.shortHistory === true || (cat && cat.shortHistory === true);
+  let shortTypeWarning = null;
+  if (shortType) {
+    cat = null;
+    const ownFull = model.kind === "fund" && model.basis === "own";
+    // In a short fit the constant and the bond sensitivities offset each other (a large positive
+    // constant against negative bond sensitivities, each with a wide error). A long-only track
+    // cannot have a negative exposure to bonds, so both are neutralised together.
+    let bondNote = "";
+    if (!ownFull) {
+      // The bond part is taken from the reported equity exposure (the track's own, or the
+      // median of the type's tracks): what is not in equities is assumed to be in bonds,
+      // half government and half corporate, unless the fit already shows at least that much.
+      let equityPct = model.kind === "fund" ? model.equityPct : null;
+      if (!Number.isFinite(equityPct)) {
+        const peers = loadFunds().funds.filter((f) => f.cat === model.category && Number.isFinite(f.eqPct)).map((f) => f.eqPct).sort((x, y) => x - y);
+        equityPct = peers.length ? peers[Math.floor(peers.length / 2)] : null;
+      }
+      // never beyond what the fitted equity sensitivities leave room for (index trackers that use
+      // futures report a low equity exposure while moving one-for-one with the index)
+      const room = Math.max(0, 1 - (Math.max(0, model.betas.ta125) + Math.max(0, model.betas.spx)));
+      const bondShare = Number.isFinite(equityPct) ? Math.min(room, Math.max(0, Math.min(1, 1 - equityPct / 100))) : 0;
+      let gov = Math.max(0, model.betas.gov);
+      let corp = Math.max(0, model.betas.corp);
+      if (bondShare >= 0.05 && gov + corp < bondShare) { gov = bondShare / 2; corp = bondShare / 2; bondNote = ` רכיב האג"ח נקבע לפי החשיפה המדווחת (${Math.round(bondShare * 100)}% שאינם במניות).`; }
+      model = { ...model, alpha: 0, betas: { ...model.betas, gov, corp } };
+    }
+    shortTypeWarning = "סוג המסלול חדש (פחות מ-36 חודשי נתונים). " + (ownFull ? "הרכיב שאינו מוסבר בשוק נלקח מהמסלול עצמו בלבד, ולא מסוג המסלול." : "לא הונח רכיב שאינו מוסבר בשוק, ורגישות שלילית לאג\"ח (שאינה אפשרית במסלול כזה) אופסה." + bondNote) + " התחזית למסלול הזה פחות מבוססת.";
+  }
 
   let yields;
   let yieldWarning = null;
@@ -336,7 +376,7 @@ async function forecastFund({ fundId, dataset, category, annualFee = 0, assumpti
   const trailing = snap && snap.trailingInflation5y ? snap.trailingInflation5y.value : null;
   const inflationLinked = comprehensivePension && Number.isFinite(trailing) && Number.isFinite(yields.inflation) ? { share: 0.3, trailingInflation: trailing, expectedInflation: yields.inflation } : null;
   const forecast = forecastEngine.forecastTrack({ model, history, yields, assumptions, valuation, inflationLinked, categoryAlpha: cat ? cat.alpha : null, annualFee: Number(annualFee) || 0 });
-  const reliability = forecastReliability(model, forecast);
+  const reliability = forecastReliability(model, forecast, { shortType });
   const name = trackLabel || label || "המסלול";
   // Official returns are gross of management fees, so the same forecast is also
   // shown after the track's average fee (when the caller gave no fee of their own).
@@ -399,6 +439,7 @@ async function forecastFund({ fundId, dataset, category, annualFee = 0, assumpti
     forecastCardDrafts: cards,
     warnings: [
       yieldWarning,
+      shortTypeWarning,
       model.qualityNote || null,
       !model.qualityNote && model.basis && model.basis !== "own" ? `המודל של המסלול נשען על בסיס חלקי (${model.basisNote}) — התחזית פחות מבוססת.` : null,
       forecast.inputs.centreBounded ? `המודל של המסלול נתן מרכז תחזית מחוץ לטווח סביר, והוא הוגבל ל-${forecast.inputs.centreBounds.low}% עד ${forecast.inputs.centreBounds.high}% בשנה. למסלול הזה התחזית פחות אמינה.` : null,

@@ -17,8 +17,8 @@
  *      recent one (EWMA), so the range widens after turbulent months.
  *
  * What the backtest showed (19 track categories, forecast origins 2011–2026,
- * market data from 2008 so the 2008 crisis is in the sample): about 84% of
- * realised returns fell inside the range, about 4% below it and about 12%
+ * market data from 2008 so the 2008 crisis is in the sample): about 83% of
+ * realised returns fell inside the range, about 4% below it and about 14%
  * above it. One-year outcomes are wide — a single number for one year is
  * not reliable; the range is the forecast.
  *
@@ -51,6 +51,11 @@ const DEFAULT_ASSUMPTIONS = {
   equityPremium: 4, // equities over the 10-year government yield
   corporateSpread: 1, // corporate bonds over the 5-year government yield
   usdDrift: 0, // expected yearly change of USD/ILS
+  // The model's S&P 500 factor is the price index (no dividends), while the equity premium
+  // and the valuation fit are total-return figures. A track's dividends sit in its fitted
+  // alpha, so the S&P anchors are taken net of the dividend yield to avoid counting it twice.
+  // (Tel Aviv indices are gross total-return indices, so TA-125 needs no such correction.)
+  spxDividendYield: 1.1,
 };
 
 // Valuation anchor for the S&P 500: ten-year nominal total return (percent a year) regressed on
@@ -66,14 +71,14 @@ const BACKTEST = {
   period: "2011–2026 (נתוני שוק מ-2008, כולל משבר 2008)",
   categories: 19,
   forecasts: { "1y": 2191, "3y": 1735, "5y": 1279 },
-  insideShare: 0.84,
+  insideShare: 0.83,
   belowShare: 0.04,
-  aboveShare: 0.12,
-  byHorizon: { "1y": { inside: 0.82, below: 0.05, above: 0.13 }, "3y": { inside: 0.84, below: 0.03, above: 0.14 }, "5y": { inside: 0.89, below: 0.02, above: 0.09 } },
-  meanAbsErrorGeneralTrack: { "1y": 4.6, "3y": 2.1, "5y": 1.5 }, // percentage points per year
+  aboveShare: 0.14,
+  byHorizon: { "1y": { inside: 0.81, below: 0.05, above: 0.14 }, "3y": { inside: 0.83, below: 0.03, above: 0.14 }, "5y": { inside: 0.86, below: 0.03, above: 0.11 } },
+  meanAbsErrorGeneralTrack: { "1y": 4.6, "3y": 2.1, "5y": 1.6 }, // percentage points per year
   independentWindows: { "1y": 15, "3y": 5, "5y": 3 },
   // the same rule applied to 70 individual tracks of specific companies (not category medians), 2012–2026
-  individualTracks: { tracks: 70, forecasts: { "1y": 1895, "3y": 1335, "5y": 792 }, inside: { "1y": 0.83, "3y": 0.84, "5y": 0.95 }, below: { "1y": 0.05, "3y": 0, "5y": 0 }, meanAbsError: { "1y": 5.4, "3y": 2.5, "5y": 1.8 } },
+  individualTracks: { tracks: 70, forecasts: { "1y": 1895, "3y": 1335, "5y": 792 }, inside: { "1y": 0.82, "3y": 0.83, "5y": 0.93 }, below: { "1y": 0.05, "3y": 0, "5y": 0 }, meanAbsError: { "1y": 5.4, "3y": 2.6, "5y": 1.9 } },
   lossProbabilityNote: "הסיכוי להפסד שהמודל נותן שמרני: בבדיקה על מסלולים בודדים, כשהמודל נתן 15% עד 25% להפסד אחרי שנה, הפסד קרה ב-9% מהמקרים; ל-3 ול-5 שנים כמעט לא נרשמו הפסדים בתקופה שנבדקה.",
   persistence: "בין מסלולים כלליים של חברות שונות, רמת התנודתיות נשמרה מתקופה לתקופה (מתאם ממוצע 0.84), ואילו התשואה היחסית כמעט לא (0.12, ובחלק מהתקופות התהפכה).",
   tenYearCheck: "אופק 10 שנים לא נבדק כתחזית. לשם בדיקת סבירות: בכל 215 התקופות של 10 שנים במסלול הכללי החציוני (1999–2026) התשואה השנתית הממוצעת הייתה בין 3.6% ל-7.8%.",
@@ -163,7 +168,9 @@ function forecastTrack({ model, history, yields, assumptions = {}, categoryAlpha
   const alpha = Math.min(ALPHA_BOUNDS.high / 12, Math.max(ALPHA_BOUNDS.low / 12, rawAlpha));
   const alphaClamped = alpha !== rawAlpha;
 
-  const yieldMonthly = { ta125: (yields.y10 + a.equityPremium) / 12, spx: (yields.y10 + a.equityPremium) / 12, usd: a.usdDrift / 12, gov: yields.y5 / 12, corp: (yields.y5 + a.corporateSpread) / 12 };
+  const spxDividend = valuation && Number.isFinite(valuation.dividendYield) && valuation.dividendYield >= 0 && valuation.dividendYield < 6 ? valuation.dividendYield : a.spxDividendYield;
+  a.spxDividendYield = spxDividend;
+  const yieldMonthly = { ta125: (yields.y10 + a.equityPremium) / 12, spx: (yields.y10 + a.equityPremium - spxDividend) / 12, usd: a.usdDrift / 12, gov: yields.y5 / 12, corp: (yields.y5 + a.corporateSpread) / 12 };
   const dot = (mu) => FACTOR_NAMES.reduce((s, f, i) => s + beta[i] * mu[f], 0);
   // Prudence cap: an equity index's historical average is not carried forward above
   // the government yield plus twice the equity premium (2012–2026 was an unusually good period).
@@ -180,11 +187,12 @@ function forecastTrack({ model, history, yields, assumptions = {}, categoryAlpha
   let valuationAnchor = null;
   let valuationEffect = 0;
   if (!bondLike && valuation && Number.isFinite(valuation.cape) && valuation.cape >= 5 && valuation.cape <= 80) {
-    const spxValuation = VALUATION_FIT.intercept + VALUATION_FIT.slope * (100 / valuation.cape);
+    const spxValuationTotal = VALUATION_FIT.intercept + VALUATION_FIT.slope * (100 / valuation.cape);
+    const spxValuation = spxValuationTotal - spxDividend; // price-index basis, like the factor
     const twoAnchor = ((histMean.spx + yieldMonthly.spx) / 2) * 12;
     const threeAnchor = (histMean.spx * 12 + yieldMonthly.spx * 12 + spxValuation) / 3;
     valuationEffect = model.betas.spx * (threeAnchor - twoAnchor);
-    valuationAnchor = { cape: valuation.cape, asOf: valuation.asOf || null, source: valuation.source || null, impliedSpxAnnual: round(spxValuation), spxAnchorBefore: round(twoAnchor), spxAnchorAfter: round(threeAnchor), effectOnCentre: round(valuationEffect, 2) };
+    valuationAnchor = { cape: valuation.cape, asOf: valuation.asOf || null, source: valuation.source || null, impliedSpxAnnual: round(spxValuationTotal), impliedSpxPriceAnnual: round(spxValuation), dividendYield: round(spxDividend, 2), spxAnchorBefore: round(twoAnchor), spxAnchorAfter: round(threeAnchor), effectOnCentre: round(valuationEffect, 2) };
   }
   // Comprehensive pension funds: 30% of assets earn a CPI-linked guaranteed return, so the
   // track's fitted "alpha" carries the inflation of the fitting window. Going forward that
