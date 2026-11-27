@@ -258,7 +258,7 @@ function yearEndFor(historyRows, estimates, trackLabel = "המסלול") {
     const parts = [];
     if (y.officialThrough) parts.push(`תשואה רשמית מתחילת ${y.year} עד סוף ${month(y.officialThrough)}: ${num(y.officialYearToDate)}`);
     if (y.estimatedMonths.length) parts.push(y.estimatedMonths.map((e) => `אומדן ל${month(e.period)}${e.partial ? " (עד כה)" : ""}: ${num(e.estimate)}`).join(", "));
-    text = `${parts.join(". ")}. הערכה לסיום ${y.year}: בסביבות ${num(y.central)}, בטווח סביר של ${num(y.range.low)} עד ${num(y.range.high)}${y.remainingMonths ? ` (נותרו ${y.remainingMonths === 1 ? "חודש אחד" : y.remainingMonths + " חודשים"} שעדיין לא התחילו)` : ""}. הערכה מחקרית, אינה תשואה מובטחת.`;
+    text = `${parts.join(". ")}. הערכה לסיום ${y.year}: בסביבות ${num(y.central)}, בטווח סביר של ${num(y.range.low)} עד ${num(y.range.high)}${y.averagedMonths ? ` (${y.averagedMonths === 1 ? "חודש אחד חושב" : y.averagedMonths + " חודשים חושבו"} לפי הממוצע הרב-שנתי של המסלול, כי אין עליהם עדיין נתון)` : ""}. הערכה מחקרית, אינה תשואה מובטחת.`;
   }
   return { ...y, text };
 }
@@ -269,7 +269,7 @@ function yearEndFor(historyRows, estimates, trackLabel = "המסלול") {
  */
 function declineSummary(returns, currentDepth = 0) {
   const depths = [1, 3];
-  if (currentDepth >= 1 && !depths.includes(Number(currentDepth.toFixed(1)))) depths.push(Number(currentDepth.toFixed(1)));
+  if (currentDepth >= 1 && currentDepth < 99 && !depths.includes(Number(currentDepth.toFixed(1)))) depths.push(Number(currentDepth.toFixed(1)));
   return depths.sort((x, y) => x - y).map((depth) => ({ ...tm.declineOutlook(returns, { depth }), isCurrentDepth: currentDepth >= 1 && depth === Number(currentDepth.toFixed(1)) }));
 }
 
@@ -287,7 +287,7 @@ function forecastReliability(model, forecast, { shortType = false } = {}) {
   if (model.quality === "low" || forecast.inputs.centreBounded) {
     grade = "very_low";
     reasons.push(model.quality === "low" ? "המודל של המסלול אינו יציב" : "מרכז התחזית הוגבל לטווח סביר");
-  } else if (eq < 0.15) {
+  } else if (forecast.inputs.bondLike === true || (forecast.inputs.bondLike == null && eq < 0.15)) {
     grade = "high";
     reasons.push("מסלול אג\"ח או כספי: תשואת האג\"ח ההתחלתית חוזה היטב את התשואה ל-3 עד 5 שנים (טעות ממוצעת של 0.3 עד 0.8 נקודות אחוז לשנה בבדיקה על מסלולים בודדים)");
   } else if (eq >= 0.6) {
@@ -306,7 +306,7 @@ function forecastReliability(model, forecast, { shortType = false } = {}) {
     reasons.push("סוג מסלול חדש, עם פחות מ-36 חודשי נתונים");
     if (!(borrowed)) grade = grade === "high" ? "medium" : "low";
   }
-  if (forecast.inputs.alphaClamped && grade === "medium") { grade = "low"; reasons.push("הרכיב הלא-מוסבר של המסלול היה חריג והוגבל"); }
+  if (forecast.inputs.alphaClamped && (grade === "medium" || grade === "high")) { grade = grade === "high" ? "medium" : "low"; reasons.push("הרכיב הלא-מוסבר של המסלול היה חריג והוגבל"); }
   const he = { high: "גבוהה", medium: "בינונית", low: "נמוכה", very_low: "נמוכה מאוד" }[grade];
   return { grade, he, reasons, note: "הדירוג מתייחס לאופק של 3 עד 5 שנים. לשנה אחת אין תחזית נקודתית אמינה לאף מסלול עם מניות." };
 }
@@ -339,6 +339,7 @@ async function forecastFund({ fundId, dataset, category, annualFee = 0, assumpti
     // constant against negative bond sensitivities, each with a wide error). A long-only track
     // cannot have a negative exposure to bonds, so both are neutralised together.
     let bondNote = "";
+    let hadNegativeBonds = false;
     if (!ownFull) {
       // The bond part is taken from the reported equity exposure (the track's own, or the
       // median of the type's tracks): what is not in equities is assumed to be in bonds,
@@ -352,12 +353,13 @@ async function forecastFund({ fundId, dataset, category, annualFee = 0, assumpti
       // futures report a low equity exposure while moving one-for-one with the index)
       const room = Math.max(0, 1 - (Math.max(0, model.betas.ta125) + Math.max(0, model.betas.spx)));
       const bondShare = Number.isFinite(equityPct) ? Math.min(room, Math.max(0, Math.min(1, 1 - equityPct / 100))) : 0;
+      hadNegativeBonds = model.betas.gov < 0 || model.betas.corp < 0;
       let gov = Math.max(0, model.betas.gov);
       let corp = Math.max(0, model.betas.corp);
       if (bondShare >= 0.05 && gov + corp < bondShare) { gov = bondShare / 2; corp = bondShare / 2; bondNote = ` רכיב האג"ח נקבע לפי החשיפה המדווחת (${Math.round(bondShare * 100)}% שאינם במניות).`; }
       model = { ...model, alpha: 0, betas: { ...model.betas, gov, corp } };
     }
-    shortTypeWarning = "סוג המסלול חדש (פחות מ-36 חודשי נתונים). " + (ownFull ? "הרכיב שאינו מוסבר בשוק נלקח מהמסלול עצמו בלבד, ולא מסוג המסלול." : "לא הונח רכיב שאינו מוסבר בשוק, ורגישות שלילית לאג\"ח (שאינה אפשרית במסלול כזה) אופסה." + bondNote) + " התחזית למסלול הזה פחות מבוססת.";
+    shortTypeWarning = "סוג המסלול חדש (פחות מ-36 חודשי נתונים). " + (ownFull ? "הרכיב שאינו מוסבר בשוק נלקח מהמסלול עצמו בלבד, ולא מסוג המסלול." : "לא הונח רכיב שאינו מוסבר בשוק" + (hadNegativeBonds ? ", ורגישות שלילית לאג\"ח (שאינה אפשרית במסלול כזה) אופסה." : ".") + bondNote) + " התחזית למסלול הזה פחות מבוססת.";
   }
 
   let yields;
@@ -370,12 +372,15 @@ async function forecastFund({ fundId, dataset, category, annualFee = 0, assumpti
     yieldWarning = `המשיכה החיה מבנק ישראל נכשלה (${err.message}); נעשה שימוש בנתון שמור מ-${yields.asOf}.`;
   }
 
-  const valuation = assumptions && assumptions.cape ? { cape: Number(assumptions.cape), asOf: null, source: "הוזן על ידי המשתמש" } : valuationSnapshot();
+  const storedValuation = valuationSnapshot();
+  const valuation = assumptions && assumptions.cape ? { cape: Number(assumptions.cape), asOf: null, source: "הוזן על ידי המשתמש", dividendYield: storedValuation ? storedValuation.dividendYield : undefined } : storedValuation;
   // comprehensive pension funds hold a 30% CPI-linked guaranteed share (see forecastTrack)
   const comprehensivePension = model.product === "קרן פנסיה מקיפה" || String(model.category || "").startsWith("פנסיה מקיפה");
   const snap = yieldSnapshot();
   const trailing = snap && snap.trailingInflation5y ? snap.trailingInflation5y.value : null;
-  const inflationLinked = comprehensivePension && Number.isFinite(trailing) && Number.isFinite(yields.inflation) ? { share: 0.3, trailingInflation: trailing, expectedInflation: yields.inflation } : null;
+  // 30% of the fund's assets, allocated 60% to pensioners' assets (so a pensioners' track holds about twice the share)
+  const pensioners = /מקבלי קצבה|פנסיונרים/.test(String(model.name || ""));
+  const inflationLinked = comprehensivePension && Number.isFinite(trailing) && Number.isFinite(yields.inflation) ? { share: pensioners ? 0.6 : 0.3, trailingInflation: trailing, expectedInflation: yields.inflation } : null;
   const forecast = forecastEngine.forecastTrack({ model, history, yields, assumptions, valuation, inflationLinked, categoryAlpha: cat ? cat.alpha : null, annualFee: Number(annualFee) || 0 });
   const reliability = forecastReliability(model, forecast, { shortType });
   const name = trackLabel || label || "המסלול";
@@ -556,7 +561,7 @@ async function analyzeFund({ dataset, fundId, window = 60, factorRows = null, mt
     const wf = tm.walkForwardFit(rows, { minTrain: Math.min(window, rows.length - 12), window });
     accuracy = { n: wf.n, from: wf.from, to: wf.to, mae: wf.mae, p90AbsError: wf.p90AbsError, bias: wf.bias, naiveMeanMae: wf.naiveMeanMae, skillVsNaive: wf.skillVsNaive, recent: wf.recent.slice(-12) };
   }
-  const model = { alpha: fit.alpha, betas: fit.betas, accuracy };
+  const model = { alpha: fit.alpha, betas: fit.betas, accuracy, residualSd: fit.residualSd };
 
   let earlyEstimate = null;
   if (monthToDate && monthToDate.factors) {

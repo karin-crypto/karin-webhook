@@ -191,6 +191,33 @@ test("track model: deposit-timing statistics", () => {
     assert.ok(both.declineOver1Probability < both.probability && both.declineOver1Probability > 0); // a deeper fall is always less likely
     assert.equal(tm.nowcast(m, Object.fromEntries(tm.FACTOR_NAMES.map((f) => [f, -1])), { elapsedShare: 0.5, history: hist }).negativeMonth.text.startsWith("הסיכוי המוערך"), true);
   }
+  // regressions from an independent review
+  {
+    // the current drawdown is where the track stands now, not the low point of the decline
+    const partRecovered = tm.depositTimingStats([...Array(40).fill(1), -10, ...Array(5).fill(1)]);
+    assert.ok(Math.abs(partRecovered.currentDrawdown.depth - (0.9 * 1.01 ** 5 - 1) * 100) < 0.01);
+    assert.equal(partRecovered.currentDrawdown.deepest, -10);
+    // a decline still in progress counts: it deepened, and it has not recovered within 12 months
+    const stuck = tm.declineOutlook([...Array(40).fill(1), -4, ...Array(5).fill(1), -4, ...Array(5).fill(1), -12, ...Array(14).fill(0.1)], { depth: 3 });
+    assert.equal(stuck.episodes, 3);
+    assert.equal(stuck.finishedEpisodes, 2);
+    assert.equal(stuck.deepenedShare, 0.33);
+    assert.equal(stuck.recoveredWithin.months12, 0.67);
+    assert.equal(stuck.recoveredWithin.months24, 1); // 24 months have not passed, so the open decline is not yet a known failure
+    assert.equal(stuck.longestStillOpen, true);
+    assert.equal(tm.declineOutlook(Array(40).fill(1).concat([-70]), { depth: 65 }).episodes, 1); // a very deep fall does not throw
+    // year end: the projection stays in the year of the last official month
+    const h11 = hist.concat([{ period: "202611", ret: 1 }]);
+    const cross = tm.yearEndProjection(h11, { estimates: [{ period: "202612", estimate: -2, errorSd: 0.4 }, { period: "202701", estimate: 5, errorSd: 0.4, elapsedShare: 0.5 }] });
+    assert.equal(cross.year, 2026);
+    assert.deepEqual(cross.estimatedMonths.map((e) => e.period), ["202612"]);
+    assert.equal(cross.central, Number(((1.01 ** 11 * 0.98 - 1) * 100).toFixed(2)));
+    // a month with neither an official figure nor an estimate is filled at the average, and said so
+    const gap = tm.yearEndProjection(hist.slice(0, -1), { estimates: [{ period: "202611", estimate: -1, errorSd: 0.4 }] }); // official to September
+    assert.equal(gap.officialThrough, "202609");
+    assert.equal(gap.averagedMonths, 2); // October and December
+    assert.equal(gap.central, Number(((1.01 ** 9 * 1.01 * 0.99 * 1.01 - 1) * 100).toFixed(2)));
+  }
   const falling = tm.depositTimingStats([...Array(36).fill(1), -2, -3]);
   assert.equal(falling.currentDrawdown.monthsSincePeak, 2);
   assert.ok(falling.currentDrawdown.depth < -4.9);
@@ -444,6 +471,11 @@ test("track forecast: range per horizon, anchors, prudence cap, fees and guards"
   const noDividend = fc.forecastTrack({ model: trackerModel, history, yields, valuation: { cape: 39, dividendYield: 0 } });
   const withDividend = fc.forecastTrack({ model: trackerModel, history, yields, valuation: { cape: 39, dividendYield: 1.5 } });
   assert.ok(noDividend.central - withDividend.central > 0.7 && noDividend.central - withDividend.central < 1.2, `dividend effect ${noDividend.central - withDividend.central}`);
+  // an explicit user assumption wins over the stored dividend yield
+  const userZero = fc.forecastTrack({ model: trackerModel, history, yields, assumptions: { spxDividendYield: 0 }, valuation: { cape: 39, dividendYield: 1.5 } });
+  assert.equal(userZero.central, noDividend.central);
+  assert.equal(userZero.inputs.assumptions.spxDividendYield, 0);
+  assert.equal(typeof dear.inputs.bondLike, "boolean");
   const cheap = fc.forecastTrack({ model: general, history, yields, valuation: { cape: 8 } });
   assert.ok(cheap.central > f.central); // and a cheap one raises it
   const trackerDear = fc.forecastTrack({ model: trackerModel, history, yields, valuation: { cape: 39 } });

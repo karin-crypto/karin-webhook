@@ -356,8 +356,9 @@
         const own = r.ownRecord && r.ownRecord.afterDeclines;
         if (own) {
           const cd = r.ownRecord.currentDrawdown;
-          if (cd && cd.depth < 0) parts.push(`נכון לחודש הרשמי האחרון (${ym(r.ownRecord.to)}) המסלול הזה ${Math.abs(cd.depth)}% מתחת לשיא.`);
-          parts.push(`במסלול הזה עצמו (מאז ${ym(r.ownRecord.from)}): ` + own.filter((o) => o.episodes).map((o) => `אחרי ירידה של ${o.depth}% מהשיא (${o.episodes} מקרים${o.reliable ? "" : ", מעט"}) — ב-${pct(o.deepenedShare)} העמיקה ל-${o.deepenedBeyond}% ומעלה; חזרה לשיא תוך ${o.medianMonthsToRecover} חודשים בחציון, ${pct(o.recoveredWithin.months12)} תוך שנה, הארוכה ${o.longestMonthsToRecover}`).join("; ") + ".");
+          if (cd && cd.depth < 0) parts.push(`נכון לחודש הרשמי האחרון (${ym(r.ownRecord.to)}) המסלול הזה ${Math.abs(cd.depth)}% מתחת לשיא${cd.deepest < cd.depth - 0.05 ? ` (בשפל של הירידה הזו: ${Math.abs(cd.deepest)}%)` : ""}.`);
+          const withCases = own.filter((o) => o.episodes);
+          if (withCases.length) parts.push(`במסלול הזה עצמו (מאז ${ym(r.ownRecord.from)}): ` + withCases.map((o) => `אחרי ירידה של ${o.depth}% מהשיא (${o.episodes} מקרים${o.reliable ? "" : ", מעט"}) — ${o.deepenedShare == null ? "" : `ב-${pct(o.deepenedShare)} העמיקה ל-${o.deepenedBeyond}% ומעלה; `}${o.medianMonthsToRecover == null ? "אף אחת מהן עוד לא חזרה לשיא" : `חזרה לשיא תוך ${o.medianMonthsToRecover} חודשים בחציון`}${o.recoveredWithin.months12 == null ? "" : `, ${pct(o.recoveredWithin.months12)} תוך שנה`}, הארוכה ${o.longestMonthsToRecover}${o.longestStillOpen ? " (ועדיין נמשכת)" : ""}`).join("; ") + ".");
         }
         if (parts.length) parts.push("תיאור העבר — אינו אומר כמה זמן תימשך ירידה נוכחית.");
         $("tfcrecover").textContent = parts.join(" ");

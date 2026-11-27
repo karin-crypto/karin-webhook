@@ -168,7 +168,9 @@ function forecastTrack({ model, history, yields, assumptions = {}, categoryAlpha
   const alpha = Math.min(ALPHA_BOUNDS.high / 12, Math.max(ALPHA_BOUNDS.low / 12, rawAlpha));
   const alphaClamped = alpha !== rawAlpha;
 
-  const spxDividend = valuation && Number.isFinite(valuation.dividendYield) && valuation.dividendYield >= 0 && valuation.dividendYield < 6 ? valuation.dividendYield : a.spxDividendYield;
+  const userDividend = Number.isFinite(assumptions.spxDividendYield) && assumptions.spxDividendYield >= 0 && assumptions.spxDividendYield < 6 ? assumptions.spxDividendYield : null;
+  const storedDividend = valuation && Number.isFinite(valuation.dividendYield) && valuation.dividendYield >= 0 && valuation.dividendYield < 6 ? valuation.dividendYield : null;
+  const spxDividend = userDividend != null ? userDividend : storedDividend != null ? storedDividend : DEFAULT_ASSUMPTIONS.spxDividendYield;
   a.spxDividendYield = spxDividend;
   const yieldMonthly = { ta125: (yields.y10 + a.equityPremium) / 12, spx: (yields.y10 + a.equityPremium - spxDividend) / 12, usd: a.usdDrift / 12, gov: yields.y5 / 12, corp: (yields.y5 + a.corporateSpread) / 12 };
   const dot = (mu) => FACTOR_NAMES.reduce((s, f, i) => s + beta[i] * mu[f], 0);
@@ -273,6 +275,7 @@ function forecastTrack({ model, history, yields, assumptions = {}, categoryAlpha
       alphaNote: Number.isFinite(categoryAlpha) ? "הרכיב שאינו מוסבר בשוק: רבע מהמסלול עצמו ושלושה רבעים מסוג המסלול (הצטיינות של מסלול בודד כמעט אינה נמשכת)" : "הרכיב שאינו מוסבר בשוק: של המסלול עצמו",
       annualFee,
       equitySensitivity: round(equitySensitivity, 2),
+      bondLike,
     },
     calibration: BACKTEST,
     generalTrackRecord: GENERAL_TRACK_RECORD,

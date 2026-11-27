@@ -446,7 +446,8 @@ function depositTimingStats(monthlyReturns, { splitMonths = 3, horizons = [12, 3
       if (depth < cur.depth) { cur.depth = depth; cur.troughIndex = i; }
     }
   });
-  const current = cur ? { depth: round(cur.depth), monthsSincePeak: r.length - 1 - cur.peakIndex } : { depth: 0, monthsSincePeak: 0 };
+  // where the track stands now against its peak; `deepest` is the low point of the same decline
+  const current = cur ? { depth: round((level / peak - 1) * 100), deepest: round(cur.depth), monthsSincePeak: r.length - 1 - cur.peakIndex } : { depth: 0, deepest: 0, monthsSincePeak: 0 };
   const worst = draws.concat(cur ? [cur] : []).sort((x, y) => x.depth - y.depth).slice(0, 5)
     .map((d) => ({ depth: round(d.depth), monthsToTrough: d.troughIndex - d.peakIndex, recoveredAfterMonths: d.recoveredAfterMonths }));
 
@@ -485,14 +486,14 @@ function declineOutlook(monthlyReturns, { depth, deeper = null } = {}) {
   const r = (monthlyReturns || []).map((v) => (v && typeof v === "object" ? v.ret : v)).filter((v) => typeof v === "number" && Number.isFinite(v));
   if (r.length < 36) throw new TrackModelError(`נדרשים לפחות 36 חודשי תשואה (יש ${r.length})`);
   const d = Math.abs(Number(depth));
-  if (!(d > 0 && d < 60)) throw new TrackModelError("depth: עומק הירידה באחוזים (מספר חיובי)");
+  if (!(d > 0 && d < 100)) throw new TrackModelError("depth: עומק הירידה באחוזים (מספר חיובי)");
   const deeperAt = deeper == null ? Math.max(2 * d, d + 2) : Math.abs(Number(deeper));
-  const episodes = [];
+  const closed = [];
   let level = 1; let peak = 1; let cur = null;
   r.forEach((v, i) => {
     level *= 1 + v / 100;
     if (level >= peak) {
-      if (cur && cur.reachedAt != null) { cur.monthsToRecover = i - cur.reachedAt; episodes.push(cur); }
+      if (cur && cur.reachedAt != null) { cur.monthsToRecover = i - cur.reachedAt; closed.push(cur); }
       peak = level; cur = null;
     } else {
       const dd = (1 - level / peak) * 100;
@@ -501,25 +502,34 @@ function declineOutlook(monthlyReturns, { depth, deeper = null } = {}) {
       if (cur.reachedAt == null && dd >= d) cur.reachedAt = i;
     }
   });
-  const open = cur && cur.reachedAt != null ? cur : null; // a decline still in progress is reported, not counted
-  const n = episodes.length;
-  const months = episodes.map((e) => e.monthsToRecover);
-  const within = (m) => (n ? round(mean(months.map((x) => (x <= m ? 1 : 0))), 2) : null);
+  // A decline that reached the depth and has not ended yet is part of the record: it counts in
+  // "how often it deepened", and as "not recovered within N months" once N months have passed.
+  const open = cur && cur.reachedAt != null ? { ...cur, monthsSoFar: r.length - 1 - cur.reachedAt } : null;
+  const all = open ? closed.concat([open]) : closed;
+  const n = all.length;
+  const months = closed.map((e) => e.monthsToRecover);
+  const within = (m) => {
+    const known = closed.length + (open && open.monthsSoFar >= m ? 1 : 0);
+    return known ? round(closed.filter((e) => e.monthsToRecover <= m).length / known, 2) : null;
+  };
   return {
     ok: true,
     depth: round(d),
     episodes: n,
+    finishedEpisodes: closed.length,
     deepenedBeyond: round(deeperAt),
-    deepenedShare: n ? round(mean(episodes.map((e) => (e.maxDepth >= deeperAt ? 1 : 0))), 2) : null,
-    medianFinalDepth: n ? round(-quantile(episodes.map((e) => e.maxDepth), 0.5)) : null,
-    worstFinalDepth: n ? round(-Math.max(...episodes.map((e) => e.maxDepth))) : null,
-    medianMonthsToRecover: n ? round(quantile(months, 0.5), 1) : null,
-    longestMonthsToRecover: n ? Math.max(...months) : null,
+    // an open decline is a known "deepened" once it has; until then its outcome is unknown and it is left out
+    deepenedShare: closed.length + (open && open.maxDepth >= deeperAt ? 1 : 0) ? round((all.filter((e) => e.maxDepth >= deeperAt).length) / (closed.length + (open && open.maxDepth >= deeperAt ? 1 : 0)), 2) : null,
+    medianFinalDepth: closed.length ? round(-quantile(closed.map((e) => e.maxDepth), 0.5)) : null,
+    worstFinalDepth: n ? round(-Math.max(...all.map((e) => e.maxDepth))) : null,
+    medianMonthsToRecover: months.length ? round(quantile(months, 0.5), 1) : null,
+    longestMonthsToRecover: months.length || open ? Math.max(...months, open ? open.monthsSoFar : 0) : null,
+    longestStillOpen: !!(open && open.monthsSoFar >= Math.max(0, ...months)),
     recoveredWithin: { months6: within(6), months12: within(12), months24: within(24) },
-    inProgress: open ? { depthSoFar: round(-open.maxDepth), monthsSinceReached: r.length - 1 - open.reachedAt } : null,
+    inProgress: open ? { depthSoFar: round(-open.maxDepth), monthsSinceReached: open.monthsSoFar } : null,
     months: r.length,
     reliable: n >= 8,
-    note: `מה שקרה בעבר אחרי שהמסלול ירד ${round(d)}% ומעלה מהשיא (לפי סוף חודש), מהחודש שבו הגיע לעומק הזה. ${n < 8 ? "מעט מקרים — לא בסיס למסקנה. " : ""}תיאור העבר, לא תחזית.`,
+    note: `מה שקרה בעבר אחרי שהמסלול ירד ${round(d)}% ומעלה מהשיא (לפי סוף חודש), מהחודש שבו הגיע לעומק הזה. ירידה שעדיין לא הסתיימה נספרת. ${n < 8 ? "מעט מקרים — לא בסיס למסקנה. " : ""}תיאור העבר, לא תחזית.`,
   };
 }
 
@@ -537,10 +547,12 @@ function yearEndProjection(history, { estimates = [] } = {}) {
   const rows = (history || []).filter((x) => x && /^\d{6}$/.test(String(x.period)) && Number.isFinite(x.ret)).map((x) => ({ period: String(x.period), ret: x.ret }));
   if (rows.length < 36) throw new TrackModelError(`נדרשים לפחות 36 חודשי תשואה רשמיים (יש ${rows.length})`);
   const lastOfficial = rows[rows.length - 1].period;
-  const est = (estimates || []).filter((e) => e && /^\d{6}$/.test(String(e.period)) && Number.isFinite(e.estimate) && String(e.period) > lastOfficial)
-    .map((e) => ({ period: String(e.period), estimate: e.estimate, errorSd: Number.isFinite(e.errorSd) ? Math.abs(e.errorSd) : 0.5, elapsedShare: e.elapsedShare > 0 && e.elapsedShare <= 1 ? e.elapsedShare : 1 }));
-  const lastCovered = est.length ? est[est.length - 1].period : lastOfficial;
-  const year = lastCovered.slice(0, 4);
+  const est = new Map((estimates || []).filter((e) => e && /^\d{6}$/.test(String(e.period)) && Number.isFinite(e.estimate) && String(e.period) > lastOfficial)
+    .map((e) => [String(e.period), { period: String(e.period), estimate: e.estimate, errorSd: Number.isFinite(e.errorSd) ? Math.abs(e.errorSd) : 0.5, elapsedShare: e.elapsedShare > 0 && e.elapsedShare <= 1 ? e.elapsedShare : 1 }]));
+  // The projection stays with the year of the last official month until that year's December
+  // is official; only then does an estimate for January open the next year.
+  const yearDone = lastOfficial.endsWith("12");
+  const year = yearDone && est.size ? String(Number(lastOfficial.slice(0, 4)) + 1) : lastOfficial.slice(0, 4);
   const all = rows.map((x) => x.ret);
   const mu = mean(all);
   let wSum = 0; let wVar = 0;
@@ -548,34 +560,41 @@ function yearEndProjection(history, { estimates = [] } = {}) {
   const monthlySd = Math.sqrt(wVar / wSum);
 
   const official = rows.filter((x) => x.period.startsWith(year));
-  const estimated = est.filter((e) => e.period.startsWith(year));
-  const remaining = 12 - Number(lastCovered.slice(4));
   let growth = official.reduce((g, x) => g * (1 + x.ret / 100), 1);
   let variance = 0;
-  for (const e of estimated) {
-    const rest = 1 - e.elapsedShare; // the part of a partial month still ahead
-    growth *= 1 + (e.estimate + mu * rest) / 100;
-    variance += e.errorSd ** 2 + rest * monthlySd ** 2;
+  const estimated = [];
+  let averaged = 0; // months with neither an official figure nor an estimate
+  const firstOpen = official.length ? Number(official[official.length - 1].period.slice(4)) + 1 : 1;
+  for (let m = firstOpen; m <= 12; m++) {
+    const e = est.get(`${year}${String(m).padStart(2, "0")}`);
+    if (e) {
+      const rest = 1 - e.elapsedShare; // the part of a partial month still ahead
+      growth *= 1 + (e.estimate + mu * rest) / 100;
+      variance += e.errorSd ** 2 + rest * monthlySd ** 2;
+      estimated.push(e);
+    } else {
+      growth *= 1 + mu / 100;
+      variance += monthlySd ** 2;
+      averaged++;
+    }
   }
-  const soFar = growth;
-  growth *= (1 + mu / 100) ** remaining;
-  variance += remaining * monthlySd ** 2;
   const central = (growth - 1) * 100;
-  const half = 1.2816 * Math.sqrt(variance) * soFar;
-  const complete = remaining === 0 && estimated.length === 0;
+  const half = 1.2816 * Math.sqrt(variance) * growth;
+  const complete = official.length === 12;
   return {
     ok: true,
     year: Number(year),
     officialThrough: official.length ? official[official.length - 1].period : null,
     officialYearToDate: official.length ? round(compound(official.map((x) => x.ret))) : null,
     estimatedMonths: estimated.map((e) => ({ period: e.period, estimate: round(e.estimate), partial: e.elapsedShare < 1 })),
-    remainingMonths: remaining,
+    averagedMonths: averaged,
+    remainingMonths: averaged,
     assumedMonthlyAverage: round(mu),
     monthlyVolatilityUsed: round(monthlySd),
     central: round(central),
     range: complete ? null : { low: round(central - half), high: round(central + half), coverage: 0.8 },
     complete,
-    note: complete ? "השנה הסתיימה — זו התשואה הרשמית." : "הערכה מחקרית לסיום השנה: החודשים הרשמיים, אומדן לחודשים שעוד לא פורסמו, וממוצע רב-שנתי לחודשים שנותרו. הטווח הוא התחזית; אינו תשואה מובטחת.",
+    note: complete ? "השנה הסתיימה — זו התשואה הרשמית." : "הערכה מחקרית לסיום השנה: החודשים הרשמיים, אומדן לחודשים שיש עליהם נתוני שוק, וממוצע רב-שנתי לשאר החודשים. הטווח הוא התחזית; אינו תשואה מובטחת.",
   };
 }
 
