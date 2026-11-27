@@ -292,8 +292,10 @@ function scenarioTable(model) {
  * (2017–2026, each fitted on the past only): Brier score 0.134 against 0.200
  * for the plain share of negative months; when it said 70–90% the month
  * ended negative 86% of the time, and above 90% — 96%. Between 10% and 30%
- * it overstates (said 20%, happened 8%). Other days of the month use the
- * same formula and were not checked separately.
+ * it overstates (said 20%, happened 8%). A second check with weekly closes
+ * (equities and the dollar only) around days 8, 15, 22 and 27 gave a skill
+ * of 14%, 30%, 45% and 66% over the base rate, and every month it put above
+ * 90% ended negative (7, 14, 45 and 78 months).
  */
 function negativeMonthProbability(model, estimate, { elapsedShare = 1, history = null } = {}) {
   const betas = requireBetas(model);
@@ -324,7 +326,7 @@ function negativeMonthProbability(model, estimate, { elapsedShare = 1, history =
     probability: round(p, 2),
     expectedMonthEnd: round(centre),
     text: `הסיכוי המוערך שהחודש יסתיים בירידה: ${Math.round(p * 100)}%`,
-    note: "מדד מחקרי. נבדק באמצע החודש על 715 חודשים (2017–2026): כשהמדד היה מעל 70%, כ-9 מכל 10 חודשים אכן הסתיימו בירידה; בין 10% ל-30% הוא מחמיר (ירידה קרתה רק בכ-8% מהמקרים).",
+    note: "מדד מחקרי. נבדק בימים 8, 15, 22 ו-27 בחודש על כ-600 חודשים (2017–2026): כשהמדד היה מעל 90%, כל החודשים הסתיימו בירידה; בין 70% ל-90% — כ-9 מכל 10 (ביום 8: 3 מכל 4). ככל שהחודש מתקדם המדד חד יותר. הוא מתייחס לחודש הנוכחי בלבד ואינו חוזה את החודש הבא.",
   };
 }
 
