@@ -15,10 +15,11 @@
  *   3. A range around the centre: k(horizon) × the track's annual
  *      volatility. k was calibrated on a walk-forward backtest (2015–2026).
  *
- * What the backtest showed (19 track categories, overlapping forecasts):
- * about 73% of realised returns fell inside the range, about 8% below it
- * and about 19% above it. One-year outcomes are wide — a single number for
- * one year is not reliable; the range is the forecast.
+ * What the backtest showed (19 track categories, forecast origins 2011–2026,
+ * market data from 2008 so the 2008 crisis is in the sample): about 87% of
+ * realised returns fell inside the range, about 3% below it and about 10%
+ * above it. One-year outcomes are wide — a single number for one year is
+ * not reliable; the range is the forecast.
  *
  * Units: percent. Nothing here fetches data, and nothing here is a promise
  * of return.
@@ -41,14 +42,15 @@ const DEFAULT_ASSUMPTIONS = {
 };
 
 const BACKTEST = {
-  period: "2015–2026",
+  period: "2011–2026 (נתוני שוק מ-2008, כולל משבר 2008)",
   categories: 19,
-  forecasts: { "1y": 1729, "3y": 1273, "5y": 817 },
-  insideShare: 0.73,
-  belowShare: 0.08,
-  aboveShare: 0.19,
-  meanAbsErrorGeneralTrack: { "1y": 4.7, "3y": 2.1, "5y": 1.6 }, // percentage points per year
-  note: "בדיקה חודש-חודש: בכל נקודה המודל ראה רק את העבר. התחזיות חופפות בזמן ולכן אינן בלתי תלויות. התקופה הייתה טובה לשווקים, ורוב החריגות היו כלפי מעלה.",
+  forecasts: { "1y": 2191, "3y": 1735, "5y": 1279 },
+  insideShare: 0.87,
+  belowShare: 0.03,
+  aboveShare: 0.10,
+  byHorizon: { "1y": { inside: 0.86, below: 0.04, above: 0.10 }, "3y": { inside: 0.86, below: 0.02, above: 0.11 }, "5y": { inside: 0.91, below: 0.01, above: 0.07 } },
+  meanAbsErrorGeneralTrack: { "1y": 4.6, "3y": 2.1, "5y": 1.5 }, // percentage points per year
+  note: "בדיקה חודש-חודש: בכל נקודה המודל ראה רק את העבר. התחזיות חופפות בזמן ולכן אינן בלתי תלויות. רוב החריגות היו כלפי מעלה. בקרנות פנסיה מקיפות לפי גיל התחזית ל-5 שנים הייתה נמוכה מהתוצאה ברוב המקרים.",
 };
 
 const round = (x, d = 1) => (Number.isFinite(x) ? Number(x.toFixed(d)) : null);
@@ -163,6 +165,51 @@ function forecastTrack({ model, history, yields, assumptions = {}, categoryAlpha
   };
 }
 
+/**
+ * Past market episodes. `moves` = cumulative factor moves (percent) over the
+ * episode; `actual` = what the median track of a category actually returned
+ * (official monthly data), where the category existed.
+ */
+const HISTORICAL_EPISODES = [
+  { key: "crisis_2008", he: "משבר 2008 (יוני 2008 עד פברואר 2009)", from: "200806", to: "200902", moves: { ta125: -41.7, spx: -47.5, usd: 28.7, gov: 6.6, corp: -11.0 },
+    actual: { "גמל/השתלמות · כללי": -15.2, "ביטוח · כללי": -11.4, "גמל/השתלמות · אשראי ואג\"ח": -1.2 } },
+  { key: "summer_2011", he: "קיץ 2011 (מאי עד ספטמבר 2011)", from: "201105", to: "201109", moves: { ta125: -18.9, spx: -17.0, usd: 9.3, gov: 4.2, corp: -0.8 },
+    actual: { "גמל/השתלמות · כללי": -6.5, "ביטוח · כללי": -7.3, "גמל/השתלמות · מניות": -17.8, "ביטוח · מניות": -21.5, "גמל/השתלמות · אשראי ואג\"ח": 0.2 } },
+  { key: "covid_2020", he: "קורונה (פברואר עד מרץ 2020)", from: "202002", to: "202003", moves: { ta125: -21.9, spx: -19.9, usd: 3.4, gov: -2.4, corp: -6.5 },
+    actual: { "גמל/השתלמות · כללי": -10.8, "ביטוח · כללי": -11.0, "גמל/השתלמות · מניות": -22.0, "ביטוח · מניות": -21.5, "גמל/השתלמות · אשראי ואג\"ח": -5.5, "פנסיה מקיפה · כללי": -9.3 } },
+  { key: "rates_2022", he: "עליית הריבית (ינואר עד ספטמבר 2022)", from: "202201", to: "202209", moves: { ta125: -8.4, spx: -24.8, usd: 13.9, gov: -8.8, corp: -8.0 },
+    actual: { "גמל/השתלמות · כללי": -8.5, "ביטוח · כללי": -9.5, "ביטוח · מניות": -16.8, "גמל/השתלמות · אשראי ואג\"ח": -6.0, "פנסיה מקיפה · כללי": -5.3 } },
+  { key: "recovery_2009", he: "התאוששות 2009 (מרץ עד דצמבר 2009)", from: "200903", to: "200912", moves: { ta125: 76.4, spx: 51.7, usd: -9.3, gov: 4.4, corp: 23.0 },
+    actual: { "גמל/השתלמות · כללי": 25.5, "ביטוח · כללי": 25.7, "גמל/השתלמות · אשראי ואג\"ח": 13.9 } },
+];
+
+/**
+ * What each past episode would mean for a track with TODAY's sensitivities:
+ * the model's monthly return is compounded over the episode's actual monthly
+ * market moves. Without the monthly history it falls back to sensitivity ×
+ * cumulative move. It answers "what if those markets repeated", not "what
+ * will happen": exposures change, and illiquid assets are marked late.
+ */
+function stressTests(model, history = null) {
+  if (!model || !model.betas) throw new TrackModelError("model.betas חובה");
+  const index = history && Array.isArray(history.periods) ? new Map(history.periods.map((p, i) => [String(p), i])) : null;
+  return HISTORICAL_EPISODES.map((e) => {
+    const months = index ? [...index.keys()].filter((p) => p >= e.from && p <= e.to) : [];
+    const expected = (Number(e.to.slice(0, 4)) - Number(e.from.slice(0, 4))) * 12 + Number(e.to.slice(4)) - Number(e.from.slice(4)) + 1;
+    let impact;
+    let method;
+    if (months.length === expected) {
+      const growth = months.reduce((g, p) => g * (1 + ((model.alpha || 0) + FACTOR_NAMES.reduce((t, f) => t + (model.betas[f] || 0) * history.factors[f][index.get(p)], 0)) / 100), 1);
+      impact = (growth - 1) * 100;
+      method = "monthly_compounded";
+    } else {
+      impact = FACTOR_NAMES.reduce((t, f) => t + (model.betas[f] || 0) * e.moves[f], 0) + (model.alpha || 0) * expected;
+      method = "cumulative_approximation";
+    }
+    return { key: e.key, description: e.he, from: e.from, to: e.to, months: expected, marketMoves: e.moves, impact: round(impact), method, actualByCategory: e.actual };
+  });
+}
+
 /** A forecast-card draft (forecast-card.js shape) for one horizon of a forecast. */
 function toForecastCard(forecast, { asset, key = "5y", dataAsOf, modelVersion = "track-forecast-1.0" } = {}) {
   const h = forecast.horizons.find((x) => x.key === key);
@@ -189,4 +236,4 @@ function toForecastCard(forecast, { asset, key = "5y", dataAsOf, modelVersion = 
   };
 }
 
-module.exports = { HORIZONS, DEFAULT_ASSUMPTIONS, BACKTEST, forecastTrack, toForecastCard, factorStats, normalCdf };
+module.exports = { HORIZONS, DEFAULT_ASSUMPTIONS, BACKTEST, HISTORICAL_EPISODES, forecastTrack, stressTests, toForecastCard, factorStats, normalCdf };

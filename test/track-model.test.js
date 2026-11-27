@@ -327,7 +327,8 @@ test("daily watch: estimates per track type, how unusual, matching scenarios, no
 
 test("track forecast: range per horizon, anchors, prudence cap, fees and guards", () => {
   const history = service.loadFactorHistory();
-  assert.ok(history.periods.length >= 170 && tm.FACTOR_NAMES.every((f) => history.factors[f].length === history.periods.length));
+  assert.ok(history.periods.length >= 220 && history.periods[0] <= "200802", "the factor history reaches back to the 2008 crisis");
+  assert.ok(tm.FACTOR_NAMES.every((f) => history.factors[f].length === history.periods.length));
   const yields = { y5: 3.86, y10: 4.24, inflation: 1.95, asOf: "2026-10", source: "בדיקה" };
   const general = { alpha: 0.08, betas: { ta125: 0.16, spx: 0.23, usd: 0.11, gov: -0.01, corp: 0.2 }, residualSd: 0.43 };
   const f = fc.forecastTrack({ model: general, history, yields });
@@ -343,7 +344,8 @@ test("track forecast: range per horizon, anchors, prudence cap, fees and guards"
   assert.ok(f.horizons[0].annualized.low < 0, "a one-year range for a general track includes a loss");
   assert.equal(f.horizons[3].backtested, false);
   assert.ok(Math.abs(f.horizons[2].cumulative.central - ((1 + f.central / 100) ** 5 - 1) * 100) < 0.3);
-  assert.equal(f.calibration.insideShare, 0.73);
+  assert.equal(f.calibration.insideShare, 0.87);
+  assert.equal(f.anchors.historicalCap, null); // with 2008 in the sample the equity averages are below the cap
   assert.ok(f.caveats.some((c) => /אינה מבטיחה/.test(c)));
 
   // more equity -> higher centre, wider range, more chance of a loss in one year
@@ -351,10 +353,13 @@ test("track forecast: range per horizon, anchors, prudence cap, fees and guards"
   const e = fc.forecastTrack({ model: equity, history, yields });
   assert.ok(e.central > f.central && e.annualVolatility > f.annualVolatility * 1.7);
   assert.ok(e.horizons[0].lossProbability > f.horizons[0].lossProbability);
-  assert.match(e.anchors.historicalCap, /S&P 500/); // the exceptional 2012–2026 average is not projected forward
-  const tracker = fc.forecastTrack({ model: { alpha: 0, betas: { ta125: 0, spx: 1, usd: 0, gov: 0, corp: 0 }, residualSd: 0.3 }, history, yields });
-  // cap = (4.24% + 2 × 4%) a year, applied monthly and compounded: about 13%, below the raw 2012–2026 average
-  assert.ok(tracker.anchors.historical.annual > 12 && tracker.anchors.historical.annual <= 13.1, `capped historical anchor ${tracker.anchors.historical.annual}`);
+  // prudence cap: a historical equity average is never carried forward above yield + twice the premium
+  const trackerModel = { alpha: 0, betas: { ta125: 0, spx: 1, usd: 0, gov: 0, corp: 0 }, residualSd: 0.3 };
+  const tracker = fc.forecastTrack({ model: trackerModel, history, yields });
+  assert.ok(tracker.anchors.historical.annual > 9 && tracker.anchors.historical.annual < 12.9, `S&P anchor ${tracker.anchors.historical.annual}`);
+  const lowPremium = fc.forecastTrack({ model: trackerModel, history, yields, assumptions: { equityPremium: 2 } });
+  assert.match(lowPremium.anchors.historicalCap, /S&P 500/);
+  assert.ok(lowPremium.anchors.historical.annual <= 8.6, `capped anchor ${lowPremium.anchors.historical.annual}`); // (4.24 + 2×2)% a year, compounded monthly
 
   // a bond track is anchored on yields only
   const bond = fc.forecastTrack({ model: { alpha: 0.05, betas: { ta125: 0.02, spx: 0.03, usd: 0.02, gov: 0.4, corp: 0.3 }, residualSd: 0.2 }, history, yields });
@@ -384,9 +389,27 @@ test("track forecast: range per horizon, anchors, prudence cap, fees and guards"
   assert.equal(card10.ok, true);
   assert.notEqual(card10.card.interval.kind, "statistical");
 
+  // historical stress episodes with today's sensitivities
+  const rough = fc.stressTests(general); // no monthly history: sensitivity × cumulative move
+  assert.deepEqual(rough.map((x) => x.key), fc.HISTORICAL_EPISODES.map((x) => x.key));
+  const r2008 = rough.find((x) => x.key === "crisis_2008");
+  assert.equal(r2008.method, "cumulative_approximation");
+  // 0.16*-41.7 + 0.23*-47.5 + 0.11*28.7 + -0.01*6.6 + 0.2*-11 + 9 months of alpha 0.08
+  assert.ok(Math.abs(r2008.impact - (-16.0)) < 0.2, `2008: ${r2008.impact}`);
+  const stress = fc.stressTests(general, history); // with history: the model's monthly returns, compounded
+  const s2008 = stress.find((x) => x.key === "crisis_2008");
+  assert.equal(s2008.method, "monthly_compounded");
+  assert.equal(s2008.months, 9);
+  assert.ok(s2008.impact < -14 && s2008.impact > -26, `2008 compounded: ${s2008.impact}`);
+  assert.equal(s2008.actualByCategory["גמל/השתלמות · כללי"], -15.2);
+  assert.ok(fc.stressTests(equity, history).find((x) => x.key === "crisis_2008").impact < s2008.impact * 1.8);
+  assert.ok(stress.find((x) => x.key === "recovery_2009").impact > 20);
+  assert.ok(stress.find((x) => x.key === "covid_2020").impact < -6);
+  assert.throws(() => fc.stressTests({}), /betas/);
+
   const text = explain.explainForecast({ forecast: f, trackLabel: "המסלול הכללי" });
   assert.match(text.summary, /הטווח הסביר/);
-  assert.match(text.summary, /73%/);
+  assert.match(text.summary, /87%/);
   assert.ok(text.clientDraft.text.startsWith("היי") && /אינה תשואה מובטחת/.test(text.clientDraft.text));
   assert.equal(text.clientDraft.requiresApproval, true);
 });
@@ -416,6 +439,10 @@ test("forecast service: live yields with a dated fallback, per-track and per-cat
   assert.ok(r.summary.startsWith(r.track.label), "the professional summary names the track that was analysed");
   // official returns are gross of fees: the forecast is also shown after the track's average fee
   assert.match(r.returnsBasis, /ברוטו/);
+  assert.equal(r.stressTests.episodes.length, fc.HISTORICAL_EPISODES.length);
+  assert.match(r.stressTests.note, /ולא תחזית/);
+  assert.equal(r.stressTests.episodes[0].actualGeneralTrack, -15.2);
+  assert.equal(r.stressTests.episodes[0].actualSameCategory, -11.4); // the track's own category (insurance, general) in 2008
   assert.ok(r.afterAverageFee.fee > 0.3 && r.afterAverageFee.fee < 2);
   assert.ok(Math.abs(r.central - r.afterAverageFee.central - r.afterAverageFee.fee) < 0.11);
   assert.match(r.summary, /לפני דמי ניהול/);

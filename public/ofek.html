@@ -118,6 +118,7 @@
         <h3 style="margin:16px 0 4px">תחזית למסלול <span class="pill">הערכה מחקרית — לא הבטחה</span></h3>
         <div id="tfctable"></div>
         <p id="tfcanchors" class="muted" style="margin:8px 0 0"></p>
+        <div id="tfcstress"></div>
         <p id="tfcwarn" class="warn" style="margin:6px 0 0"></p>
       </div>
       <div id="tout" hidden>
@@ -333,6 +334,8 @@
       $("tfctable").innerHTML = `<table class="tbl"><tr><th>אופק</th><th>תשואה שנתית ממוצעת — טווח סביר</th><th>מרכז</th><th>תשואה מצטברת — טווח</th><th>סיכוי משוער להפסד</th></tr>` +
         r.horizons.map((h) => `<tr><td>${esc(h.label)}${h.backtested ? "" : " <span class=\"muted\">(לא נבדק היסטורית)</span>"}</td><td style="white-space:nowrap">${ltr(h.annualized.low)} עד ${ltr(h.annualized.high)}</td><td class="num">${ltr(h.annualized.central)}</td><td style="white-space:nowrap">${ltr(h.cumulative.low)} עד ${ltr(h.cumulative.high)}</td><td class="num">${Math.round(h.lossProbability * 100)}%</td></tr>`).join("") + "</table>";
       $("tfcanchors").textContent = (r.inputs.annualFee ? `אחרי דמי ניהול של ${r.inputs.annualFee}% בשנה. ` : "לפני דמי ניהול. " + (r.afterAverageFee ? `אחרי דמי הניהול הממוצעים במסלול (${r.afterAverageFee.fee}%): מרכז ${r.afterAverageFee.central}% בשנה. ` : "")) + `עוגן היסטורי: ${r.anchors.historical.annual}% בשנה · עוגן לפי תשואות האג"ח: ${r.anchors.yieldBased.annual}% בשנה · ${r.anchors.centreRule}. תשואות אג"ח ממשלתיות (${r.inputs.yields.asOf}): 5 שנים ${r.inputs.yields.y5}%, 10 שנים ${r.inputs.yields.y10}%. הנחות: פרמיית מניות ${r.inputs.assumptions.equityPremium}%, מרווח אג"ח חברות ${r.inputs.assumptions.corporateSpread}%. בבדיקה היסטורית כ-${Math.round(r.calibration.insideShare * 100)}% מהתוצאות נפלו בטווח.` + (r.anchors.historicalCap ? " " + r.anchors.historicalCap + "." : "");
+      $("tfcstress").innerHTML = r.stressTests ? `<h3 style="margin:14px 0 2px">מבחני קיצון: מה היה קורה למסלול בתקופות עבר</h3><table class="tbl"><tr><th>תקופה</th><th>ת"א 125</th><th>S&amp;P 500</th><th>דולר</th><th>השפעה על המסלול (חישוב)</th><th>מסלול כללי בפועל אז</th></tr>` +
+        r.stressTests.episodes.map((e) => `<tr><td>${esc(e.description)}</td><td class="num">${num(e.marketMoves.ta125, 0)}</td><td class="num">${num(e.marketMoves.spx, 0)}</td><td class="num">${num(e.marketMoves.usd, 0)}</td><td class="num">${num(e.impact)}</td><td class="num">${num(e.actualGeneralTrack)}</td></tr>`).join("") + `</table><p class="muted" style="margin:6px 0 0">${esc(r.stressTests.note)}</p>` : "";
       $("tfcwarn").textContent = (r.warnings || []).join(" ");
       $("tout").hidden = false;
       $("tsummary").textContent = r.summary;

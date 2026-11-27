@@ -283,6 +283,10 @@ async function forecastFund({ fundId, dataset, category, annualFee = 0, assumpti
     ...forecast,
     ...text,
     afterAverageFee,
+    stressTests: {
+      episodes: forecastEngine.stressTests(model, history).map((e) => ({ ...e, actualSameCategory: model.category && e.actualByCategory[model.category] != null ? e.actualByCategory[model.category] : null, actualGeneralTrack: e.actualByCategory["גמל/השתלמות · כללי"] })),
+      note: "מה היה קורה למסלול, עם הרגישות של היום, אילו חזרו תנועות השוק של כל תקופה. לשם השוואה מוצג מה שקרה בפועל למסלול כללי חציוני. בקורונה וב-2022 המסלולים הכלליים ירדו בפועל כ-15% עד 30% יותר מהחישוב. במשבר 2008 הם ירדו בפועל 11% עד 15%, פחות ממה שהחישוב נותן היום, כי אז החזיקו פחות מניות ופחות נכסים בחו\"ל. זהו תרחיש להמחשה ולא תחזית.",
+    },
     returnsBasis: "התשואות הרשמיות הן נומינליות ברוטו — לפני דמי ניהול (כך מצוין באתר פנסיה־נט של רשות שוק ההון; בגמל־נט ובביטוח־נט לפי אותה שיטת דיווח).",
     ownRecord,
     forecastCardDrafts: cards,
