@@ -240,6 +240,33 @@ function scenarioImpact(model, scenario) {
   };
 }
 
+/**
+ * How often a scenario's market moves actually happened in the factor
+ * history: in a single month, and cumulatively within any 3- or 12-month
+ * window. A scenario with several factors counts only when all of them
+ * moved at least that much in the same window.
+ */
+function scenarioFrequency(history, scenario) {
+  const { shocks } = resolveShocks(scenario);
+  const entries = Object.entries(shocks).filter(([f, v]) => FACTORS[f] && typeof v === "number" && v !== 0);
+  if (!history || !Array.isArray(history.periods) || !entries.length) return null;
+  const n = history.periods.length;
+  const count = (w) => {
+    let hits = 0;
+    for (let i = w - 1; i < n; i++) {
+      const ok = entries.every(([f, v]) => {
+        let g = 1;
+        for (let t = i - w + 1; t <= i; t++) g *= 1 + history.factors[f][t] / 100;
+        const cum = (g - 1) * 100;
+        return v < 0 ? cum <= v : cum >= v;
+      });
+      if (ok) hits++;
+    }
+    return { hits, windows: n - w + 1, share: round(hits / (n - w + 1), 3) };
+  };
+  return { from: history.periods[0], to: history.periods[n - 1], oneMonth: count(1), threeMonths: count(3), twelveMonths: count(12) };
+}
+
 /** All named scenarios for one model. */
 function scenarioTable(model) {
   return Object.keys(SCENARIOS).map((k) => {
@@ -500,6 +527,6 @@ function findBaselineModel(baseline, { category, fundId } = {}) {
 
 module.exports = {
   FACTORS, FACTOR_NAMES, SCENARIOS, TrackModelError,
-  fitFactorModel, walkForwardFit, scenarioImpact, scenarioTable, nowcast,
+  fitFactorModel, walkForwardFit, scenarioImpact, scenarioTable, scenarioFrequency, nowcast,
   attributeDifference, depositTimingStats, riskOutlook, predictabilityTest, findBaselineModel,
 };

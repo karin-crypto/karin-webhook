@@ -255,7 +255,7 @@ function createToolExecutor({ ledger, now = () => new Date(), fetchImpl }) {
       if (!i.asOf || !i.source) throw new Error("asOf ו־source חובה כשמעבירים factors");
       return { source: i.source, ...trackService.marketWatch({ factors: i.factors, asOf: i.asOf, elapsedShare: trackService.monthShare(i.asOf) }) };
     },
-    scenario_playbook: () => ({ ok: true, playbook: trackExplain.scenarioPlaybook(trackService.mainModels()) }),
+    scenario_playbook: () => ({ ok: true, playbook: trackExplain.scenarioPlaybook(trackService.mainModels(), trackService.loadFactorHistory()) }),
     analyze_fund_track: (i) => trackService.analyzeFund({ dataset: i.dataset, fundId: i.fundId, window: i.window || 60, asOf: i.asOf || null, today: now(), ...fx }),
     deposit_timing_stats: async (i) => {
       let returns = i.monthlyReturns;

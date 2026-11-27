@@ -282,8 +282,8 @@
     if (!track.hasModel) { $("tscen").textContent = "למסלול הזה אין מספיק נתונים למודל."; return; }
     try {
       const r = await api("/track-model/scenario", { method: "POST", body: JSON.stringify({ fundId: track.fundId, dataset: track.dataset }) });
-      $("tscen").innerHTML = `<table class="tbl"><tr><th>תרחיש (הדגמה, לא תחזית)</th><th>השפעה צפויה על המסלול</th><th>טווח סביר</th></tr>` +
-        r.table.map((t) => `<tr><td>${esc(t.description)}</td><td class="num">${num(t.impact)}</td><td style="white-space:nowrap">${t.range ? `<bdi dir="ltr">${t.range.low}%</bdi> עד <bdi dir="ltr">${t.range.high}%</bdi>` : "—"}</td></tr>`).join("") + "</table>";
+      $("tscen").innerHTML = `<table class="tbl"><tr><th>תרחיש (הדגמה, לא תחזית)</th><th>השפעה צפויה על המסלול</th><th>טווח סביר</th><th>כמה פעמים קרה מאז 2008</th></tr>` +
+        r.table.map((t) => `<tr><td>${esc(t.description)}</td><td class="num">${num(t.impact)}</td><td style="white-space:nowrap">${t.range ? `<bdi dir="ltr">${t.range.low}%</bdi> עד <bdi dir="ltr">${t.range.high}%</bdi>` : "—"}</td><td class="muted">${t.historicalFrequency ? `${t.historicalFrequency.oneMonth.hits} חודשים; בתוך 3 חודשים ב-${Math.round(t.historicalFrequency.threeMonths.share * 100)}% מהתקופות` : "—"}</td></tr>`).join("") + "</table>";
     } catch (e) { $("tscen").textContent = e.message; }
   });
 

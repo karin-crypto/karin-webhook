@@ -289,8 +289,11 @@ const PLAYBOOK_TEXT = {
   },
 };
 
-function scenarioPlaybook(models) {
+function scenarioPlaybook(models, history = null) {
+  const freqText = (f) => (f ? `מאז ${f.from.slice(0, 4)}: קרה בחודש בודד ${f.oneMonth.hits} פעמים מתוך ${f.oneMonth.windows} חודשים; בתוך 3 חודשים — ב-${Math.round(f.threeMonths.share * 100)}% מהתקופות; בתוך שנה — ב-${Math.round(f.twelveMonths.share * 100)}%.` : null);
   return Object.keys(tm.SCENARIOS).map((key) => ({
+    historicalFrequency: history ? tm.scenarioFrequency(history, key) : null,
+    howOften: history ? freqText(tm.scenarioFrequency(history, key)) : null,
     scenario: key,
     description: tm.SCENARIOS[key].he,
     shocks: tm.SCENARIOS[key].shocks,

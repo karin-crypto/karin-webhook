@@ -410,7 +410,7 @@ function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_AD
     const b = req.body || {};
     const { model, origin, label } = trackService.resolveModel(b);
     const scenario = b.shocks ? { shocks: b.shocks, he: b.description } : b.scenario;
-    res.json({ ok: true, model: { label: label || null, origin, betas: model.betas }, ...(scenario ? { result: trackModel.scenarioImpact(model, scenario) } : { table: trackModel.scenarioTable(model) }) });
+    res.json({ ok: true, model: { label: label || null, origin, betas: model.betas }, ...(scenario ? { result: { ...trackModel.scenarioImpact(model, scenario), historicalFrequency: trackModel.scenarioFrequency(trackService.loadFactorHistory(), scenario) } } : { table: trackModel.scenarioTable(model).map((t) => ({ ...t, historicalFrequency: trackModel.scenarioFrequency(trackService.loadFactorHistory(), t.scenario) })) }) });
   }));
 
   router.post("/track-model/nowcast", wrap(async (req, res) => {
@@ -431,7 +431,7 @@ function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_AD
   }));
 
   router.get("/track-model/playbook", (_req, res) => {
-    res.json({ ok: true, playbook: trackExplain.scenarioPlaybook(trackService.mainModels()), note: "גודל הזעזועים הוא הדגמה. ההשפעות — לפי הרגישות ההיסטורית (60 החודשים האחרונים), בנקודות אחוז." });
+    res.json({ ok: true, playbook: trackExplain.scenarioPlaybook(trackService.mainModels(), trackService.loadFactorHistory()), note: "גודל הזעזועים הוא הדגמה. ההשפעות — לפי הרגישות ההיסטורית (60 החודשים האחרונים), בנקודות אחוז." });
   });
 
   router.post("/track-model/attribution", wrap(async (req, res) => {

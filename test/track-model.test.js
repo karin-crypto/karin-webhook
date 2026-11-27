@@ -250,6 +250,17 @@ test("track explanations: drivers, offsets, environment and a client draft that 
   assert.equal(/תנודה של חודש/.test(calm.clientDraft.text), false);
   assert.throws(() => explain.explainMonth({ model, factors: { ta125: 1 } }), /חסרים גורמים/);
 
+  // how often each scenario actually happened
+  const hist = service.loadFactorHistory();
+  const fq = tm.scenarioFrequency(hist, "spx_down_10");
+  assert.equal(fq.oneMonth.windows, hist.periods.length);
+  assert.ok(fq.oneMonth.hits >= 1 && fq.oneMonth.hits <= 6 && fq.threeMonths.hits >= fq.oneMonth.hits);
+  assert.ok(tm.scenarioFrequency(hist, "global_selloff").oneMonth.hits <= fq.oneMonth.hits); // a combined scenario is rarer than its parts
+  assert.equal(tm.scenarioFrequency(hist, { shocks: { ta125: -60 } }).oneMonth.hits, 0);
+  assert.equal(tm.scenarioFrequency(null, "spx_down_10"), null);
+  const withFreq = explain.scenarioPlaybook(service.mainModels(), hist);
+  assert.match(withFreq[0].howOften, /מאז 2008: קרה בחודש בודד/);
+
   const pb = explain.scenarioPlaybook(service.mainModels());
   assert.equal(pb.length, Object.keys(tm.SCENARIOS).length);
   for (const s of pb) {
