@@ -126,6 +126,7 @@
         <p id="tfcanchors" class="muted" style="margin:8px 0 0"></p>
         <p id="tfcsave" style="margin:10px 0 0;font-weight:500"></p>
         <div id="tfcstress"></div>
+        <p id="tfcrecover" class="muted" style="margin:8px 0 0"></p>
         <p id="tfcwarn" class="warn" style="margin:6px 0 0"></p>
       </div>
       <div id="tout" hidden>
@@ -346,6 +347,21 @@
       $("tfcanchors").textContent = (r.inputs.annualFee ? `אחרי דמי ניהול של ${r.inputs.annualFee}% בשנה. ` : "לפני דמי ניהול. " + (r.afterAverageFee ? `אחרי דמי הניהול הממוצעים במסלול (${r.afterAverageFee.fee}%): מרכז ${r.afterAverageFee.central}% בשנה. ` : "")) + `עוגן היסטורי: ${r.anchors.historical.annual}% בשנה · עוגן לפי תשואות האג"ח: ${r.anchors.yieldBased.annual}% בשנה · ${r.anchors.centreRule}. תשואות אג"ח ממשלתיות (${r.inputs.yields.asOf}): 5 שנים ${r.inputs.yields.y5}%, 10 שנים ${r.inputs.yields.y10}%. הנחות: פרמיית מניות ${r.inputs.assumptions.equityPremium}%, מרווח אג"ח חברות ${r.inputs.assumptions.corporateSpread}%. בבדיקה היסטורית כ-${Math.round(r.calibration.insideShare * 100)}% מהתוצאות נפלו בטווח.` + (r.anchors.historicalCap ? " " + r.anchors.historicalCap + "." : "");
       $("tfcstress").innerHTML = r.stressTests ? `<h3 style="margin:14px 0 2px">מבחני קיצון: מה היה קורה למסלול בתקופות עבר</h3><table class="tbl"><tr><th>תקופה</th><th>ת"א 125</th><th>S&amp;P 500</th><th>דולר</th><th>השפעה על המסלול (חישוב)</th><th>מסלול כללי בפועל אז</th></tr>` +
         r.stressTests.episodes.map((e) => `<tr><td>${esc(e.description)}</td><td class="num">${num(e.marketMoves.ta125, 0)}</td><td class="num">${num(e.marketMoves.spx, 0)}</td><td class="num">${num(e.marketMoves.usd, 0)}</td><td class="num">${num(e.impact)}</td><td class="num">${num(e.actualGeneralTrack)}</td></tr>`).join("") + `</table><p class="muted" style="margin:6px 0 0">${esc(r.stressTests.note)}</p>` : "";
+      {
+        const g = r.generalTrackRecord && r.generalTrackRecord.drawdowns;
+        const pct = (x) => Math.round(x * 100) + "%";
+        const ym = (p) => String(p).replace(/^(\d{4})-?(\d{2}).*$/, "$2/$1");
+        const parts = [];
+        if (g) parts.push(`מה קרה אחרי ירידות במסלול כללי חציוני (${r.generalTrackRecord.period}, לפי סוף חודש): ` + g.onceDown.map((o) => `אחרי ירידה של ${o.depth}% מהשיא (${o.episodes} מקרים) — ב-${pct(o.deepenedShare)} מהם הירידה העמיקה ל-${o.deepenedTo}% ומעלה; חזרה לשיא תוך ${o.medianMonthsToRecover} חודשים בחציון, ${pct(o.within12)} תוך שנה, הארוכה ${o.longestMonths} חודשים`).join("; ") + ".");
+        const own = r.ownRecord && r.ownRecord.afterDeclines;
+        if (own) {
+          const cd = r.ownRecord.currentDrawdown;
+          if (cd && cd.depth < 0) parts.push(`נכון לחודש הרשמי האחרון (${ym(r.ownRecord.to)}) המסלול הזה ${Math.abs(cd.depth)}% מתחת לשיא.`);
+          parts.push(`במסלול הזה עצמו (מאז ${ym(r.ownRecord.from)}): ` + own.filter((o) => o.episodes).map((o) => `אחרי ירידה של ${o.depth}% מהשיא (${o.episodes} מקרים${o.reliable ? "" : ", מעט"}) — ב-${pct(o.deepenedShare)} העמיקה ל-${o.deepenedBeyond}% ומעלה; חזרה לשיא תוך ${o.medianMonthsToRecover} חודשים בחציון, ${pct(o.recoveredWithin.months12)} תוך שנה, הארוכה ${o.longestMonthsToRecover}`).join("; ") + ".");
+        }
+        if (parts.length) parts.push("תיאור העבר — אינו אומר כמה זמן תימשך ירידה נוכחית.");
+        $("tfcrecover").textContent = parts.join(" ");
+      }
       $("tfcsave").textContent = r.savingsProjection ? r.savingsProjection.text + " " + r.savingsProjection.feeBasis + ". " + (r.savingsProjection.finalBalanceTodayPrices ? `במחירי היום (אינפלציה צפויה ${r.savingsProjection.finalBalanceTodayPrices.inflationAssumed}%): כ-${r.savingsProjection.finalBalanceTodayPrices.central.toLocaleString("en-US")} ₪. ` : "") + r.savingsProjection.note : "";
       $("tfcwarn").textContent = (r.warnings || []).join(" ");
       $("tout").hidden = false;

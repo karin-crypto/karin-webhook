@@ -236,6 +236,16 @@ function yieldSnapshot() {
 }
 
 /**
+ * What followed past declines of the track: at 1% and 3% below the peak, and
+ * at the track's current depth when it is at least 1% down.
+ */
+function declineSummary(returns, currentDepth = 0) {
+  const depths = [1, 3];
+  if (currentDepth >= 1 && !depths.includes(Number(currentDepth.toFixed(1)))) depths.push(Number(currentDepth.toFixed(1)));
+  return depths.sort((x, y) => x - y).map((depth) => ({ ...tm.declineOutlook(returns, { depth }), isCurrentDepth: currentDepth >= 1 && depth === Number(currentDepth.toFixed(1)) }));
+}
+
+/**
  * How far a forecast can be trusted, in plain words. The grades follow the
  * backtest: bond-like tracks were forecast within about 0.3–0.9 points a
  * year at 3–5 years, mixed tracks within about 1.5–2.5, equity-heavy tracks
@@ -333,7 +343,7 @@ async function forecastFund({ fundId, dataset, category, annualFee = 0, assumpti
       const h = await fetchFundHistory({ dataset: model.dataset, fundId: model.fundId, ...(fetchImpl ? { fetchImpl } : {}) });
       if (h.rows.length >= 36) {
         const d = tm.depositTimingStats(h.rows.map((r) => r.ret));
-        ownRecord = { from: h.rows[0].period, to: h.rows[h.rows.length - 1].period, months: h.rows.length, holding: d.holding, worstDrawdowns: d.worstDrawdowns.slice(0, 3), negativeMonthsShare: d.negativeMonthsShare, note: "מה שקרה בפועל במסלול בעבר — תיאור, לא תחזית." };
+        ownRecord = { from: h.rows[0].period, to: h.rows[h.rows.length - 1].period, months: h.rows.length, holding: d.holding, worstDrawdowns: d.worstDrawdowns.slice(0, 3), currentDrawdown: d.currentDrawdown, afterDeclines: declineSummary(h.rows.map((r) => r.ret), -d.currentDrawdown.depth), negativeMonthsShare: d.negativeMonthsShare, note: "מה שקרה בפועל במסלול בעבר — תיאור, לא תחזית." };
       }
     } catch { /* the forecast does not depend on it */ }
   }
@@ -471,6 +481,17 @@ async function analyzeFund({ dataset, fundId, window = 60, factorRows = null, mt
   let volatilityOutlook = null;
   if (history.rows.length >= 36) volatilityOutlook = tm.riskOutlook(history.rows.map((r) => r.ret), earlyEstimate ? { currentMonthEstimate: earlyEstimate.estimate } : {});
 
+  // where the track stands against its peak, counting months that are only estimated so far
+  let declineOutlook = null;
+  if (history.rows.length >= 36) {
+    const official = history.rows.map((r) => r.ret);
+    const estimated = [...unpublishedEstimates.map((u) => u.estimate), ...(earlyEstimate ? [earlyEstimate.estimate] : [])].filter((v) => Number.isFinite(v));
+    let level = 1; let peak = 1;
+    for (const v of [...official, ...estimated]) { level *= 1 + v / 100; if (level > peak) peak = level; }
+    const depthNow = (1 - level / peak) * 100;
+    declineOutlook = { depthNow: Number((-depthNow).toFixed(2)), includesEstimatedMonths: estimated.length, afterDeclines: declineSummary(official, depthNow) };
+  }
+
   return {
     ok: true,
     fund: { fundId: history.fundId, dataset, name: history.fundName, company: history.company, historyFrom: history.rows[0].period, lastOfficialMonth: last, lastOfficialReturn: history.rows[history.rows.length - 1].ret, totalAssetsMillions: history.rows[history.rows.length - 1].totalAssets },
@@ -480,6 +501,7 @@ async function analyzeFund({ dataset, fundId, window = 60, factorRows = null, mt
     unpublishedMonths: unpublishedEstimates,
     depositTiming,
     volatilityOutlook,
+    declineOutlook,
     sources,
     notice: "המודל מסביר ומעריך את תשואת המסלול לפי תנועות השוק. אינו חוזה את כיוון השוק ואינו המלצה אישית. תשואות ברמת המסלול; חשבון הלקוח מושפע גם מדמי ניהול ומועדי הפקדה.",
   };

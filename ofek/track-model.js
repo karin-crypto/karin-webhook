@@ -417,6 +417,55 @@ function depositTimingStats(monthlyReturns, { splitMonths = 3, horizons = [12, 3
 }
 
 /**
+ * What followed past declines that reached a given depth below the previous
+ * month-end peak: how often they deepened, and how long until the peak was
+ * regained, counted from the month the decline first reached that depth.
+ * Unlike a table of finished declines sorted by their final depth, this
+ * conditions only on what is known at the time. Descriptive, not a forecast.
+ */
+function declineOutlook(monthlyReturns, { depth, deeper = null } = {}) {
+  const r = (monthlyReturns || []).map((v) => (v && typeof v === "object" ? v.ret : v)).filter((v) => typeof v === "number" && Number.isFinite(v));
+  if (r.length < 36) throw new TrackModelError(`נדרשים לפחות 36 חודשי תשואה (יש ${r.length})`);
+  const d = Math.abs(Number(depth));
+  if (!(d > 0 && d < 60)) throw new TrackModelError("depth: עומק הירידה באחוזים (מספר חיובי)");
+  const deeperAt = deeper == null ? Math.max(2 * d, d + 2) : Math.abs(Number(deeper));
+  const episodes = [];
+  let level = 1; let peak = 1; let cur = null;
+  r.forEach((v, i) => {
+    level *= 1 + v / 100;
+    if (level >= peak) {
+      if (cur && cur.reachedAt != null) { cur.monthsToRecover = i - cur.reachedAt; episodes.push(cur); }
+      peak = level; cur = null;
+    } else {
+      const dd = (1 - level / peak) * 100;
+      if (!cur) cur = { reachedAt: null, maxDepth: 0, monthsToRecover: null };
+      if (dd > cur.maxDepth) cur.maxDepth = dd;
+      if (cur.reachedAt == null && dd >= d) cur.reachedAt = i;
+    }
+  });
+  const open = cur && cur.reachedAt != null ? cur : null; // a decline still in progress is reported, not counted
+  const n = episodes.length;
+  const months = episodes.map((e) => e.monthsToRecover);
+  const within = (m) => (n ? round(mean(months.map((x) => (x <= m ? 1 : 0))), 2) : null);
+  return {
+    ok: true,
+    depth: round(d),
+    episodes: n,
+    deepenedBeyond: round(deeperAt),
+    deepenedShare: n ? round(mean(episodes.map((e) => (e.maxDepth >= deeperAt ? 1 : 0))), 2) : null,
+    medianFinalDepth: n ? round(-quantile(episodes.map((e) => e.maxDepth), 0.5)) : null,
+    worstFinalDepth: n ? round(-Math.max(...episodes.map((e) => e.maxDepth))) : null,
+    medianMonthsToRecover: n ? round(quantile(months, 0.5), 1) : null,
+    longestMonthsToRecover: n ? Math.max(...months) : null,
+    recoveredWithin: { months6: within(6), months12: within(12), months24: within(24) },
+    inProgress: open ? { depthSoFar: round(-open.maxDepth), monthsSinceReached: r.length - 1 - open.reachedAt } : null,
+    months: r.length,
+    reliable: n >= 8,
+    note: `מה שקרה בעבר אחרי שהמסלול ירד ${round(d)}% ומעלה מהשיא (לפי סוף חודש), מהחודש שבו הגיע לעומק הזה. ${n < 8 ? "מעט מקרים — לא בסיס למסקנה. " : ""}תיאור העבר, לא תחזית.`,
+  };
+}
+
+/**
  * Volatility outlook for the coming month, from the track's own history.
  * Research (2012–2026): after a negative month the next month's move tends
  * to be larger, in EITHER direction; the direction itself is not predictable.
@@ -528,5 +577,5 @@ function findBaselineModel(baseline, { category, fundId } = {}) {
 module.exports = {
   FACTORS, FACTOR_NAMES, SCENARIOS, TrackModelError,
   fitFactorModel, walkForwardFit, scenarioImpact, scenarioTable, scenarioFrequency, nowcast,
-  attributeDifference, depositTimingStats, riskOutlook, predictabilityTest, findBaselineModel,
+  attributeDifference, depositTimingStats, declineOutlook, riskOutlook, predictabilityTest, findBaselineModel,
 };

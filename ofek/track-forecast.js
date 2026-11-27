@@ -91,6 +91,22 @@ const GENERAL_TRACK_RECORD = {
     "10y": { min: 3.6, p10: 4.4, median: 5.8, p90: 7.0, max: 7.8, negativeShare: 0 },
   },
   worstCalendarYear: { year: 2008, return: -23 }, bestCalendarYear: { year: 2009, return: 35 },
+  // declines from a month-end peak, and the months from that peak until it was regained
+  drawdowns: {
+    // counted from the month-end at which the decline first reached that depth (known at the time)
+    onceDown: [
+      { depth: 1, episodes: 19, deepenedTo: 3, deepenedShare: 0.53, medianMonthsToRecover: 4, within6: 0.63, within12: 0.79, within24: 1, longestMonths: 24 },
+      { depth: 3, episodes: 10, deepenedTo: 6, deepenedShare: 0.4, medianMonthsToRecover: 10, within6: 0.3, within12: 0.6, within24: 1, longestMonths: 22 },
+    ],
+    "5plus": { declines: 4, medianMonthsToRecover: 21.5, longestMonthsToRecover: 25, episodes: [
+      { peak: "2007-10", trough: "2008-12", depth: -24.0, monthsToRecover: 25 },
+      { peak: "2011-02", trough: "2011-09", depth: -6.7, monthsToRecover: 19 },
+      { peak: "2020-01", trough: "2020-03", depth: -10.8, monthsToRecover: 10 },
+      { peak: "2021-12", trough: "2022-09", depth: -8.5, monthsToRecover: 24 },
+    ] },
+    afterDeepDecline: "כשהמסלול היה 6% ומעלה מתחת לשיא (23 חודשים), 12 החודשים הבאים הניבו בממוצע 14% לעומת 6.7% בכל התקופה, אך ההבדל אינו מובהק סטטיסטית (4 אירועים בלבד) ואינו משמש לתחזית.",
+    note: "לפי נתוני סוף חודש; בתוך החודש הירידות היו עמוקות יותר.",
+  },
   note: "מה שקרה בפועל למסלול כללי חציוני בקופות גמל ובקרנות השתלמות, לפני דמי ניהול. תיאור העבר, לא תחזית.",
 };
 

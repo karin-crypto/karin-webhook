@@ -149,6 +149,17 @@ test("track model: deposit-timing statistics", () => {
   assert.equal(dd.afterPositiveMonth.moveAbove2Share, round3(1 / 46)); // the -10% month itself
   assert.match(dd.note, /אינה המלצה אישית/);
 
+  // conditional on reaching a 2% decline: one stayed shallow (regained 2 months later), one deepened to ~11.8%
+  const series2 = [...Array(40).fill(1), -2, 1, 1.1, ...Array(10).fill(1), -2, -10, ...Array(13).fill(1), ...Array(5).fill(1)];
+  const out2 = tm.declineOutlook(series2, { depth: 2 });
+  assert.equal(out2.episodes, 2);
+  assert.equal(out2.deepenedShare, 0.5);
+  assert.equal(out2.recoveredWithin.months6, 0.5);
+  assert.equal(out2.recoveredWithin.months24, 1);
+  assert.equal(out2.reliable, false);
+  assert.equal(out2.inProgress, null);
+  assert.equal(tm.declineOutlook([...series2, -3], { depth: 2 }).inProgress.monthsSinceReached, 0);
+  assert.throws(() => tm.declineOutlook(series2, { depth: 0 }), /depth/);
   const falling = tm.depositTimingStats([...Array(36).fill(1), -2, -3]);
   assert.equal(falling.currentDrawdown.monthsSincePeak, 2);
   assert.ok(falling.currentDrawdown.depth < -4.9);
@@ -691,6 +702,9 @@ test("fund analysis: model, accuracy, scenarios, early estimate and deposit timi
   assert.ok(Math.abs(r.earlyEstimate.estimate + 1.3) < 0.4);
   assert.ok(r.earlyEstimate.range.low < r.earlyEstimate.estimate);
   assert.equal(r.depositTiming.months, 120);
+  assert.ok(r.declineOutlook.depthNow <= 0);
+  assert.ok(r.declineOutlook.afterDeclines.length >= 2);
+  assert.equal(r.declineOutlook.includesEstimatedMonths, 1);
   assert.match(r.notice, /אינו חוזה/);
   assert.equal(r.volatilityOutlook.basedOn.isEarlyEstimate, true);
   assert.ok(["elevated_volatility", "normal_volatility"].includes(r.volatilityOutlook.state));
