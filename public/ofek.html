@@ -112,17 +112,27 @@
         <button id="tfc" class="secondary">תחזית למסלול</button>
         <label class="muted" style="font-weight:400;margin:0" for="tfee">דמי ניהול שנתיים של הלקוח (%, לא חובה):</label>
         <input id="tfee" type="number" step="0.05" min="0" max="4" style="width:90px">
+      </div>
+      <div class="row">
+        <span class="muted">חישוב צבירה (לא חובה):</span>
+        <label class="muted" style="font-weight:400;margin:0" for="tsbal">סכום היום ₪</label><input id="tsbal" type="number" step="1000" min="0" style="width:120px">
+        <label class="muted" style="font-weight:400;margin:0" for="tsdep">הפקדה חודשית ₪</label><input id="tsdep" type="number" step="100" min="0" style="width:110px">
+        <label class="muted" style="font-weight:400;margin:0" for="tsyrs">שנים</label><input id="tsyrs" type="number" step="1" min="1" max="40" style="width:70px">
         <span id="tstatus" class="status"></span>
       </div>
       <div id="tfcout" hidden>
-        <h3 style="margin:16px 0 4px">תחזית למסלול <span class="pill">הערכה מחקרית — לא הבטחה</span></h3>
+        <h3 style="margin:16px 0 4px">תחזית למסלול <span class="pill">הערכה מחקרית — לא הבטחה</span> <span class="pill" id="tfcrel"></span></h3>
         <div id="tfctable"></div>
+        <p id="tfcshort" style="margin:8px 0 0"></p>
         <p id="tfcanchors" class="muted" style="margin:8px 0 0"></p>
+        <p id="tfcsave" style="margin:10px 0 0;font-weight:500"></p>
+        <div id="tfcstress"></div>
+        <p id="tfcrecover" class="muted" style="margin:8px 0 0"></p>
         <p id="tfcwarn" class="warn" style="margin:6px 0 0"></p>
       </div>
       <div id="tout" hidden>
         <h3 style="margin:16px 0 4px">הסבר מקצועי</h3>
-        <p id="tsummary" style="margin:0"></p>
+        <p id="tsummary" style="margin:0;white-space:pre-line"></p>
         <h3 style="margin:16px 0 4px">טיוטת הודעה למבוטח <span class="pill">טיוטה — נשלחת רק באישור קארין</span></h3>
         <div id="tdraft" class="copybox"></div>
         <div class="row"><button id="tcopy" class="secondary">העתק</button></div>
@@ -236,13 +246,15 @@
     try {
       const w = await api("/track-model/watch?asOf=" + $("tasof").value);
       const il = (d) => (d ? d.slice(8) + "." + d.slice(5, 7) + "." + d.slice(0, 4) : "");
+      const prob = (x) => (x == null ? "—" : x >= 0.99 ? "99% ומעלה" : x <= 0.01 ? "1% או פחות" : Math.round(x * 100) + "%");
       $("wout").hidden = false;
       $("walert").className = w.alert.attention ? "warn" : "";
-      $("walert").textContent = w.alert.text;
+      $("walert").textContent = w.alert.text + (w.earlyWarning ? " " + w.earlyWarning.text : "");
+      if (w.earlyWarning && w.earlyWarning.level === "alert") $("walert").className = "warn";
       $("wenv").textContent = "סביבת השוק מתחילת החודש (עד " + il(w.asOf) + "): " + w.environment.tags.map((t) => t.he).join(", ") + ".";
       $("wscen").innerHTML = w.matchingScenarios.map((m) => `<p style="margin:8px 0 0"><span class="pill">תרחיש דומה</span>${esc(m.description)}<br><span class="muted">${esc(m.talkingPoints)}</span></p>`).join("");
-      $("wtable").innerHTML = `<table class="tbl"><tr><th>סוג מסלול</th><th>אומדן מוקדם לחודש</th><th>טווח סביר</th><th>ביחס להיסטוריה</th></tr>` +
-        w.categories.map((c) => `<tr><td>${esc(c.category)}</td><td class="num">${num(c.estimate)}</td><td style="white-space:nowrap">${c.range ? `<bdi dir="ltr">${c.range.low}%</bdi> עד <bdi dir="ltr">${c.range.high}%</bdi>` : "—"}</td><td>${esc(c.levelText)}</td></tr>`).join("") + "</table>";
+      $("wtable").innerHTML = `<table class="tbl"><tr><th>סוג מסלול</th><th>אומדן מוקדם לחודש</th><th>טווח סביר</th><th>סיכוי שהחודש יסתיים בירידה</th><th>סיכוי לירידה של יותר מ-1%</th><th>ביחס להיסטוריה</th></tr>` +
+        w.categories.map((c) => `<tr><td>${esc(c.category)}</td><td class="num">${num(c.estimate)}</td><td style="white-space:nowrap">${c.range ? `<bdi dir="ltr">${c.range.low}%</bdi> עד <bdi dir="ltr">${c.range.high}%</bdi>` : "—"}</td><td class="num">${prob(c.negativeMonthProbability)}</td><td class="num">${prob(c.declineOver1Probability)}</td><td>${esc(c.levelText)}</td></tr>`).join("") + "</table>";
       FACTOR_IDS.forEach((f) => { $("f_" + f).value = w.marketMoves[f].toFixed(2); });
       $("tsrc").value = (w.sources || []).join("; ");
       $("wstatus").textContent = "אומדנים מוקדמים — לא תשואות רשמיות";
@@ -269,13 +281,13 @@
     track = $("thits").hits[Number(b.dataset.i)];
     $("tsel").hidden = false; $("tout").hidden = true;
     $("tname").textContent = track.name;
-    $("tinfo").textContent = [track.datasetLabel, track.product, track.equityPct == null ? null : `חשיפה למניות ${track.equityPct}%`, track.fxPct == null ? null : `חשיפה למט"ח ${track.fxPct}%`, track.mae == null ? track.modelBasis : `טעות ממוצעת של המודל ${track.mae} נק' אחוז בחודש`].filter(Boolean).join(" · ");
+    $("tinfo").textContent = [track.datasetLabel, track.product, track.averageFee == null ? null : `דמי ניהול ממוצעים ${track.averageFee}% מהצבירה`, track.equityPct == null ? null : `חשיפה למניות ${track.equityPct}%`, track.fxPct == null ? null : `חשיפה למט"ח ${track.fxPct}%`, track.mae == null ? track.modelBasis : `טעות ממוצעת של המודל ${track.mae} נק' אחוז בחודש`].filter(Boolean).join(" · ");
     $("tscen").innerHTML = "";
     if (!track.hasModel) { $("tscen").textContent = "למסלול הזה אין מספיק נתונים למודל."; return; }
     try {
       const r = await api("/track-model/scenario", { method: "POST", body: JSON.stringify({ fundId: track.fundId, dataset: track.dataset }) });
-      $("tscen").innerHTML = `<table class="tbl"><tr><th>תרחיש (הדגמה, לא תחזית)</th><th>השפעה צפויה על המסלול</th><th>טווח סביר</th></tr>` +
-        r.table.map((t) => `<tr><td>${esc(t.description)}</td><td class="num">${num(t.impact)}</td><td style="white-space:nowrap">${t.range ? `<bdi dir="ltr">${t.range.low}%</bdi> עד <bdi dir="ltr">${t.range.high}%</bdi>` : "—"}</td></tr>`).join("") + "</table>";
+      $("tscen").innerHTML = `<table class="tbl"><tr><th>תרחיש (הדגמה, לא תחזית)</th><th>השפעה צפויה על המסלול</th><th>טווח סביר</th><th>כמה פעמים קרה מאז 2008</th></tr>` +
+        r.table.map((t) => `<tr><td>${esc(t.description)}</td><td class="num">${num(t.impact)}</td><td style="white-space:nowrap">${t.range ? `<bdi dir="ltr">${t.range.low}%</bdi> עד <bdi dir="ltr">${t.range.high}%</bdi>` : "—"}</td><td class="muted">${t.historicalFrequency ? `${t.historicalFrequency.oneMonth.hits} חודשים; בתוך 3 חודשים ב-${Math.round(t.historicalFrequency.threeMonths.share * 100)}% מהתקופות` : "—"}</td></tr>`).join("") + "</table>";
     } catch (e) { $("tscen").textContent = e.message; }
   });
 
@@ -317,7 +329,7 @@
     try {
       const r = await api("/track-model/year-over-year", { method: "POST", body: JSON.stringify({ fundId: track.fundId, dataset: track.dataset, trackLabel: "המסלול" }) });
       $("tout").hidden = false;
-      $("tsummary").textContent = r.summary;
+      $("tsummary").textContent = r.summary + (r.yearEnd ? "\n\n" + r.yearEnd.text : "");
       $("tdraft").textContent = r.clientDraft.text;
       $("tstatus").textContent = "";
     } catch (e) { $("tstatus").className = "status warn"; $("tstatus").textContent = e.message; }
@@ -327,12 +339,35 @@
     $("tstatus").className = "status"; $("tstatus").textContent = "מחשב תחזית…";
     try {
       const fee = parseFloat($("tfee").value);
-      const r = await api("/track-model/forecast", { method: "POST", body: JSON.stringify({ fundId: track.fundId, dataset: track.dataset, annualFee: Number.isFinite(fee) ? fee : 0 }) });
+      const sBal = parseFloat($("tsbal").value); const sDep = parseFloat($("tsdep").value); const sYrs = parseInt($("tsyrs").value, 10);
+      const savings = Number.isInteger(sYrs) && ((sBal > 0) || (sDep > 0)) ? { years: sYrs, balance: sBal > 0 ? sBal : 0, monthlyDeposit: sDep > 0 ? sDep : 0 } : null;
+      const r = await api("/track-model/forecast", { method: "POST", body: JSON.stringify({ fundId: track.fundId, dataset: track.dataset, annualFee: Number.isFinite(fee) ? fee : 0, savings }) });
       const ltr = (x) => `<bdi dir="ltr">${x}%</bdi>`;
       $("tfcout").hidden = false;
+      $("tfcrel").textContent = r.reliability ? "אמינות: " + r.reliability.he : "";
+      $("tfcshort").innerHTML = r.shortTerm ? "טווח סביר לטווח הקצר (תשואה מצטברת, בלי תחזית לכיוון): " + r.shortTerm.map((h) => `${esc(h.label)} — <bdi dir="ltr">${h.cumulative.low}%</bdi> עד <bdi dir="ltr">${h.cumulative.high}%</bdi>`).join(" · ") + "." : "";
       $("tfctable").innerHTML = `<table class="tbl"><tr><th>אופק</th><th>תשואה שנתית ממוצעת — טווח סביר</th><th>מרכז</th><th>תשואה מצטברת — טווח</th><th>סיכוי משוער להפסד</th></tr>` +
         r.horizons.map((h) => `<tr><td>${esc(h.label)}${h.backtested ? "" : " <span class=\"muted\">(לא נבדק היסטורית)</span>"}</td><td style="white-space:nowrap">${ltr(h.annualized.low)} עד ${ltr(h.annualized.high)}</td><td class="num">${ltr(h.annualized.central)}</td><td style="white-space:nowrap">${ltr(h.cumulative.low)} עד ${ltr(h.cumulative.high)}</td><td class="num">${Math.round(h.lossProbability * 100)}%</td></tr>`).join("") + "</table>";
-      $("tfcanchors").textContent = (r.inputs.annualFee ? `אחרי דמי ניהול של ${r.inputs.annualFee}% בשנה. ` : "לפני דמי ניהול. ") + `עוגן היסטורי: ${r.anchors.historical.annual}% בשנה · עוגן לפי תשואות האג"ח: ${r.anchors.yieldBased.annual}% בשנה · ${r.anchors.centreRule}. תשואות אג"ח ממשלתיות (${r.inputs.yields.asOf}): 5 שנים ${r.inputs.yields.y5}%, 10 שנים ${r.inputs.yields.y10}%. הנחות: פרמיית מניות ${r.inputs.assumptions.equityPremium}%, מרווח אג"ח חברות ${r.inputs.assumptions.corporateSpread}%. בבדיקה היסטורית כ-${Math.round(r.calibration.insideShare * 100)}% מהתוצאות נפלו בטווח.` + (r.anchors.historicalCap ? " " + r.anchors.historicalCap + "." : "");
+      $("tfcanchors").textContent = (r.inputs.annualFee ? `אחרי דמי ניהול של ${r.inputs.annualFee}% בשנה. ` : "לפני דמי ניהול. " + (r.afterAverageFee ? `אחרי דמי הניהול הממוצעים במסלול (${r.afterAverageFee.fee}%): מרכז ${r.afterAverageFee.central}% בשנה. ` : "")) + `עוגן היסטורי: ${r.anchors.historical.annual}% בשנה · עוגן לפי תשואות האג"ח: ${r.anchors.yieldBased.annual}% בשנה · ${r.anchors.centreRule}${r.anchors.valuation && r.anchors.valuation.effectOnCentre ? `, בתוספת התאמה לתמחור הגבוה של S&P 500 (${r.anchors.valuation.effectOnCentre} נק' אחוז)` : ""}${r.anchors.inflationLinked && r.anchors.inflationLinked.effectOnCentre ? `, והתאמת אינפלציה לחלק המובטח בקרן פנסיה מקיפה (${r.anchors.inflationLinked.effectOnCentre} נק' אחוז)` : ""}. תשואות אג"ח ממשלתיות (${r.inputs.yields.asOf}): 5 שנים ${r.inputs.yields.y5}%, 10 שנים ${r.inputs.yields.y10}%. הנחות: פרמיית מניות ${r.inputs.assumptions.equityPremium}%, מרווח אג"ח חברות ${r.inputs.assumptions.corporateSpread}%. בבדיקה היסטורית כ-${Math.round(r.calibration.insideShare * 100)}% מהתוצאות נפלו בטווח.` + (r.anchors.historicalCap ? " " + r.anchors.historicalCap + "." : "");
+      $("tfcstress").innerHTML = r.stressTests ? `<h3 style="margin:14px 0 2px">מבחני קיצון: מה היה קורה למסלול בתקופות עבר</h3><table class="tbl"><tr><th>תקופה</th><th>ת"א 125</th><th>S&amp;P 500</th><th>דולר</th><th>השפעה על המסלול (חישוב)</th><th>מסלול כללי בפועל אז</th></tr>` +
+        r.stressTests.episodes.map((e) => `<tr><td>${esc(e.description)}</td><td class="num">${num(e.marketMoves.ta125, 0)}</td><td class="num">${num(e.marketMoves.spx, 0)}</td><td class="num">${num(e.marketMoves.usd, 0)}</td><td class="num">${num(e.impact)}</td><td class="num">${num(e.actualGeneralTrack)}</td></tr>`).join("") + `</table><p class="muted" style="margin:6px 0 0">${esc(r.stressTests.note)}</p>` : "";
+      {
+        const g = r.generalTrackRecord && r.generalTrackRecord.drawdowns;
+        const pct = (x) => Math.round(x * 100) + "%";
+        const ym = (p) => String(p).replace(/^(\d{4})-?(\d{2}).*$/, "$2/$1");
+        const parts = [];
+        if (g) parts.push(`מה קרה אחרי ירידות במסלול כללי חציוני (${r.generalTrackRecord.period}, לפי סוף חודש): ` + g.onceDown.map((o) => `אחרי ירידה של ${o.depth}% מהשיא (${o.episodes} מקרים) — ב-${pct(o.deepenedShare)} מהם הירידה העמיקה ל-${o.deepenedTo}% ומעלה; חזרה לשיא תוך ${o.medianMonthsToRecover} חודשים בחציון, ${pct(o.within12)} תוך שנה, הארוכה ${o.longestMonths} חודשים`).join("; ") + ".");
+        const own = r.ownRecord && r.ownRecord.afterDeclines;
+        if (own) {
+          const cd = r.ownRecord.currentDrawdown;
+          if (cd && cd.depth < 0) parts.push(`נכון לחודש הרשמי האחרון (${ym(r.ownRecord.to)}) המסלול הזה ${Math.abs(cd.depth)}% מתחת לשיא${cd.deepest < cd.depth - 0.05 ? ` (בשפל של הירידה הזו: ${Math.abs(cd.deepest)}%)` : ""}.`);
+          const withCases = own.filter((o) => o.episodes);
+          if (withCases.length) parts.push(`במסלול הזה עצמו (מאז ${ym(r.ownRecord.from)}): ` + withCases.map((o) => `אחרי ירידה של ${o.depth}% מהשיא (${o.finishedEpisodes == null ? o.episodes : o.finishedEpisodes} מקרים שהסתיימו${o.inProgress ? ", ועוד ירידה אחת שעדיין נמשכת" : ""}${o.reliable ? "" : " — מעט"}) — ${o.deepenedShare == null ? "" : `ב-${pct(o.deepenedShare)} העמיקה ל-${o.deepenedBeyond}% ומעלה; `}${o.medianMonthsToRecover == null ? "אף אחת מהן עוד לא חזרה לשיא" : `חזרה לשיא תוך ${o.medianMonthsToRecover} חודשים בחציון`}${o.recoveredWithin.months12 == null ? "" : `, ${pct(o.recoveredWithin.months12)} תוך שנה`}, הארוכה ${o.longestMonthsToRecover}${o.longestStillOpen ? " (ועדיין נמשכת)" : ""}`).join("; ") + ".");
+        }
+        if (parts.length) parts.push("תיאור העבר — אינו אומר כמה זמן תימשך ירידה נוכחית.");
+        $("tfcrecover").textContent = parts.join(" ");
+      }
+      $("tfcsave").textContent = r.savingsProjection ? r.savingsProjection.text + " " + r.savingsProjection.feeBasis + ". " + (r.savingsProjection.finalBalanceTodayPrices ? `במחירי היום (אינפלציה צפויה ${r.savingsProjection.finalBalanceTodayPrices.inflationAssumed}%): כ-${r.savingsProjection.finalBalanceTodayPrices.central.toLocaleString("en-US")} ₪. ` : "") + r.savingsProjection.note : "";
       $("tfcwarn").textContent = (r.warnings || []).join(" ");
       $("tout").hidden = false;
       $("tsummary").textContent = r.summary;

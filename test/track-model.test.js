@@ -149,6 +149,81 @@ test("track model: deposit-timing statistics", () => {
   assert.equal(dd.afterPositiveMonth.moveAbove2Share, round3(1 / 46)); // the -10% month itself
   assert.match(dd.note, /אינה המלצה אישית/);
 
+  // conditional on reaching a 2% decline: one stayed shallow (regained 2 months later), one deepened to ~11.8%
+  const series2 = [...Array(40).fill(1), -2, 1, 1.1, ...Array(10).fill(1), -2, -10, ...Array(13).fill(1), ...Array(5).fill(1)];
+  const out2 = tm.declineOutlook(series2, { depth: 2 });
+  assert.equal(out2.episodes, 2);
+  assert.equal(out2.deepenedShare, 0.5);
+  assert.equal(out2.recoveredWithin.months6, 0.5);
+  assert.equal(out2.recoveredWithin.months24, 1);
+  assert.equal(out2.reliable, false);
+  assert.equal(out2.inProgress, null);
+  assert.equal(tm.declineOutlook([...series2, -3], { depth: 2 }).inProgress.monthsSinceReached, 0);
+  assert.throws(() => tm.declineOutlook(series2, { depth: 0 }), /depth/);
+  // year-end projection: 10 official months of +1%, an estimated month, one month ahead
+  const hist = [];
+  for (let y = 2022; y <= 2026; y++) for (let m = 1; m <= (y === 2026 ? 10 : 12); m++) hist.push({ period: `${y}${String(m).padStart(2, "0")}`, ret: 1 });
+  const ye = tm.yearEndProjection(hist, { estimates: [{ period: "202611", estimate: -1, errorSd: 0.4, elapsedShare: 1 }] });
+  assert.equal(ye.year, 2026);
+  assert.equal(ye.officialThrough, "202610");
+  assert.equal(ye.remainingMonths, 1);
+  assert.equal(ye.officialYearToDate, Number(((1.01 ** 10 - 1) * 100).toFixed(2)));
+  assert.equal(ye.central, Number(((1.01 ** 10 * 0.99 * 1.01 - 1) * 100).toFixed(2)));
+  // constant history has no volatility, so the range comes from the estimate's error alone
+  assert.ok(Math.abs((ye.range.high - ye.range.low) / 2 - 1.2816 * 0.4 * 1.01 ** 10 * 0.99) < 0.02);
+  const done = tm.yearEndProjection(hist.concat([{ period: "202611", ret: 1 }, { period: "202612", ret: 1 }]));
+  assert.equal(done.complete, true);
+  assert.equal(done.range, null);
+  // an estimate for January moves the projection to the new year
+  assert.equal(tm.yearEndProjection(hist.concat([{ period: "202611", ret: 1 }, { period: "202612", ret: 1 }]), { estimates: [{ period: "202701", estimate: 0.5 }] }).year, 2027);
+  assert.throws(() => tm.yearEndProjection(hist.slice(0, 10)), /לפחות 36/);
+  // chance that the month ends negative: rises as the estimate falls, sharpens as the month passes
+  {
+    const hist = { periods: Array.from({ length: 60 }, (_, i) => String(202101 + i)), factors: Object.fromEntries(tm.FACTOR_NAMES.map((f, k) => [f, Array.from({ length: 60 }, (_, i) => 0.4 + 2 * Math.sin(i * (k + 1)))])) };
+    const m = { alpha: 0.1, betas: { ta125: 0.2, spx: 0.2, usd: 0.1, gov: 0.1, corp: 0.2 }, residualSd: 0.4 };
+    const p = (est, share) => tm.negativeMonthProbability(m, est, { elapsedShare: share, history: hist }).probability;
+    assert.ok(p(-1, 0.5) > p(0, 0.5) && p(0, 0.5) > p(1, 0.5));
+    assert.ok(p(-1, 1) > p(-1, 0.5)); // the same estimate is more decisive at month end
+    assert.ok(p(-3, 1) === 0.99 && p(3, 1) === 0.01); // never shown as certainty
+    assert.match(tm.negativeMonthProbability(m, -3, { elapsedShare: 1, history: hist }).text, /99% ומעלה/);
+    // the estimate's error is the tested one when it is larger than the fit's residual
+    const shaky = { ...m, accuracy: { p90AbsError: 2.9 } };
+    assert.ok(tm.negativeMonthProbability(shaky, -1, { elapsedShare: 1, history: hist }).probability < p(-1, 1));
+    // a supplied factor with no history series gives no probability instead of throwing
+    assert.equal(tm.negativeMonthProbability({ alpha: 0, betas: { ta125: 0.3, nasdaq: 0.2 } }, -1, { history: hist }), null);
+    assert.ok(Math.abs(p(0, 1) - 0.5) < 0.011); // a zero estimate with nothing left of the month is a coin flip
+    assert.equal(tm.negativeMonthProbability(m, -1, { elapsedShare: 0.5 }), null); // no history, no probability
+    const both = tm.negativeMonthProbability(m, -0.8, { elapsedShare: 0.8, history: hist });
+    assert.ok(both.declineOver1Probability < both.probability && both.declineOver1Probability > 0); // a deeper fall is always less likely
+    assert.equal(tm.nowcast(m, Object.fromEntries(tm.FACTOR_NAMES.map((f) => [f, -1])), { elapsedShare: 0.5, history: hist }).negativeMonth.text.startsWith("הסיכוי המוערך"), true);
+  }
+  // regressions from an independent review
+  {
+    // the current drawdown is where the track stands now, not the low point of the decline
+    const partRecovered = tm.depositTimingStats([...Array(40).fill(1), -10, ...Array(5).fill(1)]);
+    assert.ok(Math.abs(partRecovered.currentDrawdown.depth - (0.9 * 1.01 ** 5 - 1) * 100) < 0.01);
+    assert.equal(partRecovered.currentDrawdown.deepest, -10);
+    // a decline still in progress counts: it deepened, and it has not recovered within 12 months
+    const stuck = tm.declineOutlook([...Array(40).fill(1), -4, ...Array(5).fill(1), -4, ...Array(5).fill(1), -12, ...Array(14).fill(0.1)], { depth: 3 });
+    assert.equal(stuck.episodes, 3);
+    assert.equal(stuck.finishedEpisodes, 2);
+    assert.equal(stuck.deepenedShare, 0.33);
+    assert.equal(stuck.recoveredWithin.months12, 0.67);
+    assert.equal(stuck.recoveredWithin.months24, 1); // 24 months have not passed, so the open decline is not yet a known failure
+    assert.equal(stuck.longestStillOpen, true);
+    assert.equal(tm.declineOutlook(Array(40).fill(1).concat([-70]), { depth: 65 }).episodes, 1); // a very deep fall does not throw
+    // year end: the projection stays in the year of the last official month
+    const h11 = hist.concat([{ period: "202611", ret: 1 }]);
+    const cross = tm.yearEndProjection(h11, { estimates: [{ period: "202612", estimate: -2, errorSd: 0.4 }, { period: "202701", estimate: 5, errorSd: 0.4, elapsedShare: 0.5 }] });
+    assert.equal(cross.year, 2026);
+    assert.deepEqual(cross.estimatedMonths.map((e) => e.period), ["202612"]);
+    assert.equal(cross.central, Number(((1.01 ** 11 * 0.98 - 1) * 100).toFixed(2)));
+    // a month with neither an official figure nor an estimate is filled at the average, and said so
+    const gap = tm.yearEndProjection(hist.slice(0, -1), { estimates: [{ period: "202611", estimate: -1, errorSd: 0.4 }] }); // official to September
+    assert.equal(gap.officialThrough, "202609");
+    assert.equal(gap.averagedMonths, 2); // October and December
+    assert.equal(gap.central, Number(((1.01 ** 9 * 1.01 * 0.99 * 1.01 - 1) * 100).toFixed(2)));
+  }
   const falling = tm.depositTimingStats([...Array(36).fill(1), -2, -3]);
   assert.equal(falling.currentDrawdown.monthsSincePeak, 2);
   assert.ok(falling.currentDrawdown.depth < -4.9);
@@ -219,7 +294,7 @@ test("track explanations: drivers, offsets, environment and a client draft that 
   const mtd = { ta125: -3, spx: -5, usd: 7, gov: 0.3, corp: -0.9 };
   const r = explain.explainMonth({ model, factors: mtd, partial: true, asOf: "2026-11-26", trackLabel: "המסלול הכללי" });
   assert.equal(r.isEstimate, true);
-  assert.equal(r.value, -1.3);
+  assert.equal(r.value, -1.32); // the constant counts only for the 26 of 30 days that have passed
   assert.deepEqual(r.drivers.map((d) => d.factor), ["spx", "ta125", "corp"]); // largest negative contributions first
   assert.deepEqual(r.offsets.map((d) => d.factor), ["usd"]);
   assert.deepEqual(r.environment.tags.map((t) => t.tag), ["israel_equities_down", "global_equities_down", "shekel_weaker"]);
@@ -249,6 +324,17 @@ test("track explanations: drivers, offsets, environment and a client draft that 
   assert.ok(calm.value > 0);
   assert.equal(/תנודה של חודש/.test(calm.clientDraft.text), false);
   assert.throws(() => explain.explainMonth({ model, factors: { ta125: 1 } }), /חסרים גורמים/);
+
+  // how often each scenario actually happened
+  const hist = service.loadFactorHistory();
+  const fq = tm.scenarioFrequency(hist, "spx_down_10");
+  assert.equal(fq.oneMonth.windows, hist.periods.length);
+  assert.ok(fq.oneMonth.hits >= 1 && fq.oneMonth.hits <= 6 && fq.threeMonths.hits >= fq.oneMonth.hits);
+  assert.ok(tm.scenarioFrequency(hist, "global_selloff").oneMonth.hits <= fq.oneMonth.hits); // a combined scenario is rarer than its parts
+  assert.equal(tm.scenarioFrequency(hist, { shocks: { ta125: -60 } }).oneMonth.hits, 0);
+  assert.equal(tm.scenarioFrequency(null, "spx_down_10"), null);
+  const withFreq = explain.scenarioPlaybook(service.mainModels(), hist);
+  assert.match(withFreq[0].howOften, /מאז 2008: קרה בחודש בודד/);
 
   const pb = explain.scenarioPlaybook(service.mainModels());
   assert.equal(pb.length, Object.keys(tm.SCENARIOS).length);
@@ -291,6 +377,16 @@ test("all-track file: every active track is searchable and almost all have a usa
   const m = service.resolveModel({ fundId: short.id, dataset: short.ds }).model;
   assert.match(m.basisNote, /היסטוריה קצרה/);
   assert.ok(m.accuracy && m.accuracy.p90AbsError > 0);
+  // quality control: an unstable own fit is replaced by the category or flagged; nothing implausible is served silently
+  for (const f of withModel) {
+    if (f.basis === "own" && f.q !== "low") assert.ok(f.b.every((v) => Math.abs(v) <= 1.5) && f.a * 12 >= -4 && f.a * 12 <= 6, `${f.name}: plausible coefficients`);
+  }
+  const flagged = file.funds.find((f) => f.q === "low");
+  if (flagged) assert.match(service.resolveModel({ fundId: flagged.id, dataset: flagged.ds }).model.qualityNote, /אינו יציב/);
+  const substituted = file.funds.find((f) => f.q === "low_own_fit");
+  assert.equal(service.resolveModel({ fundId: substituted.id, dataset: substituted.ds }).model.quality, "category_substitute");
+  assert.ok(file.funds.some((f) => f.basis === "own_recent")); // tracks that changed character are fitted on the period since 2024
+
   // a track with no usable data is refused, not guessed
   const none = file.funds.find((f) => !f.basis);
   assert.throws(() => service.resolveModel({ fundId: none.id, dataset: none.ds }), /אין מספיק נתונים/);
@@ -300,6 +396,13 @@ test("daily watch: estimates per track type, how unusual, matching scenarios, no
   const nov = service.marketWatch({ factors: { ta125: -3.34, spx: -5.24, usd: 6.93, gov: 0.33, corp: -0.86 }, asOf: "2026-11-26", elapsedShare: service.monthShare("2026-11-26") });
   assert.equal(nov.partialMonth, true);
   assert.equal(nov.alert.attention, true);
+  // early warning: late in a month like this the general track is flagged for a fall of more than 1%
+  assert.equal(nov.earlyWarning.level, "alert");
+  assert.match(nov.earlyWarning.text, /יותר מ-1%/);
+  const general = nov.categories.find((c) => c.category === "גמל/השתלמות · כללי");
+  assert.ok(general.negativeMonthProbability > 0.9 && general.declineOver1Probability < general.negativeMonthProbability);
+  const quietMonth = service.marketWatch({ factors: { ta125: 1, spx: 1, usd: 0, gov: 0.2, corp: 0.3 }, asOf: "2026-11-26", elapsedShare: service.monthShare("2026-11-26") });
+  assert.equal(quietMonth.earlyWarning.level, "none");
   assert.ok(nov.categories.length >= 20);
   assert.ok(nov.categories.every((c, i) => i === 0 || c.estimate >= nov.categories[i - 1].estimate)); // weakest first
   const cat = (w, name) => w.categories.find((c) => c.category === name);
@@ -327,7 +430,8 @@ test("daily watch: estimates per track type, how unusual, matching scenarios, no
 
 test("track forecast: range per horizon, anchors, prudence cap, fees and guards", () => {
   const history = service.loadFactorHistory();
-  assert.ok(history.periods.length >= 170 && tm.FACTOR_NAMES.every((f) => history.factors[f].length === history.periods.length));
+  assert.ok(history.periods.length >= 220 && history.periods[0] <= "200802", "the factor history reaches back to the 2008 crisis");
+  assert.ok(tm.FACTOR_NAMES.every((f) => history.factors[f].length === history.periods.length));
   const yields = { y5: 3.86, y10: 4.24, inflation: 1.95, asOf: "2026-10", source: "בדיקה" };
   const general = { alpha: 0.08, betas: { ta125: 0.16, spx: 0.23, usd: 0.11, gov: -0.01, corp: 0.2 }, residualSd: 0.43 };
   const f = fc.forecastTrack({ model: general, history, yields });
@@ -343,7 +447,17 @@ test("track forecast: range per horizon, anchors, prudence cap, fees and guards"
   assert.ok(f.horizons[0].annualized.low < 0, "a one-year range for a general track includes a loss");
   assert.equal(f.horizons[3].backtested, false);
   assert.ok(Math.abs(f.horizons[2].cumulative.central - ((1 + f.central / 100) ** 5 - 1) * 100) < 0.3);
-  assert.equal(f.calibration.insideShare, 0.73);
+  assert.equal(f.calibration.insideShare, 0.83);
+  assert.equal(f.generalTrackRecord.windows["10y"].min, 3.6);
+  assert.ok(["calm", "normal", "elevated"].includes(f.volatilityState) && f.recentVolatility > 0);
+  // the range reacts to recent volatility: a turbulent last year widens the one-year range more than the ten-year one
+  const stormy = { periods: history.periods, factors: Object.fromEntries(tm.FACTOR_NAMES.map((k) => [k, history.factors[k].map((v, i) => (i >= history.periods.length - 12 ? v * 3 : v))])) };
+  const fs2 = fc.forecastTrack({ model: general, history: stormy, yields });
+  assert.equal(fs2.volatilityState, "elevated");
+  const width = (x, key) => { const h = x.horizons.find((z) => z.key === key); return h.annualized.high - h.annualized.low; };
+  assert.ok(width(fs2, "1y") > width(f, "1y") * 1.15);
+  assert.ok(width(fs2, "1y") / width(f, "1y") > width(fs2, "10y") / width(f, "10y"));
+  assert.equal(f.anchors.historicalCap, null); // with 2008 in the sample the equity averages are below the cap
   assert.ok(f.caveats.some((c) => /אינה מבטיחה/.test(c)));
 
   // more equity -> higher centre, wider range, more chance of a loss in one year
@@ -351,22 +465,85 @@ test("track forecast: range per horizon, anchors, prudence cap, fees and guards"
   const e = fc.forecastTrack({ model: equity, history, yields });
   assert.ok(e.central > f.central && e.annualVolatility > f.annualVolatility * 1.7);
   assert.ok(e.horizons[0].lossProbability > f.horizons[0].lossProbability);
-  assert.match(e.anchors.historicalCap, /S&P 500/); // the exceptional 2012–2026 average is not projected forward
-  const tracker = fc.forecastTrack({ model: { alpha: 0, betas: { ta125: 0, spx: 1, usd: 0, gov: 0, corp: 0 }, residualSd: 0.3 }, history, yields });
-  // cap = (4.24% + 2 × 4%) a year, applied monthly and compounded: about 13%, below the raw 2012–2026 average
-  assert.ok(tracker.anchors.historical.annual > 12 && tracker.anchors.historical.annual <= 13.1, `capped historical anchor ${tracker.anchors.historical.annual}`);
+  // prudence cap: a historical equity average is never carried forward above yield + twice the premium
+  const trackerModel = { alpha: 0, betas: { ta125: 0, spx: 1, usd: 0, gov: 0, corp: 0 }, residualSd: 0.3 };
+  const tracker = fc.forecastTrack({ model: trackerModel, history, yields });
+  assert.ok(tracker.anchors.historical.annual > 9 && tracker.anchors.historical.annual < 12.9, `S&P anchor ${tracker.anchors.historical.annual}`);
+  const lowPremium = fc.forecastTrack({ model: trackerModel, history, yields, assumptions: { equityPremium: 2 } });
+  assert.match(lowPremium.anchors.historicalCap, /S&P 500/);
+  assert.ok(lowPremium.anchors.historical.annual <= 8.6, `capped anchor ${lowPremium.anchors.historical.annual}`); // (4.24 + 2×2)% a year, compounded monthly
+
+  // valuation anchor: an expensive US market lowers the centre in proportion to the S&P sensitivity
+  const dear = fc.forecastTrack({ model: general, history, yields, valuation: { cape: 39, asOf: "2026-11", source: "בדיקה" } });
+  assert.equal(dear.anchors.valuation.impliedSpxAnnual, 5.5); // 3.37 + 0.85 × (100 / 39)
+  assert.ok(dear.central < f.central && f.central - dear.central < 0.5);
+  assert.ok(Math.abs(dear.anchors.valuation.effectOnCentre - general.betas.spx * (dear.anchors.valuation.spxAnchorAfter - dear.anchors.valuation.spxAnchorBefore)) < 0.03);
+  // the S&P factor is a price index: the anchors built from total-return figures are net of the dividend yield
+  assert.equal(dear.anchors.valuation.impliedSpxPriceAnnual, 4.4);
+  assert.equal(dear.inputs.assumptions.spxDividendYield, 1.1);
+  const noDividend = fc.forecastTrack({ model: trackerModel, history, yields, valuation: { cape: 39, dividendYield: 0 } });
+  const withDividend = fc.forecastTrack({ model: trackerModel, history, yields, valuation: { cape: 39, dividendYield: 1.5 } });
+  assert.ok(noDividend.central - withDividend.central > 0.7 && noDividend.central - withDividend.central < 1.2, `dividend effect ${noDividend.central - withDividend.central}`);
+  // an explicit user assumption wins over the stored dividend yield
+  const userZero = fc.forecastTrack({ model: trackerModel, history, yields, assumptions: { spxDividendYield: 0 }, valuation: { cape: 39, dividendYield: 1.5 } });
+  assert.equal(userZero.central, noDividend.central);
+  assert.equal(userZero.inputs.assumptions.spxDividendYield, 0);
+  assert.equal(typeof dear.inputs.bondLike, "boolean");
+  assert.equal(fc.forecastTrack({ model: general, history, yields, assumptions: null }).central, f.central); // null assumptions are accepted
+  const pensioner = fc.forecastTrack({ model: general, history, yields, inflationLinked: { share: 0.6, trailingInflation: 3.16, expectedInflation: 1.96 } });
+  assert.match(pensioner.anchors.inflationLinked.note, /60%/);
+  assert.equal(pensioner.anchors.inflationLinked.effectOnCentre, -0.72);
+  // short-term ranges: wider with the horizon, centred near the pro-rata centre, never a point forecast
+  assert.deepEqual(f.shortTerm.map((h) => h.key), ["1m", "3m", "6m"]);
+  const span = (h) => h.cumulative.high - h.cumulative.low;
+  assert.ok(span(f.shortTerm[0]) < span(f.shortTerm[1]) && span(f.shortTerm[1]) < span(f.shortTerm[2]));
+  assert.ok(f.shortTerm.every((h) => h.cumulative.low < 0 && h.cumulative.high > 0)); // a general track can lose or gain in any half year
+  assert.ok(Math.abs((f.shortTerm[2].cumulative.low + f.shortTerm[2].cumulative.high) / 2 - ((1 + f.central / 100) ** 0.5 - 1) * 100) < 0.11);
+  const cheap = fc.forecastTrack({ model: general, history, yields, valuation: { cape: 8 } });
+  // the summary says which way the valuation moved the centre, and names the real history window
+  const cheapText = explain.explainForecast({ forecast: cheap, trackLabel: "מסלול בדיקה" }).summary;
+  assert.match(cheapText, /תמחור המניות בארה"ב נמוך/);
+  assert.match(cheapText, /הועלה/);
+  const dearText = explain.explainForecast({ forecast: dear, trackLabel: "מסלול בדיקה" }).summary;
+  assert.match(dearText, /תמחור המניות בארה"ב גבוה/);
+  assert.match(dearText, /הופחת/);
+  assert.equal(/מאז 2012/.test(dearText), false);
+  assert.ok(dearText.includes(dear.anchors.historical.basis));
+  assert.ok(cheap.central > f.central); // and a cheap one raises it
+  const trackerDear = fc.forecastTrack({ model: trackerModel, history, yields, valuation: { cape: 39 } });
+  assert.ok(tracker.central - trackerDear.central > 1 && tracker.central - trackerDear.central < 1.6);
+  assert.equal(fc.forecastTrack({ model: general, history, yields, valuation: { cape: 0 } }).anchors.valuation, null); // nonsense input is ignored
+  assert.equal(f.anchors.valuation, null);
 
   // a bond track is anchored on yields only
   const bond = fc.forecastTrack({ model: { alpha: 0.05, betas: { ta125: 0.02, spx: 0.03, usd: 0.02, gov: 0.4, corp: 0.3 }, residualSd: 0.2 }, history, yields });
   assert.match(bond.anchors.centreRule, /בלבד/);
   assert.equal(bond.central, bond.anchors.yieldBased.annual);
+  assert.equal(fc.forecastTrack({ model: { alpha: 0.05, betas: { ta125: 0.02, spx: 0.03, usd: 0.02, gov: 0.4, corp: 0.3 }, residualSd: 0.2 }, history, yields, valuation: { cape: 39 } }).anchors.valuation, null);
 
   // fee, category shrinkage and custom assumptions
   const net = fc.forecastTrack({ model: general, history, yields, annualFee: 0.8 });
   assert.ok(Math.abs(f.central - net.central - 0.8) < 0.11);
-  const shrunk = fc.forecastTrack({ model: { ...general, alpha: 0.4 }, history, yields, categoryAlpha: 0.08 });
-  const own = fc.forecastTrack({ model: { ...general, alpha: 0.4 }, history, yields });
+  const shrunk = fc.forecastTrack({ model: { ...general, alpha: 0.28 }, history, yields, categoryAlpha: 0.08 });
+  const own = fc.forecastTrack({ model: { ...general, alpha: 0.28 }, history, yields });
   assert.ok(shrunk.central < own.central && shrunk.central > f.central);
+  // only a quarter of a track's own excess is carried forward: 0.25 × (0.28 − 0.08) × 12 = 0.6 points a year
+  assert.ok(Math.abs(shrunk.central - f.central - 0.6) < 0.15, `shrunk ${shrunk.central} vs ${f.central}`);
+  assert.equal(shrunk.inputs.alphaUsed, 1.56);
+  // an extreme unexplained return is bounded, and the result says so
+  const wild = fc.forecastTrack({ model: { ...general, alpha: 1.2 }, history, yields }); // 14% a year of "alpha"
+  assert.equal(wild.inputs.alphaClamped, true);
+  assert.equal(wild.inputs.alphaUsed, fc.ALPHA_BOUNDS.high);
+  assert.ok(wild.central < f.central + 3.5);
+  assert.equal(f.inputs.alphaClamped, false);
+  // sensitivities that would imply an absurd centre are bounded and flagged
+  const absurd = fc.forecastTrack({ model: { alpha: 0.29, betas: { ta125: 0, spx: 0.9, usd: 0, gov: -0.5, corp: 1.05 }, residualSd: 0.8 }, history, yields });
+  assert.equal(absurd.inputs.centreBounded, true);
+  assert.equal(absurd.central, absurd.inputs.centreBounds.high);
+  assert.ok(absurd.inputs.centreBounds.high < 12.5 && absurd.inputs.centreBounds.low > 0.5);
+  assert.equal(f.inputs.centreBounded, false);
+  const sour = fc.forecastTrack({ model: { ...general, alpha: -0.9 }, history, yields });
+  assert.equal(sour.inputs.alphaUsed, fc.ALPHA_BOUNDS.low);
   const cautious = fc.forecastTrack({ model: general, history, yields, assumptions: { equityPremium: 2 } });
   assert.ok(cautious.central < f.central);
 
@@ -384,9 +561,47 @@ test("track forecast: range per horizon, anchors, prudence cap, fees and guards"
   assert.equal(card10.ok, true);
   assert.notEqual(card10.card.interval.kind, "statistical");
 
+  // historical stress episodes with today's sensitivities
+  const rough = fc.stressTests(general); // no monthly history: sensitivity × cumulative move
+  assert.deepEqual(rough.map((x) => x.key), fc.HISTORICAL_EPISODES.map((x) => x.key));
+  const r2008 = rough.find((x) => x.key === "crisis_2008");
+  assert.equal(r2008.method, "cumulative_approximation");
+  // 0.16*-41.7 + 0.23*-47.5 + 0.11*28.7 + -0.01*6.6 + 0.2*-11 + 9 months of alpha 0.08
+  assert.ok(Math.abs(r2008.impact - (-16.0)) < 0.2, `2008: ${r2008.impact}`);
+  const stress = fc.stressTests(general, history); // with history: the model's monthly returns, compounded
+  const s2008 = stress.find((x) => x.key === "crisis_2008");
+  assert.equal(s2008.method, "monthly_compounded");
+  assert.equal(s2008.months, 9);
+  assert.ok(s2008.impact < -14 && s2008.impact > -26, `2008 compounded: ${s2008.impact}`);
+  assert.equal(s2008.actualByCategory["גמל/השתלמות · כללי"], -15.2);
+  assert.ok(fc.stressTests(equity, history).find((x) => x.key === "crisis_2008").impact < s2008.impact * 1.8);
+  assert.ok(stress.find((x) => x.key === "recovery_2009").impact > 20);
+  assert.ok(stress.find((x) => x.key === "covid_2020").impact < -6);
+  assert.throws(() => fc.stressTests({}), /betas/);
+
+  // savings projection: consistent with the forecast, deterministic, and guarded
+  const lump5 = fc.projectSavings(f, { years: 5, balance: 100000 });
+  const h5 = f.horizons.find((x) => x.key === "5y");
+  assert.ok(Math.abs(lump5.finalBalance.central / 1000 - 100 - h5.cumulative.central) < 4, "the median of a lump sum matches the five-year centre");
+  assert.ok(Math.abs(lump5.finalBalance.high / 1000 - 100 - h5.cumulative.high) < 8 && lump5.finalBalance.low < lump5.finalBalance.central);
+  assert.deepEqual(fc.projectSavings(f, { years: 5, balance: 100000 }).finalBalance, lump5.finalBalance); // same seed, same answer
+  const plan = fc.projectSavings(f, { years: 20, balance: 50000, monthlyDeposit: 2000, depositFee: 1 });
+  assert.equal(plan.paidIn, 530000);
+  assert.ok(plan.finalBalance.low > 530000 * 0.9 && plan.finalBalance.central > 700000 && plan.finalBalance.high > plan.finalBalance.central * 1.2);
+  assert.ok(plan.finalBalanceTodayPrices.central < plan.finalBalance.central);
+  assert.ok(plan.belowPaidInProbability < 0.1 && fc.projectSavings(f, { years: 1, balance: 100000 }).belowPaidInProbability > 0.1);
+  assert.ok(fc.projectSavings(net, { years: 20, monthlyDeposit: 2000 }).finalBalance.central < fc.projectSavings(f, { years: 20, monthlyDeposit: 2000 }).finalBalance.central); // fees cost money
+  assert.throws(() => fc.projectSavings(f, { years: 0, balance: 1000 }), /years/);
+  assert.throws(() => fc.projectSavings(f, { years: 5 }), /סכום פתיחה או הפקדה/);
+  assert.throws(() => fc.projectSavings({}, { years: 5, balance: 1 }), /תחזית מסלול/);
+
   const text = explain.explainForecast({ forecast: f, trackLabel: "המסלול הכללי" });
   assert.match(text.summary, /הטווח הסביר/);
-  assert.match(text.summary, /73%/);
+  assert.match(text.summary, /83%/);
+  assert.match(text.summary, /רמת הסיכון ודמי הניהול/);
+  assert.match(text.summary, /מאז 1999 הסתיימו בהפסד 17% מהתקופות של שנה, 2% מהתקופות של 3 שנים/);
+  assert.equal(f.calibration.individualTracks.tracks, 70);
+  assert.match(f.calibration.lossProbabilityNote, /שמרני/);
   assert.ok(text.clientDraft.text.startsWith("היי") && /אינה תשואה מובטחת/.test(text.clientDraft.text));
   assert.equal(text.clientDraft.requiresApproval, true);
 });
@@ -413,7 +628,57 @@ test("forecast service: live yields with a dated fallback, per-track and per-cat
   assert.equal(r.ownRecord, null); // no official history reachable in this test — the forecast does not depend on it
   assert.ok(r.forecastCardDrafts["5y"].asset.includes("הפניקס") && validateCard(r.forecastCardDrafts["1y"], { now: today }).ok);
   assert.match(r.notice, /אינה הבטחה/);
+  // reliability grade follows what the backtest supports
+  assert.equal(r.reliability.grade, "medium");
+  assert.match(r.summary, /אמינות התחזית: בינונית/);
+  const bondTrack = await service.forecastFund({ category: 'גמל/השתלמות · אשראי ואג"ח', fetchImpl: ok, today });
+  assert.equal(bondTrack.reliability.grade, "high");
+  const stockTrack = await service.forecastFund({ category: "גמל/השתלמות · מניות", fetchImpl: ok, today });
+  assert.equal(stockTrack.reliability.grade, "low");
+  assert.equal(service.forecastReliability({ quality: "low", basis: "own" }, { inputs: { equitySensitivity: 0.4, centreBounded: false, alphaClamped: false } }).grade, "very_low");
+  assert.equal(service.forecastReliability({ quality: "ok", basis: "blend", basisNote: "היסטוריה קצרה" }, { inputs: { equitySensitivity: 0.4, centreBounded: false, alphaClamped: false } }).grade, "low");
+  // comprehensive pension: the CPI-linked guaranteed share uses expected, not trailing, inflation
+  const pensionTrack = await service.forecastFund({ category: "פנסיה מקיפה · כללי", fetchImpl: ok, today });
+  const il = pensionTrack.anchors.inflationLinked;
+  assert.equal(il.share, 0.3);
+  assert.ok(Math.abs(il.effectOnCentre + 0.3 * (il.trailingInflation - il.expectedInflation)) < 0.011);
+  assert.match(pensionTrack.summary, /צמודה למדד/);
+  assert.equal(r.anchors.inflationLinked, null); // not applied outside comprehensive pension funds
+  // new track types (short history): their inflated constant is not carried forward, so an S&P tracker
+  // in provident funds is forecast like the same tracker in insurance policies, not points above it
+  const newType = await service.forecastFund({ category: "גמל/השתלמות · עוקב S&P 500", fetchImpl: ok, today });
+  const oldType = await service.forecastFund({ category: "ביטוח · עוקב S&P 500", fetchImpl: ok, today });
+  assert.ok(Math.abs(newType.central - oldType.central) < 1, `${newType.central} vs ${oldType.central}`);
+  assert.ok(newType.warnings.some((w) => /סוג המסלול חדש/.test(w)));
+  assert.equal(newType.reliability.grade, "low");
+  const mixedNew = await service.forecastFund({ category: "גמל/השתלמות · משולב סחיר", fetchImpl: ok, today });
+  assert.ok(mixedNew.central > 4.5 && mixedNew.central < 7.5, `mixed new type ${mixedNew.central}`);
+  assert.ok(mixedNew.warnings.some((w) => /לפי החשיפה המדווחת/.test(w)));
+  assert.equal(r.anchors.valuation.cape, 39); // the stored valuation snapshot is applied
+  assert.match(r.summary, /מכפיל שילר 39/);
+  const cheaper = await service.forecastFund({ fundId: 50, assumptions: { cape: 20 }, fetchImpl: ok, today });
+  assert.ok(cheaper.central > r.central && cheaper.anchors.valuation.cape === 20);
   assert.ok(r.summary.startsWith(r.track.label), "the professional summary names the track that was analysed");
+  // official returns are gross of fees: the forecast is also shown after the track's average fee
+  assert.match(r.returnsBasis, /ברוטו/);
+  assert.equal(r.stressTests.episodes.length, fc.HISTORICAL_EPISODES.length);
+  assert.match(r.stressTests.note, /ולא תחזית/);
+  assert.equal(r.stressTests.episodes[0].actualGeneralTrack, -15.2);
+  assert.equal(r.stressTests.episodes[0].actualSameCategory, -11.4); // the track's own category (insurance, general) in 2008
+  assert.ok(r.afterAverageFee.fee > 0.3 && r.afterAverageFee.fee < 2);
+  assert.ok(Math.abs(r.central - r.afterAverageFee.central - r.afterAverageFee.fee) < 0.11);
+  assert.match(r.summary, /לפני דמי ניהול/);
+  assert.equal(r.savingsProjection, null);
+  const withPlan = await service.forecastFund({ fundId: 50, savings: { years: 10, monthlyDeposit: 1500 }, fetchImpl: ok, today });
+  assert.equal(withPlan.savingsProjection.paidIn, 180000);
+  assert.match(withPlan.savingsProjection.feeBasis, /הממוצעים במסלול/);
+  assert.match(withPlan.savingsProjection.text, /180,000 ₪/);
+  assert.equal(withPlan.savingsProjection.basis.annualReturnCentre, withPlan.afterAverageFee.central);
+  await assert.rejects(service.forecastFund({ fundId: 50, savings: { years: 99, balance: 1000 }, fetchImpl: ok, today }), /years/);
+  const own = await service.forecastFund({ fundId: 50, annualFee: 1.1, fetchImpl: ok, today });
+  assert.equal(own.afterAverageFee, null); // the caller's own fee replaces the average
+  assert.match(own.summary, /אחרי דמי ניהול של 1\.1%/);
+  assert.match(own.clientDraft.text, /אחרי דמי ניהול של 1\.1%/);
   assert.ok(r.clientDraft.text.startsWith("היי, בדקתי את המסלול."), "the client draft keeps the generic label");
 
   // Bank of Israel unreachable -> stored snapshot, and the result says so
@@ -555,6 +820,9 @@ test("fund analysis: model, accuracy, scenarios, early estimate and deposit timi
   assert.ok(Math.abs(r.earlyEstimate.estimate + 1.3) < 0.4);
   assert.ok(r.earlyEstimate.range.low < r.earlyEstimate.estimate);
   assert.equal(r.depositTiming.months, 120);
+  assert.ok(r.declineOutlook.depthNow <= 0);
+  assert.ok(r.declineOutlook.afterDeclines.length >= 2);
+  assert.equal(r.declineOutlook.includesEstimatedMonths, 1);
   assert.match(r.notice, /אינו חוזה/);
   assert.equal(r.volatilityOutlook.basedOn.isEarlyEstimate, true);
   assert.ok(["elevated_volatility", "normal_volatility"].includes(r.volatilityOutlook.state));
@@ -589,6 +857,13 @@ test("fund analysis: model, accuracy, scenarios, early estimate and deposit timi
   assert.equal(lagged.earlyEstimate.since, "2026-10-31");
   assert.ok(Math.abs(lagged.earlyEstimate.marketMoves.ta125 + 2) < 1e-9);
   assert.equal(lagged.earlyEstimate.partialMonth, true);
+  // the year-end projection counts the unpublished month and the partial month as estimates, with December still ahead
+  assert.deepEqual(lagged.yearEnd.estimatedMonths.map((e) => [e.period, e.partial]), [["202610", false], ["202611", true]]);
+  assert.equal(lagged.yearEnd.officialThrough, "202609");
+  assert.equal(lagged.yearEnd.remainingMonths, 1);
+  assert.ok(lagged.yearEnd.range.low < lagged.yearEnd.central && lagged.yearEnd.central < lagged.yearEnd.range.high);
+  assert.match(lagged.yearEnd.text, /הערכה לסיום 2026/);
+  assert.match(lagged.yearEnd.text, /אינה תשואה מובטחת/);
   market._clearCache();
 
   // without supplied factors and without the opt-in index source the analysis refuses rather than guessing
@@ -604,6 +879,7 @@ test("year over year: same months in both years, gap split by factor, draft with
   assert.deepEqual(r.years, ["2016", "2017"]);
   assert.equal(r.months.label, "ינואר עד יוני");
   assert.equal(r.fund.lastOfficialMonth, "201706");
+  assert.equal(r.yearEnd, null); // fewer than 36 official months: no year-end projection
   const sum = Object.values(r.byFactor).reduce((t, v) => t + v, 0) + r.unexplained;
   assert.ok(Math.abs(sum - r.gap) < 0.05, `sum ${sum} gap ${r.gap}`);
   assert.equal(typeof r.factorMoves["2016"].ta125, "number");

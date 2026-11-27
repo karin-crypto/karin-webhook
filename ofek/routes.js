@@ -410,14 +410,14 @@ function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_AD
     const b = req.body || {};
     const { model, origin, label } = trackService.resolveModel(b);
     const scenario = b.shocks ? { shocks: b.shocks, he: b.description } : b.scenario;
-    res.json({ ok: true, model: { label: label || null, origin, betas: model.betas }, ...(scenario ? { result: trackModel.scenarioImpact(model, scenario) } : { table: trackModel.scenarioTable(model) }) });
+    res.json({ ok: true, model: { label: label || null, origin, betas: model.betas }, ...(scenario ? { result: { ...trackModel.scenarioImpact(model, scenario), historicalFrequency: trackModel.scenarioFrequency(trackService.loadFactorHistory(), scenario) } } : { table: trackModel.scenarioTable(model).map((t) => ({ ...t, historicalFrequency: trackModel.scenarioFrequency(trackService.loadFactorHistory(), t.scenario) })) }) });
   }));
 
   router.post("/track-model/nowcast", wrap(async (req, res) => {
     const b = req.body || {};
     const { model, origin, label } = trackService.resolveModel(b);
     if (!b.asOf || !b.source) throw new trackModel.TrackModelError("asOf ו־source חובה: מאיזה תאריך ומאיזה מקור נלקחו תנועות השוק");
-    res.json({ ok: true, model: { label: label || null, origin }, asOf: b.asOf, source: b.source, ...trackModel.nowcast(model, b.factors, { elapsedShare: b.elapsedShare == null ? 1 : b.elapsedShare }) });
+    res.json({ ok: true, model: { label: label || null, origin }, asOf: b.asOf, source: b.source, ...trackModel.nowcast(model, b.factors, { elapsedShare: b.elapsedShare == null ? (b.partial ? trackService.monthShare(b.asOf) : 1) : b.elapsedShare, history: trackService.loadFactorHistory() }) });
   }));
 
   router.post("/track-model/explain", wrap(async (req, res) => {
@@ -426,12 +426,12 @@ function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_AD
     if (!b.asOf || !b.source) throw new trackModel.TrackModelError("asOf ו־source חובה: מאיזה תאריך ומאיזה מקור נלקחו תנועות השוק");
     res.json({
       model: { label: label || null, origin }, source: b.source,
-      ...trackExplain.explainMonth({ model, factors: b.factors, actual: typeof b.actual === "number" ? b.actual : null, partial: !!b.partial, asOf: b.asOf, trackLabel: b.trackLabel || "המסלול", elapsedShare: b.elapsedShare == null ? 1 : b.elapsedShare }),
+      ...trackExplain.explainMonth({ history: trackService.loadFactorHistory(), model, factors: b.factors, actual: typeof b.actual === "number" ? b.actual : null, partial: !!b.partial, asOf: b.asOf, trackLabel: b.trackLabel || "המסלול", elapsedShare: b.elapsedShare == null ? 1 : b.elapsedShare }),
     });
   }));
 
   router.get("/track-model/playbook", (_req, res) => {
-    res.json({ ok: true, playbook: trackExplain.scenarioPlaybook(trackService.mainModels()), note: "גודל הזעזועים הוא הדגמה. ההשפעות — לפי הרגישות ההיסטורית (60 החודשים האחרונים), בנקודות אחוז." });
+    res.json({ ok: true, playbook: trackExplain.scenarioPlaybook(trackService.mainModels(), trackService.loadFactorHistory()), note: "גודל הזעזועים הוא הדגמה. ההשפעות — לפי הרגישות ההיסטורית (60 החודשים האחרונים), בנקודות אחוז." });
   });
 
   router.post("/track-model/attribution", wrap(async (req, res) => {
@@ -478,7 +478,7 @@ function createOfekRouter({ ledger = createLedger(), token = process.env.OFEK_AD
     const b = req.body || {};
     res.json(await trackService.forecastFund({
       fundId: b.fundId, dataset: b.dataset, category: b.category, annualFee: b.annualFee || 0, assumptions: b.assumptions || {}, trackLabel: b.trackLabel || null,
-      includeHistory: b.includeHistory !== false, ...(fetchImpl ? { fetchImpl } : {}),
+      includeHistory: b.includeHistory !== false, savings: b.savings || null, ...(fetchImpl ? { fetchImpl } : {}),
     }));
   }));
 

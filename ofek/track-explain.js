@@ -68,8 +68,14 @@ function classifyEnvironment(factors) {
  *   actual:  the official return if already published (percent), else null
  *   partial: true when the month is not over (the text says "so far")
  */
-function explainMonth({ model, factors, actual = null, partial = false, asOf = null, trackLabel = "המסלול", elapsedShare = 1 } = {}) {
-  const est = tm.nowcast(model, factors, { elapsedShare });
+function explainMonth({ model, factors, actual = null, partial = false, asOf = null, trackLabel = "המסלול", elapsedShare = 1, history = null } = {}) {
+  // a month in progress: when the caller gave no share, take it from the as-of date
+  let share = elapsedShare;
+  if (partial && elapsedShare === 1 && /^\d{4}-\d{2}-\d{2}$/.test(String(asOf || ""))) {
+    const [y, m, d] = asOf.split("-").map(Number);
+    if (d >= 1 && m >= 1 && m <= 12) share = Math.min(1, d / new Date(Date.UTC(y, m, 0)).getUTCDate());
+  }
+  const est = tm.nowcast(model, factors, { elapsedShare: share, history });
   const value = typeof actual === "number" ? actual : est.estimate;
   const isEstimate = typeof actual !== "number";
 
@@ -99,6 +105,7 @@ function explainMonth({ model, factors, actual = null, partial = false, asOf = n
   if (drivers.length) summary.push(`הגורמים העיקריים: ${drivers.map(effect).join("; ")}.`);
   if (offsets.length) summary.push(`גורמים שפעלו בכיוון ההפוך: ${offsets.map(effect).join("; ")}.`);
   if (!drivers.length && !offsets.length) summary.push("לא נרשמה תנועת שוק בולטת; השינוי קטן ונובע מתנודה שוטפת.");
+  if (isEstimate && est.negativeMonth) summary.push(`${est.negativeMonth.text} (מדד מחקרי).`);
   if (!isEstimate) {
     const gap = Number((actual - est.estimate).toFixed(2));
     if (Math.abs(gap) >= 0.5) summary.push(`הפער בין הנתון הרשמי לאומדן המודל (${signed(est.estimate)}) הוא ${Math.abs(gap).toFixed(1)} נק' אחוז ${gap > 0 ? "לטובה" : "לרעה"} — חלק שאינו מוסבר בתנועות השוק (בחירת נכסים, נכסים לא סחירים, שינוי חשיפות).`);
@@ -122,6 +129,7 @@ function explainMonth({ model, factors, actual = null, partial = false, asOf = n
     asOf,
     range: isEstimate ? est.range : null,
     modelEstimate: est.estimate,
+    negativeMonth: isEstimate ? est.negativeMonth : null,
     environment,
     drivers,
     offsets,
@@ -209,21 +217,39 @@ function explainYearOverYear({ attribution, factorMoves, years, fromMonth, toMon
  * client-message draft. The range is the message; the centre alone is never
  * presented as "the forecast".
  */
-function explainForecast({ forecast, trackLabel = "המסלול", draftLabel = "המסלול", peerNote = true } = {}) {
+function explainForecast({ forecast, trackLabel = "המסלול", draftLabel = "המסלול", peerNote = true, afterAverageFee = null, reliability = null } = {}) {
   const h = Object.fromEntries(forecast.horizons.map((x) => [x.key, x]));
   const rangeYear = (x) => between(x.annualized.low, x.annualized.high);
   const summary = [];
   summary.push(`${trackLabel}: מרכז התחזית הוא תשואה של כ-${forecast.central}% בשנה בממוצע (נומינלי${forecast.centralReal == null ? "" : `; כ-${forecast.centralReal}% מעל האינפלציה הצפויה`}).`);
+  if (Math.abs(forecast.inputs.equitySensitivity) >= 0.15 && forecast.inputs.assumptions.spxDividendYield > 0) summary.push(`מדד S&P 500 שבמודל אינו כולל דיבידנדים, ולכן העוגנים שלו חושבו בניכוי תשואת הדיבידנד (${forecast.inputs.assumptions.spxDividendYield}%), כדי לא לספור אותה פעמיים.`);
+  if (forecast.anchors.inflationLinked) {
+    const il = forecast.anchors.inflationLinked;
+    summary.push(`${il.share > 0.3 ? "במסלול מקבלי קצבה בקרן פנסיה מקיפה כ-" + Math.round(il.share * 100) + "%" : "בקרן פנסיה מקיפה 30%"} מהנכסים נהנים מתשואה מובטחת צמודה למדד; הרכיב הזה חושב לפי האינפלציה הצפויה (${il.expectedInflation}%) ולא לפי זו של חמש השנים האחרונות (${il.trailingInflation}%), והשפעתו על המרכז: ${il.effectOnCentre < 0 ? "מינוס " + Math.abs(il.effectOnCentre) : il.effectOnCentre} נקודות אחוז לשנה.`);
+  }
+  if (reliability) summary.push(`אמינות התחזית: ${reliability.he} (${reliability.reasons.join("; ")}).`);
+  if (forecast.inputs.annualFee > 0) summary.push(`המספרים אחרי דמי ניהול של ${forecast.inputs.annualFee}% בשנה.`);
+  else if (afterAverageFee) summary.push(`המספרים לפני דמי ניהול. אחרי דמי הניהול הממוצעים במסלול (${afterAverageFee.fee}% בשנה) המרכז הוא כ-${afterAverageFee.central}% בשנה.`);
+  else summary.push("המספרים לפני דמי ניהול.");
   summary.push(`הטווח הסביר: בשנה הקרובה ${rangeYear(h["1y"])}; בממוצע שנתי לאורך 3 שנים ${rangeYear(h["3y"])}; לאורך 5 שנים ${rangeYear(h["5y"])}; לאורך 10 שנים ${rangeYear(h["10y"])} (האחרון לא נבדק היסטורית).`);
   summary.push(`הסיכוי המשוער לסיים בהפסד: כ-${Math.round(h["1y"].lossProbability * 100)}% אחרי שנה, כ-${Math.round(h["3y"].lossProbability * 100)}% אחרי 3 שנים, כ-${Math.round(h["5y"].lossProbability * 100)}% אחרי 5 שנים.`);
-  summary.push(`שני עוגנים: לפי ממוצע השווקים מאז 2012 — ${forecast.anchors.historical.annual}% בשנה; לפי תשואות האג"ח הנוכחיות והנחות הפרמיה — ${forecast.anchors.yieldBased.annual}% בשנה. ${forecast.anchors.centreRule}.`);
+  if (forecast.generalTrackRecord) {
+    const w = forecast.generalTrackRecord.windows;
+    summary.push(`לשם השוואה, במסלול כללי חציוני מאז 1999 הסתיימו בהפסד ${Math.round(w["1y"].negativeShare * 100)}% מהתקופות של שנה, ${Math.round(w["3y"].negativeShare * 100)}% מהתקופות של 3 שנים, ואף תקופה של 5 שנים.`);
+  }
+  summary.push(`שני עוגנים: לפי ${forecast.anchors.historical.basis || "ממוצע גורמי השוק בעבר"} — ${forecast.anchors.historical.annual}% בשנה; לפי תשואות האג"ח הנוכחיות והנחות הפרמיה — ${forecast.anchors.yieldBased.annual}% בשנה. ${forecast.anchors.centreRule}.`);
+  const val = forecast.anchors.valuation;
+  if (val && Math.abs(val.effectOnCentre) >= 0.05) summary.push(`תמחור המניות בארה"ב ${val.effectOnCentre < 0 ? "גבוה" : "נמוך"} (מכפיל שילר ${val.cape}${val.asOf ? `, ${val.asOf}` : ""}). לפי 140 שנות נתונים, רמה כזו הייתה מלווה בתשואה של כ-${val.impliedSpxAnnual}% בשנה ב-S&P 500 בעשור שאחריה, ולכן מרכז התחזית ${val.effectOnCentre < 0 ? "הופחת" : "הועלה"} ב-${Math.abs(val.effectOnCentre).toFixed(1)} נקודות אחוז. זה אינו כלי לעיתוי: לשנה אחת אין לתמחור כוח חיזוי.`);
   summary.push(`בבדיקה היסטורית (${forecast.calibration.period}) כ-${Math.round(forecast.calibration.insideShare * 100)}% מהתוצאות בפועל נפלו בתוך טווח כזה, כ-${Math.round(forecast.calibration.belowShare * 100)}% מתחתיו וכ-${Math.round(forecast.calibration.aboveShare * 100)}% מעליו.`);
-  if (peerNote) summary.push("בין חברות שונות באותו סוג מסלול הפער בעבר היה קטן יחסית (כ-2 נקודות אחוז לשנה בין הטובות לחלשות), והצטיינות בעבר חזתה את ההמשך רק במעט. סוג המסלול משפיע הרבה יותר מזהות החברה.");
+  if (forecast.volatilityState === "elevated") summary.push("התנודתיות בחודשים האחרונים גבוהה מהרגיל, ולכן הטווח לשנה הקרובה רחב מהרגיל.");
+  if (forecast.volatilityState === "calm") summary.push("התנודתיות בחודשים האחרונים נמוכה מהרגיל, ולכן הטווח לשנה הקרובה צר מעט מהרגיל.");
+  if (peerNote) summary.push("בין חברות שונות באותו סוג מסלול הפער בעבר היה קטן יחסית (כ-2 נקודות אחוז לשנה בין הטובות לחלשות), והצטיינות של מסלול בודד כמעט לא נמשכה. מה שכן נשאר עקבי בין חברות הוא רמת הסיכון ודמי הניהול. סוג המסלול משפיע הרבה יותר מזהות החברה.");
 
   const lines = [
     // the client draft keeps a generic label: office rules ban the word "קרן" there, and many track names contain it
     `היי, בדקתי את ${draftLabel}. לפי המודל שלנו, לאורך 5 שנים התשואה השנתית הממוצעת הצפויה היא בסביבות ${forecast.central}%, בטווח סביר של ${rangeYear(h["5y"])} לשנה.`,
     `בשנה בודדת הטווח רחב הרבה יותר, ${rangeYear(h["1y"])}, ולכן אי אפשר להתחייב על שנה מסוימת.`,
+    forecast.inputs.annualFee > 0 ? `המספרים אחרי דמי ניהול של ${forecast.inputs.annualFee}% בשנה.` : "המספרים לפני דמי ניהול.",
     "זו הערכה מחקרית ואינה תשואה מובטחת, והיא לפני התאמה אישית של המסלול לטווח ולרמת הסיכון שלך.",
   ];
   return {
@@ -277,10 +303,25 @@ const PLAYBOOK_TEXT = {
     what: "עליית תשואות: אגרות החוב יורדות והמניות נחלשות מעט.",
     talking: "פוגע גם במסלולים הסולידיים, שבדרך כלל יציבים. כדאי להסביר שירידת מחיר באג\"ח פירושה תשואה לפדיון גבוהה יותר מכאן והלאה.",
   },
+  global_rally: {
+    what: "עלייה חדה במניות בעולם ובישראל, לרוב יחד עם התחזקות של השקל.",
+    talking: "המסלולים הכלליים עולים בערך 3%, מסלולי המניות 6%–7%. במסלולים שעוקבים אחרי S&P 500 התחזקות השקל מקזזת חלק מהעלייה (בערך 5% במקום 8%). חודש כזה אינו סיבה להגדיל סיכון: אחרי עליות חדות אין יתרון מוכח להמשך, והמסלול נבחר לפי הגיל והטווח ולא לפי החודש האחרון.",
+  },
+  local_rally: {
+    what: "עלייה חדה במניות בישראל, עם התחזקות של השקל (למשל רגיעה ביטחונית או ירידה בפרמיית הסיכון של ישראל).",
+    talking: "המסלולים הכלליים עולים בערך 1.5%–2%, מסלולי המניות 3%–5%. מסלולים שעוקבים אחרי S&P 500 עלולים דווקא לרדת (2%–3.5%) כי הדולר נחלש — חשוב להסביר זאת מראש למי שמחזיק בהם.",
+  },
+  yields_down: {
+    what: "ירידת תשואות באג\"ח (ציפייה להורדת ריבית או ירידה באינפלציה): מחירי האג\"ח עולים, והמניות עולות מעט.",
+    talking: "כמעט כל המסלולים מרוויחים בערך 1%–1.5%, כולל מסלולי האג\"ח והמסלולים לגילאי 60 ומעלה. זה רווח חד-פעמי: אחרי ירידת תשואות, התשואה השוטפת הצפויה מהאג\"ח מכאן והלאה נמוכה יותר.",
+  },
 };
 
-function scenarioPlaybook(models) {
+function scenarioPlaybook(models, history = null) {
+  const freqText = (f) => (f ? `מאז ${f.from.slice(0, 4)}: קרה בחודש בודד ${f.oneMonth.hits} פעמים מתוך ${f.oneMonth.windows} חודשים; בתוך 3 חודשים — ב-${Math.round(f.threeMonths.share * 100)}% מהתקופות; בתוך שנה — ב-${Math.round(f.twelveMonths.share * 100)}%.` : null);
   return Object.keys(tm.SCENARIOS).map((key) => ({
+    historicalFrequency: history ? tm.scenarioFrequency(history, key) : null,
+    howOften: history ? freqText(tm.scenarioFrequency(history, key)) : null,
     scenario: key,
     description: tm.SCENARIOS[key].he,
     shocks: tm.SCENARIOS[key].shocks,

@@ -128,13 +128,13 @@ const TOOL_DEFS = [
     name: "track_early_estimate",
     description:
       "Early estimate of a track's return for a month whose official figure is not published yet, from month-to-date market moves YOU VERIFIED (percent): factors { ta125, spx (in USD), usd (USD/ILS change), gov, corp }. " +
-      "asOf (date of the market data) and source are required. elapsedShare = share of the month that has passed (1 if the month ended). Always present the result as an early estimate with its range.",
-    input_schema: obj({ fundId: { type: "integer" }, category: { type: "string" }, betas: anyObj, alpha: { type: "number" }, factors: anyObj, asOf: { type: "string" }, source: { type: "string" }, elapsedShare: { type: "number" } }, ["factors", "asOf", "source"]),
+      "asOf (date of the market data) and source are required. For a month still in progress pass partial: true — the share of the month that has passed is then taken from asOf (or pass elapsedShare yourself); without it the month is treated as complete and the decline probability will be overstated. Always present the result as an early estimate with its range.",
+    input_schema: obj({ fundId: { type: "integer" }, category: { type: "string" }, betas: anyObj, alpha: { type: "number" }, factors: anyObj, asOf: { type: "string" }, source: { type: "string" }, elapsedShare: { type: "number" }, partial: { type: "boolean" } }, ["factors", "asOf", "source"]),
   },
   {
     name: "analyze_fund_track",
     description:
-      "Full analysis of ONE track by its Capital Market Authority fund id: official monthly history from data.gov.il, factor model fitted on the last `window` months, out-of-sample accuracy, scenario table, deposit-timing statistics, and (with asOf) a month-to-date early estimate. " +
+      "Full analysis of ONE track by its Capital Market Authority fund id: official monthly history from data.gov.il, factor model fitted on the last `window` months, out-of-sample accuracy, scenario table, deposit-timing statistics, and (with asOf) a month-to-date early estimate. Also returns declineOutlook (how far the track is below its peak and what followed past declines of that depth: how often they deepened, how long until the peak was regained) and yearEnd (where the calendar year is heading: official year-to-date, estimated months, and an 80% range for the year-end figure). " +
       "dataset: gemel (provident/study/investment funds) | pension | insurance (savings policies). Needs the automatic index source; if it is not enabled the tool says so — then use track_model_baseline instead.",
     input_schema: obj({ dataset: { type: "string", enum: ["gemel", "pension", "insurance"] }, fundId: { type: "integer" }, window: { type: "integer" }, asOf: { type: "string" } }, ["dataset", "fundId"]),
   },
@@ -155,14 +155,14 @@ const TOOL_DEFS = [
   {
     name: "forecast_track",
     description:
-      "Multi-year forecast for ONE savings track (fund id from find_track) or a track category: expected yearly return RANGE for 1, 3, 5 and 10 years, loss probability per horizon, the historical and yield-based anchors, stated assumptions, the backtest calibration (how often past outcomes fell inside such ranges), the track's own record, a plain summary and forecast-card drafts. " +
-      "Use it when someone asks what to expect from investing in a specific track at a specific company. Always present the range, never the centre alone; a one-year figure is not reliable. It is not a recommendation — suitability is Karin's decision. Optional annualFee (percent) gives the result net of the client's fee.",
-    input_schema: obj({ fundId: { type: "integer" }, dataset: { type: "string", enum: ["gemel", "pension", "insurance"] }, category: { type: "string" }, annualFee: { type: "number" }, assumptions: anyObj }),
+      "Multi-year forecast for ONE savings track (fund id from find_track) or a track category: expected yearly return RANGE for 1, 3, 5 and 10 years, loss probability per horizon, the historical and yield-based anchors, stated assumptions, the backtest calibration (how often past outcomes fell inside such ranges), the track's own record, a plain summary and forecast-card drafts. The result carries `reliability` (high / medium / low / very low, with the reason) — always state it — and `warnings`, which must be passed on. `shortTerm` gives an 80% range for the next 1, 3 and 6 months (a range from volatility, not a direction call). " +
+      "Use it when someone asks what to expect from investing in a specific track at a specific company. Always present the range, never the centre alone; a one-year figure is not reliable. It is not a recommendation — suitability is Karin's decision. Optional annualFee (percent) gives the result net of the client's fee. Optional savings { years, balance, monthlyDeposit, depositFee } adds the range of the final balance (after fees, nominal ₪) — use it for 'how much will I have in N years'.",
+    input_schema: obj({ fundId: { type: "integer" }, dataset: { type: "string", enum: ["gemel", "pension", "insurance"] }, category: { type: "string" }, annualFee: { type: "number" }, assumptions: anyObj, savings: anyObj }),
   },
   {
     name: "explain_year_over_year",
     description:
-      "Answers 'why is this year weaker (or stronger) than last year?' for ONE track: official return for January-to-latest-month in both years, the market moves in each period, the gap split by market factor and the part markets do not explain, plus a client-message DRAFT (no names; needs Karin's approval). " +
+      "Answers 'why is this year weaker (or stronger) than last year?' for ONE track: official return for January-to-latest-month in both years, the market moves in each period, the gap split by market factor and the part markets do not explain, plus a client-message DRAFT (no names; needs Karin's approval) and `yearEnd` — a research estimate of where the year will end, as a range. " +
       "Needs the automatic index source; get the fund id from find_track.",
     input_schema: obj({ dataset: { type: "string", enum: ["gemel", "pension", "insurance"] }, fundId: { type: "integer" }, trackLabel: { type: "string" } }, ["dataset", "fundId"]),
   },
@@ -241,21 +241,21 @@ function createToolExecutor({ ledger, now = () => new Date(), fetchImpl }) {
     track_early_estimate: (i) => {
       if (!i.asOf || !i.source) throw new Error("asOf ו־source חובה");
       const { model, origin, label } = trackService.resolveModel(i);
-      return { track: label || null, modelOrigin: origin, asOf: i.asOf, source: i.source, ...trackModel.nowcast(model, i.factors, { elapsedShare: i.elapsedShare == null ? 1 : i.elapsedShare }) };
+      return { track: label || null, modelOrigin: origin, asOf: i.asOf, source: i.source, ...trackModel.nowcast(model, i.factors, { elapsedShare: i.elapsedShare == null ? (i.partial ? trackService.monthShare(i.asOf) : 1) : i.elapsedShare, history: trackService.loadFactorHistory() }) };
     },
     explain_track_month: (i) => {
       if (!i.asOf || !i.source) throw new Error("asOf ו־source חובה");
       const { model, origin, label } = trackService.resolveModel(i);
-      return { track: label || null, modelOrigin: origin, source: i.source, ...trackExplain.explainMonth({ model, factors: i.factors, actual: typeof i.actual === "number" ? i.actual : null, partial: !!i.partial, asOf: i.asOf, trackLabel: i.trackLabel || "המסלול" }) };
+      return { track: label || null, modelOrigin: origin, source: i.source, ...trackExplain.explainMonth({ history: trackService.loadFactorHistory(), model, factors: i.factors, actual: typeof i.actual === "number" ? i.actual : null, partial: !!i.partial, asOf: i.asOf, trackLabel: i.trackLabel || "המסלול" }) };
     },
-    forecast_track: (i) => trackService.forecastFund({ fundId: i.fundId, dataset: i.dataset, category: i.category, annualFee: i.annualFee || 0, assumptions: i.assumptions || {}, today: now(), ...fx }),
+    forecast_track: (i) => trackService.forecastFund({ fundId: i.fundId, dataset: i.dataset, category: i.category, annualFee: i.annualFee || 0, assumptions: i.assumptions || {}, savings: i.savings || null, today: now(), ...fx }),
     explain_year_over_year: (i) => trackService.yearOverYear({ dataset: i.dataset, fundId: i.fundId, trackLabel: i.trackLabel || "המסלול", today: now(), ...fx }),
     market_watch: (i) => {
       if (!i.factors) return trackService.fetchMarketWatch({ asOf: i.asOf || null, today: now(), ...fx });
       if (!i.asOf || !i.source) throw new Error("asOf ו־source חובה כשמעבירים factors");
       return { source: i.source, ...trackService.marketWatch({ factors: i.factors, asOf: i.asOf, elapsedShare: trackService.monthShare(i.asOf) }) };
     },
-    scenario_playbook: () => ({ ok: true, playbook: trackExplain.scenarioPlaybook(trackService.mainModels()) }),
+    scenario_playbook: () => ({ ok: true, playbook: trackExplain.scenarioPlaybook(trackService.mainModels(), trackService.loadFactorHistory()) }),
     analyze_fund_track: (i) => trackService.analyzeFund({ dataset: i.dataset, fundId: i.fundId, window: i.window || 60, asOf: i.asOf || null, today: now(), ...fx }),
     deposit_timing_stats: async (i) => {
       let returns = i.monthlyReturns;
