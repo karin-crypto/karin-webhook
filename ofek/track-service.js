@@ -219,6 +219,14 @@ function loadFactorHistory() {
   }
   return factorHistoryCache;
 }
+function valuationSnapshot() {
+  try {
+    const v = JSON.parse(fs.readFileSync(path.join(__dirname, "data", "valuation-snapshot.json"), "utf8"));
+    return Number.isFinite(v.cape) ? v : null;
+  } catch {
+    return null;
+  }
+}
 function yieldSnapshot() {
   try {
     return { ...JSON.parse(fs.readFileSync(path.join(__dirname, "data", "yield-snapshot.json"), "utf8")), live: false };
@@ -251,14 +259,15 @@ async function forecastFund({ fundId, dataset, category, annualFee = 0, assumpti
     yieldWarning = `המשיכה החיה מבנק ישראל נכשלה (${err.message}); נעשה שימוש בנתון שמור מ-${yields.asOf}.`;
   }
 
-  const forecast = forecastEngine.forecastTrack({ model, history, yields, assumptions, categoryAlpha: cat ? cat.alpha : null, annualFee: Number(annualFee) || 0 });
+  const valuation = assumptions && assumptions.cape ? { cape: Number(assumptions.cape), asOf: null, source: "הוזן על ידי המשתמש" } : valuationSnapshot();
+  const forecast = forecastEngine.forecastTrack({ model, history, yields, assumptions, valuation, categoryAlpha: cat ? cat.alpha : null, annualFee: Number(annualFee) || 0 });
   const name = trackLabel || label || "המסלול";
   // Official returns are gross of management fees, so the same forecast is also
   // shown after the track's average fee (when the caller gave no fee of their own).
   let afterAverageFee = null;
   let netForecast = Number(annualFee) > 0 ? forecast : null; // the forecast a savings projection should stand on
   if (!(Number(annualFee) > 0) && Number.isFinite(model.averageFee) && model.averageFee > 0) {
-    const net = forecastEngine.forecastTrack({ model, history, yields, assumptions, categoryAlpha: cat ? cat.alpha : null, annualFee: model.averageFee });
+    const net = forecastEngine.forecastTrack({ model, history, yields, assumptions, valuation, categoryAlpha: cat ? cat.alpha : null, annualFee: model.averageFee });
     netForecast = net;
     afterAverageFee = {
       fee: model.averageFee, depositFee: model.averageDepositFee, central: net.central, centralReal: net.centralReal,

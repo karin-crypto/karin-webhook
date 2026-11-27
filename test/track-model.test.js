@@ -391,10 +391,23 @@ test("track forecast: range per horizon, anchors, prudence cap, fees and guards"
   assert.match(lowPremium.anchors.historicalCap, /S&P 500/);
   assert.ok(lowPremium.anchors.historical.annual <= 8.6, `capped anchor ${lowPremium.anchors.historical.annual}`); // (4.24 + 2×2)% a year, compounded monthly
 
+  // valuation anchor: an expensive US market lowers the centre in proportion to the S&P sensitivity
+  const dear = fc.forecastTrack({ model: general, history, yields, valuation: { cape: 39, asOf: "2026-11", source: "בדיקה" } });
+  assert.equal(dear.anchors.valuation.impliedSpxAnnual, 5.5); // 3.37 + 0.85 × (100 / 39)
+  assert.ok(dear.central < f.central && f.central - dear.central < 0.5);
+  assert.ok(Math.abs(dear.anchors.valuation.effectOnCentre - general.betas.spx * (dear.anchors.valuation.spxAnchorAfter - dear.anchors.valuation.spxAnchorBefore)) < 0.03);
+  const cheap = fc.forecastTrack({ model: general, history, yields, valuation: { cape: 12 } });
+  assert.ok(cheap.central > f.central); // and a cheap one raises it
+  const trackerDear = fc.forecastTrack({ model: trackerModel, history, yields, valuation: { cape: 39 } });
+  assert.ok(tracker.central - trackerDear.central > 1 && tracker.central - trackerDear.central < 1.6);
+  assert.equal(fc.forecastTrack({ model: general, history, yields, valuation: { cape: 0 } }).anchors.valuation, null); // nonsense input is ignored
+  assert.equal(f.anchors.valuation, null);
+
   // a bond track is anchored on yields only
   const bond = fc.forecastTrack({ model: { alpha: 0.05, betas: { ta125: 0.02, spx: 0.03, usd: 0.02, gov: 0.4, corp: 0.3 }, residualSd: 0.2 }, history, yields });
   assert.match(bond.anchors.centreRule, /בלבד/);
   assert.equal(bond.central, bond.anchors.yieldBased.annual);
+  assert.equal(fc.forecastTrack({ model: { alpha: 0.05, betas: { ta125: 0.02, spx: 0.03, usd: 0.02, gov: 0.4, corp: 0.3 }, residualSd: 0.2 }, history, yields, valuation: { cape: 39 } }).anchors.valuation, null);
 
   // fee, category shrinkage and custom assumptions
   const net = fc.forecastTrack({ model: general, history, yields, annualFee: 0.8 });
@@ -503,6 +516,10 @@ test("forecast service: live yields with a dated fallback, per-track and per-cat
   assert.equal(r.ownRecord, null); // no official history reachable in this test — the forecast does not depend on it
   assert.ok(r.forecastCardDrafts["5y"].asset.includes("הפניקס") && validateCard(r.forecastCardDrafts["1y"], { now: today }).ok);
   assert.match(r.notice, /אינה הבטחה/);
+  assert.equal(r.anchors.valuation.cape, 39); // the stored valuation snapshot is applied
+  assert.match(r.summary, /מכפיל שילר 39/);
+  const cheaper = await service.forecastFund({ fundId: 50, assumptions: { cape: 20 }, fetchImpl: ok, today });
+  assert.ok(cheaper.central > r.central && cheaper.anchors.valuation.cape === 20);
   assert.ok(r.summary.startsWith(r.track.label), "the professional summary names the track that was analysed");
   // official returns are gross of fees: the forecast is also shown after the track's average fee
   assert.match(r.returnsBasis, /ברוטו/);

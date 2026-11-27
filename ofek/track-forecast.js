@@ -53,6 +53,12 @@ const DEFAULT_ASSUMPTIONS = {
   usdDrift: 0, // expected yearly change of USD/ILS
 };
 
+// Valuation anchor for the S&P 500: ten-year nominal total return (percent a year) regressed on
+// the Shiller earnings yield (100 / CAPE), monthly data 1881–2023 (public-domain Shiller dataset).
+// Out of sample the rule beat the historical mean at ten years (R² about 20–28% for origins from
+// 1930 or 1960), had about a third of that at five years, and none at one year or since 1990.
+const VALUATION_FIT = { intercept: 3.37, slope: 0.85, residualSd: 4.46, sample: "1881–2023", horizonYears: 10 };
+
 // Bounds (percent per year) on the unexplained return carried into a forecast.
 const ALPHA_BOUNDS = { low: -1.5, high: 3.5 };
 
@@ -123,7 +129,7 @@ function factorStats(history) {
  *                  (past out-performance of a single track persists only weakly)
  *   annualFee: optional yearly management fee to subtract (percent)
  */
-function forecastTrack({ model, history, yields, assumptions = {}, categoryAlpha = null, annualFee = 0, horizons = HORIZONS } = {}) {
+function forecastTrack({ model, history, yields, assumptions = {}, categoryAlpha = null, annualFee = 0, horizons = HORIZONS, valuation = null } = {}) {
   if (!model || !model.betas) throw new TrackModelError("model.betas חובה");
   const missing = FACTOR_NAMES.filter((f) => typeof model.betas[f] !== "number");
   if (missing.length) throw new TrackModelError(`חסרות רגישויות: ${missing.join(", ")}`);
@@ -153,7 +159,18 @@ function forecastTrack({ model, history, yields, assumptions = {}, categoryAlpha
 
   const equitySensitivity = model.betas.ta125 + model.betas.spx;
   const bondLike = equitySensitivity < 0.15;
-  const rawGross = bondLike ? yieldBased : (historical + yieldBased) / 2;
+  // Third anchor, for the S&P 500 only: what its current valuation has implied historically.
+  // It replaces a third of the weight of the two other S&P anchors.
+  let valuationAnchor = null;
+  let valuationEffect = 0;
+  if (!bondLike && valuation && Number.isFinite(valuation.cape) && valuation.cape >= 5 && valuation.cape <= 80) {
+    const spxValuation = VALUATION_FIT.intercept + VALUATION_FIT.slope * (100 / valuation.cape);
+    const twoAnchor = ((histMean.spx + yieldMonthly.spx) / 2) * 12;
+    const threeAnchor = (histMean.spx * 12 + yieldMonthly.spx * 12 + spxValuation) / 3;
+    valuationEffect = model.betas.spx * (threeAnchor - twoAnchor);
+    valuationAnchor = { cape: valuation.cape, asOf: valuation.asOf || null, source: valuation.source || null, impliedSpxAnnual: round(spxValuation), spxAnchorBefore: round(twoAnchor), spxAnchorAfter: round(threeAnchor), effectOnCentre: round(valuationEffect, 2) };
+  }
+  const rawGross = (bondLike ? yieldBased : (historical + yieldBased) / 2) + valuationEffect;
   // Plausibility bounds on the centre. No track is forecast above what a pure equity
   // position would be forecast to earn plus 1.5 points, or below the 5-year government
   // yield minus 2.5 points. A centre outside these bounds means the track's fitted
@@ -207,6 +224,7 @@ function forecastTrack({ model, history, yields, assumptions = {}, categoryAlpha
       historical: { annual: round(historical - annualFee), basis: `ממוצע גורמי השוק ${stats.from.slice(0, 4)}–${stats.to.slice(0, 4)} (${stats.n} חודשים)` },
       yieldBased: { annual: round(yieldBased - annualFee), basis: "תשואות אג\"ח ממשלתיות נוכחיות בתוספת פרמיות שנקבעו בהנחה" },
       historicalCap: capped.length ? `הממוצע ההיסטורי של ${capped.map((f) => (f === "spx" ? "S&P 500" : 'ת"א 125')).join(" ושל ")} הוגבל ל-${round(equityCap * 12)}% בשנה (תשואת אג"ח + פעמיים פרמיית המניות), כדי לא להשליך תקופה חריגה קדימה` : null,
+      valuation: valuationAnchor,
       centreRule: bondLike ? "מסלול כמעט ללא רגישות למניות — המרכז הוא העוגן מבוסס התשואות בלבד" : "המרכז הוא ממוצע שני העוגנים",
     },
     horizons: rows,
@@ -372,4 +390,4 @@ function toForecastCard(forecast, { asset, key = "5y", dataAsOf, modelVersion = 
   };
 }
 
-module.exports = { HORIZONS, DEFAULT_ASSUMPTIONS, ALPHA_BOUNDS, OWN_ALPHA_WEIGHT, BACKTEST, GENERAL_TRACK_RECORD, HISTORICAL_EPISODES, forecastTrack, stressTests, projectSavings, toForecastCard, factorStats, normalCdf };
+module.exports = { HORIZONS, DEFAULT_ASSUMPTIONS, ALPHA_BOUNDS, OWN_ALPHA_WEIGHT, VALUATION_FIT, BACKTEST, GENERAL_TRACK_RECORD, HISTORICAL_EPISODES, forecastTrack, stressTests, projectSavings, toForecastCard, factorStats, normalCdf };
