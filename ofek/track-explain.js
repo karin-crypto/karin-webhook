@@ -68,8 +68,8 @@ function classifyEnvironment(factors) {
  *   actual:  the official return if already published (percent), else null
  *   partial: true when the month is not over (the text says "so far")
  */
-function explainMonth({ model, factors, actual = null, partial = false, asOf = null, trackLabel = "המסלול", elapsedShare = 1 } = {}) {
-  const est = tm.nowcast(model, factors, { elapsedShare });
+function explainMonth({ model, factors, actual = null, partial = false, asOf = null, trackLabel = "המסלול", elapsedShare = 1, history = null } = {}) {
+  const est = tm.nowcast(model, factors, { elapsedShare, history });
   const value = typeof actual === "number" ? actual : est.estimate;
   const isEstimate = typeof actual !== "number";
 
@@ -99,6 +99,7 @@ function explainMonth({ model, factors, actual = null, partial = false, asOf = n
   if (drivers.length) summary.push(`הגורמים העיקריים: ${drivers.map(effect).join("; ")}.`);
   if (offsets.length) summary.push(`גורמים שפעלו בכיוון ההפוך: ${offsets.map(effect).join("; ")}.`);
   if (!drivers.length && !offsets.length) summary.push("לא נרשמה תנועת שוק בולטת; השינוי קטן ונובע מתנודה שוטפת.");
+  if (isEstimate && est.negativeMonth) summary.push(`${est.negativeMonth.text} (מדד מחקרי).`);
   if (!isEstimate) {
     const gap = Number((actual - est.estimate).toFixed(2));
     if (Math.abs(gap) >= 0.5) summary.push(`הפער בין הנתון הרשמי לאומדן המודל (${signed(est.estimate)}) הוא ${Math.abs(gap).toFixed(1)} נק' אחוז ${gap > 0 ? "לטובה" : "לרעה"} — חלק שאינו מוסבר בתנועות השוק (בחירת נכסים, נכסים לא סחירים, שינוי חשיפות).`);
@@ -122,6 +123,7 @@ function explainMonth({ model, factors, actual = null, partial = false, asOf = n
     asOf,
     range: isEstimate ? est.range : null,
     modelEstimate: est.estimate,
+    negativeMonth: isEstimate ? est.negativeMonth : null,
     environment,
     drivers,
     offsets,

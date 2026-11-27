@@ -177,6 +177,18 @@ test("track model: deposit-timing statistics", () => {
   // an estimate for January moves the projection to the new year
   assert.equal(tm.yearEndProjection(hist.concat([{ period: "202611", ret: 1 }, { period: "202612", ret: 1 }]), { estimates: [{ period: "202701", estimate: 0.5 }] }).year, 2027);
   assert.throws(() => tm.yearEndProjection(hist.slice(0, 10)), /לפחות 36/);
+  // chance that the month ends negative: rises as the estimate falls, sharpens as the month passes
+  {
+    const hist = { periods: Array.from({ length: 60 }, (_, i) => String(202101 + i)), factors: Object.fromEntries(tm.FACTOR_NAMES.map((f, k) => [f, Array.from({ length: 60 }, (_, i) => 0.4 + 2 * Math.sin(i * (k + 1)))])) };
+    const m = { alpha: 0.1, betas: { ta125: 0.2, spx: 0.2, usd: 0.1, gov: 0.1, corp: 0.2 }, residualSd: 0.4 };
+    const p = (est, share) => tm.negativeMonthProbability(m, est, { elapsedShare: share, history: hist }).probability;
+    assert.ok(p(-1, 0.5) > p(0, 0.5) && p(0, 0.5) > p(1, 0.5));
+    assert.ok(p(-1, 1) > p(-1, 0.5)); // the same estimate is more decisive at month end
+    assert.ok(p(-3, 1) > 0.99 && p(3, 1) < 0.01);
+    assert.ok(Math.abs(p(0, 1) - 0.5) < 0.011); // a zero estimate with nothing left of the month is a coin flip
+    assert.equal(tm.negativeMonthProbability(m, -1, { elapsedShare: 0.5 }), null); // no history, no probability
+    assert.equal(tm.nowcast(m, Object.fromEntries(tm.FACTOR_NAMES.map((f) => [f, -1])), { elapsedShare: 0.5, history: hist }).negativeMonth.text.startsWith("הסיכוי המוערך"), true);
+  }
   const falling = tm.depositTimingStats([...Array(36).fill(1), -2, -3]);
   assert.equal(falling.currentDrawdown.monthsSincePeak, 2);
   assert.ok(falling.currentDrawdown.depth < -4.9);

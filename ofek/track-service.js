@@ -154,10 +154,11 @@ function marketWatch({ factors, asOf, elapsedShare = 1, since = null, lastObserv
   const b = loadBaseline();
   if (!b) throw new tm.TrackModelError("קובץ הבסיס של מודל המסלולים חסר");
   const environment = explain.classifyEnvironment(factors);
+  const factorHistory = loadFactorHistory();
   const rows = b.categories.map((c) => {
-    const n = tm.nowcast(c, factors, { elapsedShare });
+    const n = tm.nowcast(c, factors, { elapsedShare, history: factorHistory });
     const u = unusualLevel(n.estimate, c.monthlyDistribution, n.range);
-    return { category: c.category, estimate: n.estimate, range: n.range, level: u.level, levelText: u.he, shortHistory: !!c.shortHistory, contributions: n.contributions };
+    return { category: c.category, estimate: n.estimate, range: n.range, negativeMonthProbability: n.negativeMonth ? n.negativeMonth.probability : null, level: u.level, levelText: u.he, shortHistory: !!c.shortHistory, contributions: n.contributions };
   }).sort((x, y) => x.estimate - y.estimate);
   const order = ["very_unusual", "unusual", "weak", "slightly_negative", "within_noise", "normal", "unknown"];
   const main = rows.filter((r) => MAIN_CATEGORIES.includes(r.category));
@@ -184,7 +185,7 @@ function marketWatch({ factors, asOf, elapsedShare = 1, since = null, lastObserv
     alert: { level: worst, attention: ["very_unusual", "unusual"].includes(worst), text: !["very_unusual", "unusual"].includes(worst) ? "אין כרגע חריגה שמצדיקה פנייה יזומה למבוטחים." : "יש סוגי מסלולים עם ירידה חריגה החודש — כדאי להכין הסבר למבוטחים." },
     matchingScenarios: matching,
     categories: rows,
-    generalTrackExplanation: general ? explain.explainMonth({ model: b.categories.find((c) => c.category === general.category), factors, partial: elapsedShare < 1, asOf, trackLabel: "המסלול הכללי", elapsedShare }) : null,
+    generalTrackExplanation: general ? explain.explainMonth({ model: b.categories.find((c) => c.category === general.category), factors, partial: elapsedShare < 1, asOf, history: factorHistory, trackLabel: "המסלול הכללי", elapsedShare }) : null,
     note: "אומדנים מוקדמים לפי תנועות השוק — לא תשואות רשמיות. רמת החריגות נמדדת מול החודשים ההיסטוריים של אותו סוג מסלול. פנייה למבוטחים — רק באישור קארין.",
   };
 }
@@ -559,11 +560,11 @@ async function analyzeFund({ dataset, fundId, window = 60, factorRows = null, mt
 
   let earlyEstimate = null;
   if (monthToDate && monthToDate.factors) {
-    earlyEstimate = { ...tm.nowcast(model, monthToDate.factors, { elapsedShare: monthShare(monthToDate.asOf) }), asOf: monthToDate.asOf || null, since: monthToDate.since || null, marketMoves: monthToDate.factors, lastObservation: monthToDate.lastObservation || null };
+    earlyEstimate = { ...tm.nowcast(model, monthToDate.factors, { elapsedShare: monthShare(monthToDate.asOf), history: loadFactorHistory() }), asOf: monthToDate.asOf || null, since: monthToDate.since || null, marketMoves: monthToDate.factors, lastObservation: monthToDate.lastObservation || null };
   }
 
   // each complete month without an official figure gets its own full-month estimate
-  const unpublishedEstimates = unpublished.map((u) => ({ period: u.period, ...tm.nowcast(model, u.factors), marketMoves: u.factors }));
+  const unpublishedEstimates = unpublished.map((u) => ({ period: u.period, ...tm.nowcast(model, u.factors, { history: loadFactorHistory() }), marketMoves: u.factors }));
 
   let depositTiming = null;
   if (history.rows.length >= 36) depositTiming = tm.depositTimingStats(history.rows.map((r) => r.ret), { splitMonths });

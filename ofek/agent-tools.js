@@ -241,12 +241,12 @@ function createToolExecutor({ ledger, now = () => new Date(), fetchImpl }) {
     track_early_estimate: (i) => {
       if (!i.asOf || !i.source) throw new Error("asOf ו־source חובה");
       const { model, origin, label } = trackService.resolveModel(i);
-      return { track: label || null, modelOrigin: origin, asOf: i.asOf, source: i.source, ...trackModel.nowcast(model, i.factors, { elapsedShare: i.elapsedShare == null ? 1 : i.elapsedShare }) };
+      return { track: label || null, modelOrigin: origin, asOf: i.asOf, source: i.source, ...trackModel.nowcast(model, i.factors, { elapsedShare: i.elapsedShare == null ? 1 : i.elapsedShare, history: trackService.loadFactorHistory() }) };
     },
     explain_track_month: (i) => {
       if (!i.asOf || !i.source) throw new Error("asOf ו־source חובה");
       const { model, origin, label } = trackService.resolveModel(i);
-      return { track: label || null, modelOrigin: origin, source: i.source, ...trackExplain.explainMonth({ model, factors: i.factors, actual: typeof i.actual === "number" ? i.actual : null, partial: !!i.partial, asOf: i.asOf, trackLabel: i.trackLabel || "המסלול" }) };
+      return { track: label || null, modelOrigin: origin, source: i.source, ...trackExplain.explainMonth({ history: trackService.loadFactorHistory(), model, factors: i.factors, actual: typeof i.actual === "number" ? i.actual : null, partial: !!i.partial, asOf: i.asOf, trackLabel: i.trackLabel || "המסלול" }) };
     },
     forecast_track: (i) => trackService.forecastFund({ fundId: i.fundId, dataset: i.dataset, category: i.category, annualFee: i.annualFee || 0, assumptions: i.assumptions || {}, savings: i.savings || null, today: now(), ...fx }),
     explain_year_over_year: (i) => trackService.yearOverYear({ dataset: i.dataset, fundId: i.fundId, trackLabel: i.trackLabel || "המסלול", today: now(), ...fx }),

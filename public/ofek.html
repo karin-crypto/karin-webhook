@@ -250,8 +250,8 @@
       $("walert").textContent = w.alert.text;
       $("wenv").textContent = "סביבת השוק מתחילת החודש (עד " + il(w.asOf) + "): " + w.environment.tags.map((t) => t.he).join(", ") + ".";
       $("wscen").innerHTML = w.matchingScenarios.map((m) => `<p style="margin:8px 0 0"><span class="pill">תרחיש דומה</span>${esc(m.description)}<br><span class="muted">${esc(m.talkingPoints)}</span></p>`).join("");
-      $("wtable").innerHTML = `<table class="tbl"><tr><th>סוג מסלול</th><th>אומדן מוקדם לחודש</th><th>טווח סביר</th><th>ביחס להיסטוריה</th></tr>` +
-        w.categories.map((c) => `<tr><td>${esc(c.category)}</td><td class="num">${num(c.estimate)}</td><td style="white-space:nowrap">${c.range ? `<bdi dir="ltr">${c.range.low}%</bdi> עד <bdi dir="ltr">${c.range.high}%</bdi>` : "—"}</td><td>${esc(c.levelText)}</td></tr>`).join("") + "</table>";
+      $("wtable").innerHTML = `<table class="tbl"><tr><th>סוג מסלול</th><th>אומדן מוקדם לחודש</th><th>טווח סביר</th><th>סיכוי שהחודש יסתיים בירידה</th><th>ביחס להיסטוריה</th></tr>` +
+        w.categories.map((c) => `<tr><td>${esc(c.category)}</td><td class="num">${num(c.estimate)}</td><td style="white-space:nowrap">${c.range ? `<bdi dir="ltr">${c.range.low}%</bdi> עד <bdi dir="ltr">${c.range.high}%</bdi>` : "—"}</td><td class="num">${c.negativeMonthProbability == null ? "—" : Math.round(c.negativeMonthProbability * 100) + "%"}</td><td>${esc(c.levelText)}</td></tr>`).join("") + "</table>";
       FACTOR_IDS.forEach((f) => { $("f_" + f).value = w.marketMoves[f].toFixed(2); });
       $("tsrc").value = (w.sources || []).join("; ");
       $("wstatus").textContent = "אומדנים מוקדמים — לא תשואות רשמיות";

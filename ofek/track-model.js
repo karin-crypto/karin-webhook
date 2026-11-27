@@ -283,7 +283,52 @@ function scenarioTable(model) {
  * Early estimate of a month's return from month-to-date factor moves.
  * `elapsedShare` (0–1) scales alpha when the month is not over yet.
  */
-function nowcast(model, mtdFactors, { elapsedShare = 1 } = {}) {
+/**
+ * Chance that the month's official return ends below zero, given an early
+ * estimate made when `elapsedShare` of the month has passed. The rest of the
+ * month is taken at the track's average monthly return with its usual
+ * volatility (both from the last 60 months of factor history), plus the
+ * estimate's own error. Checked at mid-month on 715 category-months
+ * (2017–2026, each fitted on the past only): Brier score 0.134 against 0.200
+ * for the plain share of negative months; when it said 70–90% the month
+ * ended negative 86% of the time, and above 90% — 96%. Between 10% and 30%
+ * it overstates (said 20%, happened 8%). Other days of the month use the
+ * same formula and were not checked separately.
+ */
+function negativeMonthProbability(model, estimate, { elapsedShare = 1, history = null } = {}) {
+  const betas = requireBetas(model);
+  if (!Number.isFinite(estimate) || !history || !Array.isArray(history.periods) || history.periods.length < 36) return null;
+  const names = Object.keys(betas);
+  const n = Math.min(60, history.periods.length);
+  const tail = Object.fromEntries(names.map((f) => [f, history.factors[f].slice(-n)]));
+  const mu = Object.fromEntries(names.map((f) => [f, mean(tail[f])]));
+  let factorVar = 0;
+  for (const f of names) for (const g of names) {
+    let c = 0;
+    for (let t = 0; t < n; t++) c += (tail[f][t] - mu[f]) * (tail[g][t] - mu[g]);
+    factorVar += betas[f] * betas[g] * (c / (n - 1));
+  }
+  const resid = Number.isFinite(model.residualSd) ? model.residualSd : model.accuracy && Number.isFinite(model.accuracy.p90AbsError) ? model.accuracy.p90AbsError / 1.645 : 0.45;
+  const monthlyMean = (model.alpha || 0) + names.reduce((t, f) => t + betas[f] * mu[f], 0);
+  const rest = 1 - elapsedShare;
+  // the estimate already holds the constant for the elapsed part of the month
+  const centre = estimate + rest * monthlyMean;
+  const sdAll = Math.sqrt(rest * (factorVar + resid * resid) + resid * resid);
+  if (!(sdAll > 0)) return null;
+  const z = -centre / sdAll;
+  // standard normal CDF (Abramowitz–Stegun 7.1.26)
+  const t = 1 / (1 + 0.3275911 * Math.abs(z) / Math.SQRT2);
+  const erf = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-(z * z) / 2);
+  const p = 0.5 * (1 + (z >= 0 ? erf : -erf));
+  return {
+    probability: round(p, 2),
+    expectedMonthEnd: round(centre),
+    text: `הסיכוי המוערך שהחודש יסתיים בירידה: ${Math.round(p * 100)}%`,
+    note: "מדד מחקרי. נבדק באמצע החודש על 715 חודשים (2017–2026): כשהמדד היה מעל 70%, כ-9 מכל 10 חודשים אכן הסתיימו בירידה; בין 10% ל-30% הוא מחמיר (ירידה קרתה רק בכ-8% מהמקרים).",
+  };
+}
+
+function nowcast(model, mtdFactors, { elapsedShare = 1, history = null } = {}) {
   const betas = requireBetas(model);
   if (!mtdFactors || typeof mtdFactors !== "object") throw new TrackModelError("factors: תנועות השוק מתחילת החודש, באחוזים");
   const missing = Object.keys(betas).filter((f) => typeof mtdFactors[f] !== "number" || !Number.isFinite(mtdFactors[f]));
@@ -296,6 +341,7 @@ function nowcast(model, mtdFactors, { elapsedShare = 1 } = {}) {
   return {
     ok: true,
     estimate: round(estimate),
+    negativeMonth: negativeMonthProbability(model, estimate, { elapsedShare, history }),
     range: band == null ? null : { low: round(estimate - band), high: round(estimate + band), coverage: 0.9, method: "walk_forward_errors" },
     contributions: { alpha: round(alphaPart), ...contributions },
     partialMonth: elapsedShare < 1,
@@ -636,6 +682,6 @@ function findBaselineModel(baseline, { category, fundId } = {}) {
 
 module.exports = {
   FACTORS, FACTOR_NAMES, SCENARIOS, TrackModelError,
-  fitFactorModel, walkForwardFit, scenarioImpact, scenarioTable, scenarioFrequency, nowcast,
+  fitFactorModel, walkForwardFit, scenarioImpact, scenarioTable, scenarioFrequency, nowcast, negativeMonthProbability,
   attributeDifference, depositTimingStats, declineOutlook, yearEndProjection, riskOutlook, predictabilityTest, findBaselineModel,
 };
