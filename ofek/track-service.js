@@ -277,7 +277,7 @@ function yearEndFor(historyRows, estimates, trackLabel = "המסלול", today =
     const parts = [];
     if (y.officialThrough) parts.push(`תשואה רשמית מתחילת ${y.year} עד סוף ${month(y.officialThrough)}: ${num(y.officialYearToDate)}`);
     if (y.estimatedMonths.length) parts.push(y.estimatedMonths.map((e) => `אומדן ל${month(e.period)}${e.partial ? " (עד כה)" : ""}: ${num(e.estimate)}`).join(", "));
-    text = `${parts.join(". ")}. הערכה לסיום ${y.year}: בסביבות ${num(y.central)}, בטווח סביר של ${num(y.range.low)} עד ${num(y.range.high)}${y.averagedMonths ? ` (${y.averagedMonths === 1 ? "חודש אחד חושב" : y.averagedMonths + " חודשים חושבו"} לפי הממוצע הרב-שנתי של המסלול, כי אין עליהם עדיין נתון)` : ""}. הערכה מחקרית, אינה תשואה מובטחת.`;
+    text = `${parts.join(". ")}. הערכה לסיום ${y.year}: בסביבות ${num(y.central)}, בטווח סביר של ${num(y.range.low)} עד ${num(y.range.high)}${y.averagedMonths ? ` (${y.averagedMonths === 1 ? "חודש אחד חושב" : y.averagedMonths + " חודשים חושבו"} לפי הממוצע הרב-שנתי של המסלול, כי ${y.averagedMonths === 1 ? "אין עליו" : "אין עליהם"} עדיין נתון)` : ""}. הערכה מחקרית, אינה תשואה מובטחת.`;
   }
   return { ...y, text };
 }
