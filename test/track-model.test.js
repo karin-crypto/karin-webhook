@@ -288,7 +288,7 @@ test("track explanations: drivers, offsets, environment and a client draft that 
   const mtd = { ta125: -3, spx: -5, usd: 7, gov: 0.3, corp: -0.9 };
   const r = explain.explainMonth({ model, factors: mtd, partial: true, asOf: "2026-11-26", trackLabel: "המסלול הכללי" });
   assert.equal(r.isEstimate, true);
-  assert.equal(r.value, -1.3);
+  assert.equal(r.value, -1.32); // the constant counts only for the 26 of 30 days that have passed
   assert.deepEqual(r.drivers.map((d) => d.factor), ["spx", "ta125", "corp"]); // largest negative contributions first
   assert.deepEqual(r.offsets.map((d) => d.factor), ["usd"]);
   assert.deepEqual(r.environment.tags.map((t) => t.tag), ["israel_equities_down", "global_equities_down", "shekel_weaker"]);

@@ -69,7 +69,13 @@ function classifyEnvironment(factors) {
  *   partial: true when the month is not over (the text says "so far")
  */
 function explainMonth({ model, factors, actual = null, partial = false, asOf = null, trackLabel = "המסלול", elapsedShare = 1, history = null } = {}) {
-  const est = tm.nowcast(model, factors, { elapsedShare, history });
+  // a month in progress: when the caller gave no share, take it from the as-of date
+  let share = elapsedShare;
+  if (partial && elapsedShare === 1 && /^\d{4}-\d{2}-\d{2}$/.test(String(asOf || ""))) {
+    const [y, m, d] = asOf.split("-").map(Number);
+    share = Math.min(1, d / new Date(Date.UTC(y, m, 0)).getUTCDate());
+  }
+  const est = tm.nowcast(model, factors, { elapsedShare: share, history });
   const value = typeof actual === "number" ? actual : est.estimate;
   const isEstimate = typeof actual !== "number";
 
