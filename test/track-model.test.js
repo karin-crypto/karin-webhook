@@ -354,7 +354,16 @@ test("track forecast: range per horizon, anchors, prudence cap, fees and guards"
   assert.ok(f.horizons[0].annualized.low < 0, "a one-year range for a general track includes a loss");
   assert.equal(f.horizons[3].backtested, false);
   assert.ok(Math.abs(f.horizons[2].cumulative.central - ((1 + f.central / 100) ** 5 - 1) * 100) < 0.3);
-  assert.equal(f.calibration.insideShare, 0.87);
+  assert.equal(f.calibration.insideShare, 0.84);
+  assert.equal(f.generalTrackRecord.windows["10y"].min, 3.6);
+  assert.ok(["calm", "normal", "elevated"].includes(f.volatilityState) && f.recentVolatility > 0);
+  // the range reacts to recent volatility: a turbulent last year widens the one-year range more than the ten-year one
+  const stormy = { periods: history.periods, factors: Object.fromEntries(tm.FACTOR_NAMES.map((k) => [k, history.factors[k].map((v, i) => (i >= history.periods.length - 12 ? v * 3 : v))])) };
+  const fs2 = fc.forecastTrack({ model: general, history: stormy, yields });
+  assert.equal(fs2.volatilityState, "elevated");
+  const width = (x, key) => { const h = x.horizons.find((z) => z.key === key); return h.annualized.high - h.annualized.low; };
+  assert.ok(width(fs2, "1y") > width(f, "1y") * 1.15);
+  assert.ok(width(fs2, "1y") / width(f, "1y") > width(fs2, "10y") / width(f, "10y"));
   assert.equal(f.anchors.historicalCap, null); // with 2008 in the sample the equity averages are below the cap
   assert.ok(f.caveats.some((c) => /אינה מבטיחה/.test(c)));
 
@@ -379,9 +388,12 @@ test("track forecast: range per horizon, anchors, prudence cap, fees and guards"
   // fee, category shrinkage and custom assumptions
   const net = fc.forecastTrack({ model: general, history, yields, annualFee: 0.8 });
   assert.ok(Math.abs(f.central - net.central - 0.8) < 0.11);
-  const shrunk = fc.forecastTrack({ model: { ...general, alpha: 0.4 }, history, yields, categoryAlpha: 0.08 });
-  const own = fc.forecastTrack({ model: { ...general, alpha: 0.4 }, history, yields });
+  const shrunk = fc.forecastTrack({ model: { ...general, alpha: 0.28 }, history, yields, categoryAlpha: 0.08 });
+  const own = fc.forecastTrack({ model: { ...general, alpha: 0.28 }, history, yields });
   assert.ok(shrunk.central < own.central && shrunk.central > f.central);
+  // only a quarter of a track's own excess is carried forward: 0.25 × (0.28 − 0.08) × 12 = 0.6 points a year
+  assert.ok(Math.abs(shrunk.central - f.central - 0.6) < 0.15, `shrunk ${shrunk.central} vs ${f.central}`);
+  assert.equal(shrunk.inputs.alphaUsed, 1.56);
   // an extreme unexplained return is bounded, and the result says so
   const wild = fc.forecastTrack({ model: { ...general, alpha: 1.2 }, history, yields }); // 14% a year of "alpha"
   assert.equal(wild.inputs.alphaClamped, true);
@@ -433,7 +445,8 @@ test("track forecast: range per horizon, anchors, prudence cap, fees and guards"
 
   const text = explain.explainForecast({ forecast: f, trackLabel: "המסלול הכללי" });
   assert.match(text.summary, /הטווח הסביר/);
-  assert.match(text.summary, /87%/);
+  assert.match(text.summary, /84%/);
+  assert.match(text.summary, /רמת הסיכון ודמי הניהול/);
   assert.ok(text.clientDraft.text.startsWith("היי") && /אינה תשואה מובטחת/.test(text.clientDraft.text));
   assert.equal(text.clientDraft.requiresApproval, true);
 });

@@ -221,7 +221,9 @@ function explainForecast({ forecast, trackLabel = "המסלול", draftLabel = "
   summary.push(`הסיכוי המשוער לסיים בהפסד: כ-${Math.round(h["1y"].lossProbability * 100)}% אחרי שנה, כ-${Math.round(h["3y"].lossProbability * 100)}% אחרי 3 שנים, כ-${Math.round(h["5y"].lossProbability * 100)}% אחרי 5 שנים.`);
   summary.push(`שני עוגנים: לפי ממוצע השווקים מאז 2012 — ${forecast.anchors.historical.annual}% בשנה; לפי תשואות האג"ח הנוכחיות והנחות הפרמיה — ${forecast.anchors.yieldBased.annual}% בשנה. ${forecast.anchors.centreRule}.`);
   summary.push(`בבדיקה היסטורית (${forecast.calibration.period}) כ-${Math.round(forecast.calibration.insideShare * 100)}% מהתוצאות בפועל נפלו בתוך טווח כזה, כ-${Math.round(forecast.calibration.belowShare * 100)}% מתחתיו וכ-${Math.round(forecast.calibration.aboveShare * 100)}% מעליו.`);
-  if (peerNote) summary.push("בין חברות שונות באותו סוג מסלול הפער בעבר היה קטן יחסית (כ-2 נקודות אחוז לשנה בין הטובות לחלשות), והצטיינות בעבר חזתה את ההמשך רק במעט. סוג המסלול משפיע הרבה יותר מזהות החברה.");
+  if (forecast.volatilityState === "elevated") summary.push("התנודתיות בחודשים האחרונים גבוהה מהרגיל, ולכן הטווח לשנה הקרובה רחב מהרגיל.");
+  if (forecast.volatilityState === "calm") summary.push("התנודתיות בחודשים האחרונים נמוכה מהרגיל, ולכן הטווח לשנה הקרובה צר מעט מהרגיל.");
+  if (peerNote) summary.push("בין חברות שונות באותו סוג מסלול הפער בעבר היה קטן יחסית (כ-2 נקודות אחוז לשנה בין הטובות לחלשות), והצטיינות של מסלול בודד כמעט לא נמשכה. מה שכן נשאר עקבי בין חברות הוא רמת הסיכון ודמי הניהול. סוג המסלול משפיע הרבה יותר מזהות החברה.");
 
   const lines = [
     // the client draft keeps a generic label: office rules ban the word "קרן" there, and many track names contain it

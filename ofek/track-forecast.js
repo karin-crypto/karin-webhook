@@ -13,11 +13,12 @@
  *      The centre is the average of the two; for tracks with almost no
  *      equity sensitivity it is the yield-based anchor alone.
  *   3. A range around the centre: k(horizon) × the track's annual
- *      volatility. k was calibrated on a walk-forward backtest (2015–2026).
+ *      volatility, where volatility blends the long-run level with the
+ *      recent one (EWMA), so the range widens after turbulent months.
  *
  * What the backtest showed (19 track categories, forecast origins 2011–2026,
- * market data from 2008 so the 2008 crisis is in the sample): about 87% of
- * realised returns fell inside the range, about 3% below it and about 10%
+ * market data from 2008 so the 2008 crisis is in the sample): about 84% of
+ * realised returns fell inside the range, about 4% below it and about 12%
  * above it. One-year outcomes are wide — a single number for one year is
  * not reliable; the range is the forecast.
  *
@@ -27,12 +28,23 @@
 
 const { FACTOR_NAMES, TrackModelError } = require("./track-model");
 
+// k = how many "annual volatilities" wide the range is on each side. For the backtested
+// horizons it is 1.1 × the theoretical 80% multiplier (1.2816 / √years); the extra 10%
+// covers uncertainty about the centre. The 10-year multiplier is wider still and untested.
 const HORIZONS = [
-  { months: 12, key: "1y", label: "שנה", k: 1.5, backtested: true },
-  { months: 36, key: "3y", label: "3 שנים", k: 0.9, backtested: true },
-  { months: 60, key: "5y", label: "5 שנים", k: 0.7, backtested: true },
+  { months: 12, key: "1y", label: "שנה", k: 1.41, backtested: true },
+  { months: 36, key: "3y", label: "3 שנים", k: 0.81, backtested: true },
+  { months: 60, key: "5y", label: "5 שנים", k: 0.63, backtested: true },
   { months: 120, key: "10y", label: "10 שנים", k: 0.5, backtested: false },
 ];
+
+// Weight of a single track's own unexplained return against its category's. Tested on
+// general tracks 2013–2023: the slope of future on past unexplained return averaged 0.16
+// (pooled 0.36) and changed sign between periods.
+const OWN_ALPHA_WEIGHT = 0.25;
+
+// EWMA decay for recent volatility (monthly data).
+const EWMA_LAMBDA = 0.94;
 
 // Judgmental long-run premiums (percent per year). Stated, not estimated.
 const DEFAULT_ASSUMPTIONS = {
@@ -48,12 +60,28 @@ const BACKTEST = {
   period: "2011–2026 (נתוני שוק מ-2008, כולל משבר 2008)",
   categories: 19,
   forecasts: { "1y": 2191, "3y": 1735, "5y": 1279 },
-  insideShare: 0.87,
-  belowShare: 0.03,
-  aboveShare: 0.10,
-  byHorizon: { "1y": { inside: 0.86, below: 0.04, above: 0.10 }, "3y": { inside: 0.86, below: 0.02, above: 0.11 }, "5y": { inside: 0.91, below: 0.01, above: 0.07 } },
+  insideShare: 0.84,
+  belowShare: 0.04,
+  aboveShare: 0.12,
+  byHorizon: { "1y": { inside: 0.82, below: 0.05, above: 0.13 }, "3y": { inside: 0.84, below: 0.03, above: 0.14 }, "5y": { inside: 0.89, below: 0.02, above: 0.09 } },
   meanAbsErrorGeneralTrack: { "1y": 4.6, "3y": 2.1, "5y": 1.5 }, // percentage points per year
-  note: "בדיקה חודש-חודש: בכל נקודה המודל ראה רק את העבר. התחזיות חופפות בזמן ולכן אינן בלתי תלויות. רוב החריגות היו כלפי מעלה. בקרנות פנסיה מקיפות לפי גיל התחזית ל-5 שנים הייתה נמוכה מהתוצאה ברוב המקרים.",
+  independentWindows: { "1y": 15, "3y": 5, "5y": 3 },
+  tenYearCheck: "אופק 10 שנים לא נבדק כתחזית. לשם בדיקת סבירות: בכל 215 התקופות של 10 שנים במסלול הכללי החציוני (1999–2026) התשואה השנתית הממוצעת הייתה בין 3.6% ל-7.8%.",
+  note: "בדיקה חודש-חודש: בכל נקודה המודל ראה רק את העבר. התחזיות חופפות בזמן, ולכן מספר התקופות הבלתי תלויות קטן (כ-15 של שנה, 5 של 3 שנים, 3 של 5 שנים). רוב החריגות היו כלפי מעלה: בתקופה הזו התחזית הייתה נמוכה מהתוצאה ב-1.5 עד 2.5 נקודות אחוז לשנה בממוצע. בקרנות פנסיה מקיפות לפי גיל התחזית ל-5 שנים הייתה נמוכה מהתוצאה ברוב המקרים.",
+};
+
+// What the median general track (provident / study funds) actually did, 1999–2026:
+// annualised return over every rolling window of each length (official monthly data).
+const GENERAL_TRACK_RECORD = {
+  period: "1999–2026", months: 334,
+  windows: {
+    "1y": { min: -22.6, p10: -2.5, median: 7.5, p90: 14.4, max: 34.6, negativeShare: 0.17 },
+    "3y": { min: -3.6, p10: 3.0, median: 5.4, p90: 10.9, max: 13.7, negativeShare: 0.02 },
+    "5y": { min: 1.1, p10: 3.5, median: 5.8, p90: 9.1, max: 11.7, negativeShare: 0 },
+    "10y": { min: 3.6, p10: 4.4, median: 5.8, p90: 7.0, max: 7.8, negativeShare: 0 },
+  },
+  worstCalendarYear: { year: 2008, return: -23 }, bestCalendarYear: { year: 2009, return: 35 },
+  note: "מה שקרה בפועל למסלול כללי חציוני בקופות גמל ובקרנות השתלמות, לפני דמי ניהול. תיאור העבר, לא תחזית.",
 };
 
 const round = (x, d = 1) => (Number.isFinite(x) ? Number(x.toFixed(d)) : null);
@@ -105,7 +133,7 @@ function forecastTrack({ model, history, yields, assumptions = {}, categoryAlpha
   // The unexplained monthly return is averaged with the category's (weak persistence) and then
   // bounded: a large "alpha" in a 60-month fit is mostly noise or a change in the track's
   // character, and compounding it for ten years would dominate the forecast.
-  const rawAlpha = Number.isFinite(categoryAlpha) ? ((model.alpha || 0) + categoryAlpha) / 2 : model.alpha || 0;
+  const rawAlpha = Number.isFinite(categoryAlpha) ? OWN_ALPHA_WEIGHT * (model.alpha || 0) + (1 - OWN_ALPHA_WEIGHT) * categoryAlpha : model.alpha || 0;
   const alpha = Math.min(ALPHA_BOUNDS.high / 12, Math.max(ALPHA_BOUNDS.low / 12, rawAlpha));
   const alphaClamped = alpha !== rawAlpha;
 
@@ -134,10 +162,24 @@ function forecastTrack({ model, history, yields, assumptions = {}, categoryAlpha
 
   const factorVar = beta.reduce((s, bi, i) => s + beta.reduce((t, bj, j) => t + bi * bj * stats.cov[i][j], 0), 0);
   const resid = Number.isFinite(model.residualSd) ? model.residualSd : 0.45;
-  const annualVolatility = Math.sqrt(factorVar + resid * resid) * Math.sqrt(12);
+  const longRunVol = Math.sqrt(factorVar + resid * resid) * Math.sqrt(12);
+  // recent volatility: exponentially weighted variance of the track's factor-implied monthly returns
+  const implied = history.periods.map((_, t) => FACTOR_NAMES.reduce((acc, f, i) => acc + beta[i] * history.factors[f][t], 0));
+  const impliedMean = implied.reduce((acc, v) => acc + v, 0) / implied.length;
+  let wSum = 0;
+  let wVar = 0;
+  for (let t = 0; t < implied.length; t++) {
+    const w = EWMA_LAMBDA ** (implied.length - 1 - t);
+    wSum += w;
+    wVar += w * (implied[t] - impliedMean) ** 2;
+  }
+  const recentVol = Math.sqrt(wVar / wSum + resid * resid) * Math.sqrt(12);
+  // one year ahead leans half on recent volatility; longer horizons a third
+  const blended = (months) => (months <= 12 ? Math.sqrt((longRunVol ** 2 + recentVol ** 2) / 2) : Math.sqrt((2 * longRunVol ** 2 + recentVol ** 2) / 3));
+  const annualVolatility = longRunVol;
 
   const rows = horizons.map((h) => {
-    const half = h.k * annualVolatility;
+    const half = h.k * blended(h.months);
     const low = centre - half;
     const high = centre + half;
     return {
@@ -155,6 +197,8 @@ function forecastTrack({ model, history, yields, assumptions = {}, categoryAlpha
     central: round(centre),
     centralReal: inflation == null ? null : round(centre - inflation),
     annualVolatility: round(annualVolatility),
+    recentVolatility: round(recentVol),
+    volatilityState: recentVol > longRunVol * 1.15 ? "elevated" : recentVol < longRunVol * 0.85 ? "calm" : "normal",
     anchors: {
       historical: { annual: round(historical - annualFee), basis: `ממוצע גורמי השוק ${stats.from.slice(0, 4)}–${stats.to.slice(0, 4)} (${stats.n} חודשים)` },
       yieldBased: { annual: round(yieldBased - annualFee), basis: "תשואות אג\"ח ממשלתיות נוכחיות בתוספת פרמיות שנקבעו בהנחה" },
@@ -169,11 +213,12 @@ function forecastTrack({ model, history, yields, assumptions = {}, categoryAlpha
       alphaClamped,
       centreBounded,
       centreBounds: { low: round(bounds.low), high: round(bounds.high) },
-      alphaNote: Number.isFinite(categoryAlpha) ? "הרכיב שאינו מוסבר בשוק: ממוצע בין המסלול לסוג המסלול" : "הרכיב שאינו מוסבר בשוק: של המסלול עצמו",
+      alphaNote: Number.isFinite(categoryAlpha) ? "הרכיב שאינו מוסבר בשוק: רבע מהמסלול עצמו ושלושה רבעים מסוג המסלול (הצטיינות של מסלול בודד כמעט אינה נמשכת)" : "הרכיב שאינו מוסבר בשוק: של המסלול עצמו",
       annualFee,
       equitySensitivity: round(equitySensitivity, 2),
     },
     calibration: BACKTEST,
+    generalTrackRecord: GENERAL_TRACK_RECORD,
     caveats: [
       "זו הערכה מחקרית ולא הבטחה. תשואת עבר אינה מבטיחה תשואה בעתיד.",
       "תחזית לשנה אחת רחבה מאוד; הטווח הוא התחזית, לא המספר המרכזי.",
@@ -255,4 +300,4 @@ function toForecastCard(forecast, { asset, key = "5y", dataAsOf, modelVersion = 
   };
 }
 
-module.exports = { HORIZONS, DEFAULT_ASSUMPTIONS, ALPHA_BOUNDS, BACKTEST, HISTORICAL_EPISODES, forecastTrack, stressTests, toForecastCard, factorStats, normalCdf };
+module.exports = { HORIZONS, DEFAULT_ASSUMPTIONS, ALPHA_BOUNDS, OWN_ALPHA_WEIGHT, BACKTEST, GENERAL_TRACK_RECORD, HISTORICAL_EPISODES, forecastTrack, stressTests, toForecastCard, factorStats, normalCdf };
