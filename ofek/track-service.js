@@ -235,6 +235,32 @@ function yieldSnapshot() {
   }
 }
 
+/** Standard error of an early estimate, from the model's tested error band. */
+function estimateErrorSd(model) {
+  if (model.accuracy && Number.isFinite(model.accuracy.p90AbsError)) return model.accuracy.p90AbsError / 1.645;
+  if (Number.isFinite(model.residualSd)) return model.residualSd;
+  return 0.5;
+}
+
+const MONTH_NAMES = ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"];
+
+/** Year-end projection with a one-sentence Hebrew summary. */
+function yearEndFor(historyRows, estimates, trackLabel = "המסלול") {
+  if (historyRows.length < 36) return null;
+  const y = tm.yearEndProjection(historyRows, { estimates });
+  const num = (v) => (v < 0 ? `מינוס ${Math.abs(v)}%` : `${v}%`);
+  const month = (p) => MONTH_NAMES[Number(p.slice(4)) - 1];
+  let text;
+  if (y.complete) text = `${trackLabel} סיים את ${y.year} בתשואה רשמית של ${num(y.central)}.`;
+  else {
+    const parts = [];
+    if (y.officialThrough) parts.push(`תשואה רשמית מתחילת ${y.year} עד סוף ${month(y.officialThrough)}: ${num(y.officialYearToDate)}`);
+    if (y.estimatedMonths.length) parts.push(y.estimatedMonths.map((e) => `אומדן ל${month(e.period)}${e.partial ? " (עד כה)" : ""}: ${num(e.estimate)}`).join(", "));
+    text = `${parts.join(". ")}. הערכה לסיום ${y.year}: בסביבות ${num(y.central)}, בטווח סביר של ${num(y.range.low)} עד ${num(y.range.high)}${y.remainingMonths ? ` (נותרו ${y.remainingMonths === 1 ? "חודש אחד" : y.remainingMonths + " חודשים"} שעדיין לא התחילו)` : ""}. הערכה מחקרית, אינה תשואה מובטחת.`;
+  }
+  return { ...y, text };
+}
+
 /**
  * What followed past declines of the track: at 1% and 3% below the peak, and
  * at the track's current depth when it is at least 1% down.
@@ -247,9 +273,10 @@ function declineSummary(returns, currentDepth = 0) {
 
 /**
  * How far a forecast can be trusted, in plain words. The grades follow the
- * backtest: bond-like tracks were forecast within about 0.3–0.9 points a
- * year at 3–5 years, mixed tracks within about 1.5–2.5, equity-heavy tracks
- * within about 3.5–6; an unstable or borrowed model lowers the grade.
+ * backtest on 70 individual tracks (mean absolute error, points a year):
+ * bond-like 0.3–0.8 at 3–5 years; mixed 2.1–3.8 at 3 years and 1.7–3.7 at
+ * 5 years; equity about 6 at 3 years (few tracks). An unstable or borrowed
+ * model lowers the grade.
  */
 function forecastReliability(model, forecast) {
   const eq = forecast.inputs.equitySensitivity;
@@ -260,13 +287,13 @@ function forecastReliability(model, forecast) {
     reasons.push(model.quality === "low" ? "המודל של המסלול אינו יציב" : "מרכז התחזית הוגבל לטווח סביר");
   } else if (eq < 0.15) {
     grade = "high";
-    reasons.push("מסלול אג\"ח או כספי: תשואת האג\"ח ההתחלתית חוזה היטב את התשואה ל-3 עד 5 שנים (טעות של כ-0.3 עד 0.9 נקודות אחוז לשנה בבדיקה)");
+    reasons.push("מסלול אג\"ח או כספי: תשואת האג\"ח ההתחלתית חוזה היטב את התשואה ל-3 עד 5 שנים (טעות ממוצעת של 0.3 עד 0.8 נקודות אחוז לשנה בבדיקה על מסלולים בודדים)");
   } else if (eq >= 0.6) {
     grade = "low";
-    reasons.push("מסלול עתיר מניות: אין מנבא אמין לתשואת מניות, והטעות בבדיקה הייתה 3.5 עד 6 נקודות אחוז לשנה");
+    reasons.push("מסלול עתיר מניות: אין מנבא אמין לתשואת מניות. הטעות הממוצעת בבדיקה הייתה כ-6 נקודות אחוז לשנה ל-3 שנים, על מעט מסלולים");
   } else {
     grade = "medium";
-    reasons.push("מסלול מעורב: הטעות בבדיקה הייתה כ-2 נקודות אחוז לשנה ל-3 שנים וכ-1.5 עד 1.8 ל-5 שנים");
+    reasons.push("מסלול מעורב: הטעות הממוצעת בבדיקה הייתה 2 עד 4 נקודות אחוז לשנה ל-3 שנים ו-1.7 עד 3.7 ל-5 שנים, ורוב הטעויות היו תחזית נמוכה מהתוצאה");
   }
   const borrowed = model.basis && model.basis !== "own";
   if (borrowed && grade !== "very_low") {
@@ -398,11 +425,18 @@ async function yearOverYear({ dataset, fundId, factorRows = null, trackLabel = "
   if (missing.length) throw new tm.TrackModelError(`למסלול חסרים נתונים רשמיים בחודשים: ${missing.join(", ")} — אין השוואה מלאה בין השנים`);
 
   let factors = factorRows;
+  let pendingMonths = [];
+  let monthToDate = null;
   let sources = ["רשות שוק ההון — data.gov.il (תשואות חודשיות רשמיות)"];
   if (!factors) {
-    const fetched = await market.fetchFactorHistory({ from: prev[0], to: cur[cur.length - 1], env, today, ...fx });
+    const asOf = market.israelDate(today);
+    let fetched;
+    try { fetched = await market.fetchFactorHistory({ from: prev[0], to: cur[cur.length - 1], asOf, env, today, ...fx }); }
+    catch (e) { if (e instanceof market.MarketDataError && e.status === 409) throw e; fetched = await market.fetchFactorHistory({ from: prev[0], to: cur[cur.length - 1], env, today, ...fx }); }
     factors = fetched.rows;
     sources = sources.concat(fetched.sources);
+    pendingMonths = fetched.unpublishedMonths || [];
+    monthToDate = fetched.monthToDate || null;
   } else sources.push("גורמי שוק — סופקו על ידי המשתמש");
   const fmap = new Map(factors.map((f) => [String(f.period), f.factors]));
   const noFactor = [...prev, ...cur].filter((p) => !fmap.has(p));
@@ -418,9 +452,19 @@ async function yearOverYear({ dataset, fundId, factorRows = null, trackLabel = "
     factorMoves[labels[0]][f] = compoundMove(prev, f);
     factorMoves[labels[1]][f] = compoundMove(cur, f);
   }
+  // where the year is heading: official months, estimated months, the rest at the long-run average
+  const errorSd = estimateErrorSd(model);
+  const estimates = pendingMonths.map((u) => ({ period: u.period, estimate: tm.nowcast(model, u.factors).estimate, errorSd, elapsedShare: 1 }));
+  if (monthToDate && monthToDate.factors) {
+    const share = monthShare(monthToDate.asOf);
+    estimates.push({ period: monthToDate.period, estimate: tm.nowcast(model, monthToDate.factors, { elapsedShare: share }).estimate, errorSd, elapsedShare: share });
+  }
+  const yearEnd = yearEndFor(history.rows, estimates, trackLabel);
+
   return {
     fund: { fundId: history.fundId, dataset, name: history.fundName, lastOfficialMonth: last },
     model: { origin, basis: model.basisNote || null },
+    yearEnd,
     ...explain.explainYearOverYear({ attribution, factorMoves, years: labels, fromMonth: 1, toMonth, trackLabel }),
     sources,
     notice: "פירוק לפי הרגישות ההיסטורית של המסלול לגורמי השוק. תשואות ברמת המסלול; חשבון הלקוח מושפע גם מדמי ניהול ומועדי הפקדה.",
@@ -492,6 +536,12 @@ async function analyzeFund({ dataset, fundId, window = 60, factorRows = null, mt
     declineOutlook = { depthNow: Number((-depthNow).toFixed(2)), includesEstimatedMonths: estimated.length, afterDeclines: declineSummary(official, depthNow) };
   }
 
+  const errorSd = estimateErrorSd(model);
+  const yearEnd = yearEndFor(history.rows, [
+    ...unpublishedEstimates.map((u) => ({ period: u.period, estimate: u.estimate, errorSd, elapsedShare: 1 })),
+    ...(earlyEstimate && monthToDate.asOf ? [{ period: monthToDate.period || monthToDate.asOf.replace(/-/g, "").slice(0, 6), estimate: earlyEstimate.estimate, errorSd, elapsedShare: monthShare(monthToDate.asOf) }] : []),
+  ], history.fundName);
+
   return {
     ok: true,
     fund: { fundId: history.fundId, dataset, name: history.fundName, company: history.company, historyFrom: history.rows[0].period, lastOfficialMonth: last, lastOfficialReturn: history.rows[history.rows.length - 1].ret, totalAssetsMillions: history.rows[history.rows.length - 1].totalAssets },
@@ -502,6 +552,7 @@ async function analyzeFund({ dataset, fundId, window = 60, factorRows = null, mt
     depositTiming,
     volatilityOutlook,
     declineOutlook,
+    yearEnd,
     sources,
     notice: "המודל מסביר ומעריך את תשואת המסלול לפי תנועות השוק. אינו חוזה את כיוון השוק ואינו המלצה אישית. תשואות ברמת המסלול; חשבון הלקוח מושפע גם מדמי ניהול ומועדי הפקדה.",
   };

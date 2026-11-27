@@ -160,6 +160,23 @@ test("track model: deposit-timing statistics", () => {
   assert.equal(out2.inProgress, null);
   assert.equal(tm.declineOutlook([...series2, -3], { depth: 2 }).inProgress.monthsSinceReached, 0);
   assert.throws(() => tm.declineOutlook(series2, { depth: 0 }), /depth/);
+  // year-end projection: 10 official months of +1%, an estimated month, one month ahead
+  const hist = [];
+  for (let y = 2022; y <= 2026; y++) for (let m = 1; m <= (y === 2026 ? 10 : 12); m++) hist.push({ period: `${y}${String(m).padStart(2, "0")}`, ret: 1 });
+  const ye = tm.yearEndProjection(hist, { estimates: [{ period: "202611", estimate: -1, errorSd: 0.4, elapsedShare: 1 }] });
+  assert.equal(ye.year, 2026);
+  assert.equal(ye.officialThrough, "202610");
+  assert.equal(ye.remainingMonths, 1);
+  assert.equal(ye.officialYearToDate, Number(((1.01 ** 10 - 1) * 100).toFixed(2)));
+  assert.equal(ye.central, Number(((1.01 ** 10 * 0.99 * 1.01 - 1) * 100).toFixed(2)));
+  // constant history has no volatility, so the range comes from the estimate's error alone
+  assert.ok(Math.abs((ye.range.high - ye.range.low) / 2 - 1.2816 * 0.4 * 1.01 ** 10 * 0.99) < 0.02);
+  const done = tm.yearEndProjection(hist.concat([{ period: "202611", ret: 1 }, { period: "202612", ret: 1 }]));
+  assert.equal(done.complete, true);
+  assert.equal(done.range, null);
+  // an estimate for January moves the projection to the new year
+  assert.equal(tm.yearEndProjection(hist.concat([{ period: "202611", ret: 1 }, { period: "202612", ret: 1 }]), { estimates: [{ period: "202701", estimate: 0.5 }] }).year, 2027);
+  assert.throws(() => tm.yearEndProjection(hist.slice(0, 10)), /לפחות 36/);
   const falling = tm.depositTimingStats([...Array(36).fill(1), -2, -3]);
   assert.equal(falling.currentDrawdown.monthsSincePeak, 2);
   assert.ok(falling.currentDrawdown.depth < -4.9);
@@ -739,6 +756,13 @@ test("fund analysis: model, accuracy, scenarios, early estimate and deposit timi
   assert.equal(lagged.earlyEstimate.since, "2026-10-31");
   assert.ok(Math.abs(lagged.earlyEstimate.marketMoves.ta125 + 2) < 1e-9);
   assert.equal(lagged.earlyEstimate.partialMonth, true);
+  // the year-end projection counts the unpublished month and the partial month as estimates, with December still ahead
+  assert.deepEqual(lagged.yearEnd.estimatedMonths.map((e) => [e.period, e.partial]), [["202610", false], ["202611", true]]);
+  assert.equal(lagged.yearEnd.officialThrough, "202609");
+  assert.equal(lagged.yearEnd.remainingMonths, 1);
+  assert.ok(lagged.yearEnd.range.low < lagged.yearEnd.central && lagged.yearEnd.central < lagged.yearEnd.range.high);
+  assert.match(lagged.yearEnd.text, /הערכה לסיום 2026/);
+  assert.match(lagged.yearEnd.text, /אינה תשואה מובטחת/);
   market._clearCache();
 
   // without supplied factors and without the opt-in index source the analysis refuses rather than guessing
@@ -754,6 +778,7 @@ test("year over year: same months in both years, gap split by factor, draft with
   assert.deepEqual(r.years, ["2016", "2017"]);
   assert.equal(r.months.label, "ינואר עד יוני");
   assert.equal(r.fund.lastOfficialMonth, "201706");
+  assert.equal(r.yearEnd, null); // fewer than 36 official months: no year-end projection
   const sum = Object.values(r.byFactor).reduce((t, v) => t + v, 0) + r.unexplained;
   assert.ok(Math.abs(sum - r.gap) < 0.05, `sum ${sum} gap ${r.gap}`);
   assert.equal(typeof r.factorMoves["2016"].ta125, "number");

@@ -466,6 +466,62 @@ function declineOutlook(monthlyReturns, { depth, deeper = null } = {}) {
 }
 
 /**
+ * Where the calendar year is heading: official months so far, months that
+ * are only estimated (each with its own error), and the months still ahead
+ * at the track's long-run monthly average. The range is an 80% interval
+ * built from the estimates' errors and recent (EWMA) volatility; in a check
+ * on 1999–2026 such ranges held in about 75–90% of the years.
+ *   history:   [{ period: "YYYYMM", ret }] official monthly returns
+ *   estimates: [{ period, estimate, errorSd, elapsedShare }] months after the
+ *              last official one, in order
+ */
+function yearEndProjection(history, { estimates = [] } = {}) {
+  const rows = (history || []).filter((x) => x && /^\d{6}$/.test(String(x.period)) && Number.isFinite(x.ret)).map((x) => ({ period: String(x.period), ret: x.ret }));
+  if (rows.length < 36) throw new TrackModelError(`נדרשים לפחות 36 חודשי תשואה רשמיים (יש ${rows.length})`);
+  const lastOfficial = rows[rows.length - 1].period;
+  const est = (estimates || []).filter((e) => e && /^\d{6}$/.test(String(e.period)) && Number.isFinite(e.estimate) && String(e.period) > lastOfficial)
+    .map((e) => ({ period: String(e.period), estimate: e.estimate, errorSd: Number.isFinite(e.errorSd) ? Math.abs(e.errorSd) : 0.5, elapsedShare: e.elapsedShare > 0 && e.elapsedShare <= 1 ? e.elapsedShare : 1 }));
+  const lastCovered = est.length ? est[est.length - 1].period : lastOfficial;
+  const year = lastCovered.slice(0, 4);
+  const all = rows.map((x) => x.ret);
+  const mu = mean(all);
+  let wSum = 0; let wVar = 0;
+  for (let i = all.length - 1, w = 1; i >= 0; i--, w *= 0.94) { wSum += w; wVar += w * (all[i] - mu) ** 2; }
+  const monthlySd = Math.sqrt(wVar / wSum);
+
+  const official = rows.filter((x) => x.period.startsWith(year));
+  const estimated = est.filter((e) => e.period.startsWith(year));
+  const remaining = 12 - Number(lastCovered.slice(4));
+  let growth = official.reduce((g, x) => g * (1 + x.ret / 100), 1);
+  let variance = 0;
+  for (const e of estimated) {
+    const rest = 1 - e.elapsedShare; // the part of a partial month still ahead
+    growth *= 1 + (e.estimate + mu * rest) / 100;
+    variance += e.errorSd ** 2 + rest * monthlySd ** 2;
+  }
+  const soFar = growth;
+  growth *= (1 + mu / 100) ** remaining;
+  variance += remaining * monthlySd ** 2;
+  const central = (growth - 1) * 100;
+  const half = 1.2816 * Math.sqrt(variance) * soFar;
+  const complete = remaining === 0 && estimated.length === 0;
+  return {
+    ok: true,
+    year: Number(year),
+    officialThrough: official.length ? official[official.length - 1].period : null,
+    officialYearToDate: official.length ? round(compound(official.map((x) => x.ret))) : null,
+    estimatedMonths: estimated.map((e) => ({ period: e.period, estimate: round(e.estimate), partial: e.elapsedShare < 1 })),
+    remainingMonths: remaining,
+    assumedMonthlyAverage: round(mu),
+    monthlyVolatilityUsed: round(monthlySd),
+    central: round(central),
+    range: complete ? null : { low: round(central - half), high: round(central + half), coverage: 0.8 },
+    complete,
+    note: complete ? "השנה הסתיימה — זו התשואה הרשמית." : "הערכה מחקרית לסיום השנה: החודשים הרשמיים, אומדן לחודשים שעוד לא פורסמו, וממוצע רב-שנתי לחודשים שנותרו. הטווח הוא התחזית; אינו תשואה מובטחת.",
+  };
+}
+
+/**
  * Volatility outlook for the coming month, from the track's own history.
  * Research (2012–2026): after a negative month the next month's move tends
  * to be larger, in EITHER direction; the direction itself is not predictable.
@@ -577,5 +633,5 @@ function findBaselineModel(baseline, { category, fundId } = {}) {
 module.exports = {
   FACTORS, FACTOR_NAMES, SCENARIOS, TrackModelError,
   fitFactorModel, walkForwardFit, scenarioImpact, scenarioTable, scenarioFrequency, nowcast,
-  attributeDifference, depositTimingStats, declineOutlook, riskOutlook, predictabilityTest, findBaselineModel,
+  attributeDifference, depositTimingStats, declineOutlook, yearEndProjection, riskOutlook, predictabilityTest, findBaselineModel,
 };
