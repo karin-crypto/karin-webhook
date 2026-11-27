@@ -390,6 +390,13 @@ test("daily watch: estimates per track type, how unusual, matching scenarios, no
   const nov = service.marketWatch({ factors: { ta125: -3.34, spx: -5.24, usd: 6.93, gov: 0.33, corp: -0.86 }, asOf: "2026-11-26", elapsedShare: service.monthShare("2026-11-26") });
   assert.equal(nov.partialMonth, true);
   assert.equal(nov.alert.attention, true);
+  // early warning: late in a month like this the general track is flagged for a fall of more than 1%
+  assert.equal(nov.earlyWarning.level, "alert");
+  assert.match(nov.earlyWarning.text, /יותר מ-1%/);
+  const general = nov.categories.find((c) => c.category === "גמל/השתלמות · כללי");
+  assert.ok(general.negativeMonthProbability > 0.9 && general.declineOver1Probability < general.negativeMonthProbability);
+  const quietMonth = service.marketWatch({ factors: { ta125: 1, spx: 1, usd: 0, gov: 0.2, corp: 0.3 }, asOf: "2026-11-26", elapsedShare: service.monthShare("2026-11-26") });
+  assert.equal(quietMonth.earlyWarning.level, "none");
   assert.ok(nov.categories.length >= 20);
   assert.ok(nov.categories.every((c, i) => i === 0 || c.estimate >= nov.categories[i - 1].estimate)); // weakest first
   const cat = (w, name) => w.categories.find((c) => c.category === name);

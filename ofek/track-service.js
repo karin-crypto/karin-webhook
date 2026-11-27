@@ -177,9 +177,24 @@ function marketWatch({ factors, asOf, elapsedShare = 1, since = null, lastObserv
     .sort((x, y) => y.similarity - x.similarity)
     .slice(0, 2);
   const general = rows.find((r) => r.category === "גמל/השתלמות · כללי");
+  // Two-level early warning on the general track: the chance of a monthly fall of more than 1%.
+  // Past record on general tracks (33 such months out of 230, 2017–2026): at 30% or more the
+  // warning caught 52% of them by day 15 and 79% by day 22, with 61% and 81% of warnings right;
+  // at 50% or more it caught 58% by day 22 and 76% by day 27, with about 9 in 10 right.
+  const p1 = general ? general.declineOver1Probability : null;
+  const warnLevel = p1 == null ? "unknown" : p1 >= 0.5 ? "alert" : p1 >= 0.3 ? "watch" : "none";
+  const earlyWarning = {
+    level: warnLevel,
+    probability: p1,
+    text: warnLevel === "alert" ? `התרעה: סיכוי של ${Math.round(p1 * 100)}% שהמסלול הכללי יסיים את החודש בירידה של יותר מ-1%. בעבר כ-9 מכל 10 התרעות כאלה התממשו.`
+      : warnLevel === "watch" ? `למעקב: סיכוי של ${Math.round(p1 * 100)}% שהמסלול הכללי יסיים את החודש בירידה של יותר מ-1%. בעבר 6 עד 8 מכל 10 סימנים כאלה התממשו, תלוי כמה מהחודש כבר עבר.`
+        : warnLevel === "none" ? "אין כרגע סימן לירידה חודשית של יותר מ-1% במסלול הכללי." : "אין נתונים למדד ההתרעה.",
+    note: "מדד מחקרי לחודש הנוכחי בלבד. אינו חוזה את החודש הבא, ואינו בסיס לפנייה ללקוחות בלי בדיקה ואישור של קארין.",
+  };
   return {
     ok: true,
     asOf, since, lastObservation, partialMonth: elapsedShare < 1,
+    earlyWarning,
     marketMoves: factors,
     environment,
     alert: { level: worst, attention: ["very_unusual", "unusual"].includes(worst), text: !["very_unusual", "unusual"].includes(worst) ? "אין כרגע חריגה שמצדיקה פנייה יזומה למבוטחים." : "יש סוגי מסלולים עם ירידה חריגה החודש — כדאי להכין הסבר למבוטחים." },

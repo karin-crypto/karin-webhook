@@ -249,7 +249,8 @@
       const prob = (x) => (x == null ? "—" : x > 0.99 ? "מעל 99%" : x < 0.01 ? "פחות מ-1%" : Math.round(x * 100) + "%");
       $("wout").hidden = false;
       $("walert").className = w.alert.attention ? "warn" : "";
-      $("walert").textContent = w.alert.text;
+      $("walert").textContent = w.alert.text + (w.earlyWarning ? " " + w.earlyWarning.text : "");
+      if (w.earlyWarning && w.earlyWarning.level === "alert") $("walert").className = "warn";
       $("wenv").textContent = "סביבת השוק מתחילת החודש (עד " + il(w.asOf) + "): " + w.environment.tags.map((t) => t.he).join(", ") + ".";
       $("wscen").innerHTML = w.matchingScenarios.map((m) => `<p style="margin:8px 0 0"><span class="pill">תרחיש דומה</span>${esc(m.description)}<br><span class="muted">${esc(m.talkingPoints)}</span></p>`).join("");
       $("wtable").innerHTML = `<table class="tbl"><tr><th>סוג מסלול</th><th>אומדן מוקדם לחודש</th><th>טווח סביר</th><th>סיכוי שהחודש יסתיים בירידה</th><th>סיכוי לירידה של יותר מ-1%</th><th>ביחס להיסטוריה</th></tr>` +
