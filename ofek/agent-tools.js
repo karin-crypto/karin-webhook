@@ -134,7 +134,7 @@ const TOOL_DEFS = [
   {
     name: "analyze_fund_track",
     description:
-      "Full analysis of ONE track by its Capital Market Authority fund id: official monthly history from data.gov.il, factor model fitted on the last `window` months, out-of-sample accuracy, scenario table, deposit-timing statistics, and (with asOf) a month-to-date early estimate. " +
+      "Full analysis of ONE track by its Capital Market Authority fund id: official monthly history from data.gov.il, factor model fitted on the last `window` months, out-of-sample accuracy, scenario table, deposit-timing statistics, and (with asOf) a month-to-date early estimate. Also returns declineOutlook (how far the track is below its peak and what followed past declines of that depth: how often they deepened, how long until the peak was regained) and yearEnd (where the calendar year is heading: official year-to-date, estimated months, and an 80% range for the year-end figure). " +
       "dataset: gemel (provident/study/investment funds) | pension | insurance (savings policies). Needs the automatic index source; if it is not enabled the tool says so — then use track_model_baseline instead.",
     input_schema: obj({ dataset: { type: "string", enum: ["gemel", "pension", "insurance"] }, fundId: { type: "integer" }, window: { type: "integer" }, asOf: { type: "string" } }, ["dataset", "fundId"]),
   },
@@ -155,14 +155,14 @@ const TOOL_DEFS = [
   {
     name: "forecast_track",
     description:
-      "Multi-year forecast for ONE savings track (fund id from find_track) or a track category: expected yearly return RANGE for 1, 3, 5 and 10 years, loss probability per horizon, the historical and yield-based anchors, stated assumptions, the backtest calibration (how often past outcomes fell inside such ranges), the track's own record, a plain summary and forecast-card drafts. " +
+      "Multi-year forecast for ONE savings track (fund id from find_track) or a track category: expected yearly return RANGE for 1, 3, 5 and 10 years, loss probability per horizon, the historical and yield-based anchors, stated assumptions, the backtest calibration (how often past outcomes fell inside such ranges), the track's own record, a plain summary and forecast-card drafts. The result carries `reliability` (high / medium / low / very low, with the reason) — always state it — and `warnings`, which must be passed on. " +
       "Use it when someone asks what to expect from investing in a specific track at a specific company. Always present the range, never the centre alone; a one-year figure is not reliable. It is not a recommendation — suitability is Karin's decision. Optional annualFee (percent) gives the result net of the client's fee. Optional savings { years, balance, monthlyDeposit, depositFee } adds the range of the final balance (after fees, nominal ₪) — use it for 'how much will I have in N years'.",
     input_schema: obj({ fundId: { type: "integer" }, dataset: { type: "string", enum: ["gemel", "pension", "insurance"] }, category: { type: "string" }, annualFee: { type: "number" }, assumptions: anyObj, savings: anyObj }),
   },
   {
     name: "explain_year_over_year",
     description:
-      "Answers 'why is this year weaker (or stronger) than last year?' for ONE track: official return for January-to-latest-month in both years, the market moves in each period, the gap split by market factor and the part markets do not explain, plus a client-message DRAFT (no names; needs Karin's approval). " +
+      "Answers 'why is this year weaker (or stronger) than last year?' for ONE track: official return for January-to-latest-month in both years, the market moves in each period, the gap split by market factor and the part markets do not explain, plus a client-message DRAFT (no names; needs Karin's approval) and `yearEnd` — a research estimate of where the year will end, as a range. " +
       "Needs the automatic index source; get the fund id from find_track.",
     input_schema: obj({ dataset: { type: "string", enum: ["gemel", "pension", "insurance"] }, fundId: { type: "integer" }, trackLabel: { type: "string" } }, ["dataset", "fundId"]),
   },
